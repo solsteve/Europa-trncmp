@@ -1,0 +1,175 @@
+module testZero_R8
+  use pfunit_mod
+  use trncmp_env
+  implicit none
+
+
+  integer, parameter :: dim1 = 11
+  integer, parameter :: dim2 = 7
+  integer, parameter :: dim3 = 5
+  integer, parameter :: dim4 = 3
+
+
+contains
+
+
+  !=========================================================
+  ! Zero Real 64 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_R8_1d
+    real(dp) :: total
+    real(dp), dimension(dim1) :: buffer
+    
+    call zero( buffer )
+
+    total = sum( buffer )
+    
+    @assertFalse( total.lt.0.0_dp )
+    @assertFalse( total.gt.0.0_dp )
+
+  end subroutine test_zero_R8_1d
+
+
+  !=========================================================
+  ! Zero Real 64 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_R8_2d
+    real(dp) :: total
+    real(dp), dimension(dim1,dim2) :: buffer
+    
+    call zero( buffer )
+
+    total = sum( buffer )
+    
+    @assertFalse( total.lt.0.0_dp )
+    @assertFalse( total.gt.0.0_dp )
+
+  end subroutine test_zero_R8_2d
+
+
+  !=========================================================
+  ! Zero Real 64 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_R8_3d
+    real(dp) :: total
+    real(dp), dimension(dim1,dim2,dim3) :: buffer
+    
+    call zero( buffer )
+
+    total = sum( buffer )
+    
+    @assertFalse( total.lt.0.0_dp )
+    @assertFalse( total.gt.0.0_dp )
+
+  end subroutine test_zero_R8_3d
+
+
+  !=========================================================
+  ! Zero Real 64 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_R8_4d
+    real(dp) :: total
+    real(dp), dimension(dim1,dim2,dim3,dim4) :: buffer
+    
+    call zero( buffer )
+
+    total = sum( buffer )
+    
+    @assertFalse( total.lt.0.0_dp )
+    @assertFalse( total.gt.0.0_dp )
+
+  end subroutine test_zero_R8_4d
+
+
+
+
+
+
+
+
+  !=========================================================
+  ! Set Real 64 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_R8_1d
+    real(dp) :: total, test
+    real(dp), dimension(dim1) :: buffer
+
+    call zero( buffer, 3.0_dp )
+
+    test = sum( buffer )
+
+    total = 3.0_dp * real( dim1, dp )
+
+    @assertFalse( total.lt.total )
+    @assertFalse( total.gt.total )
+
+  end subroutine test_set_R8_1d
+
+  
+  !=========================================================
+  ! Set Real 64 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_R8_2d
+    real(dp) :: total, test
+    real(dp), dimension(dim1,dim2) :: buffer
+
+    call zero( buffer, 3.0_dp )
+
+    test = sum( buffer )
+
+    total = 3.0_dp * real( dim1 * dim2, dp )
+
+    @assertFalse( total.lt.total )
+    @assertFalse( total.gt.total )
+
+  end subroutine test_set_R8_2d
+
+  
+  !=========================================================
+  ! Set Real 64 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_R8_3d
+    real(dp) :: total, test
+    real(dp), dimension(dim1,dim2,dim3) :: buffer
+
+    call zero( buffer, 3.0_dp )
+
+    test = sum( buffer )
+
+    total = 3.0_dp * real( dim1 * dim2 * dim3, dp )
+
+    @assertFalse( total.lt.total )
+    @assertFalse( total.gt.total )
+
+  end subroutine test_set_R8_3d
+
+  
+  !=========================================================
+  ! Set Real 64 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_R8_4d
+    real(dp) :: total, test
+    real(dp), dimension(dim1,dim2,dim3,dim4) :: buffer
+
+    call zero( buffer, 3.0_dp )
+
+    test = sum( buffer )
+
+    total = 3.0_dp * real( dim1 * dim2 * dim3 * dim4, dp )
+
+    @assertFalse( total.lt.total )
+    @assertFalse( total.gt.total )
+
+  end subroutine test_set_R8_4d
+
+  
+end module testZero_R8
+

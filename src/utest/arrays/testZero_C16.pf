@@ -1,0 +1,193 @@
+module testZero_C16
+  use pfunit_mod
+  use trncmp_env
+  implicit none
+
+
+  integer, parameter :: dim1 = 11
+  integer, parameter :: dim2 = 7
+  integer, parameter :: dim3 = 5
+  integer, parameter :: dim4 = 3
+
+
+  complex(dp), parameter :: C_MUL = ( 5.0_dp, 3.0_dp )
+
+contains
+
+
+  !=========================================================
+  ! Zero Real 64 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_C16_1d
+    complex(dp) :: total
+    complex(dp), dimension(dim1) :: buffer
+    
+    call zero( buffer )
+
+    total = sum( buffer )
+    
+    @assertFalse( real(total).lt.0.0_dp )
+    @assertFalse( real(total).gt.0.0_dp )
+    @assertFalse( aimag(total).lt.0.0_dp )
+    @assertFalse( aimag(total).gt.0.0_dp )
+
+  end subroutine test_zero_C16_1d
+
+
+  !=========================================================
+  ! Zero Real 64 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_C16_2d
+    complex(dp) :: total
+    complex(dp), dimension(dim1,dim2) :: buffer
+    
+    call zero( buffer )
+
+    total = sum( buffer )
+    
+    @assertFalse( real(total).lt.0.0_dp )
+    @assertFalse( real(total).gt.0.0_dp )
+    @assertFalse( aimag(total).lt.0.0_dp )
+    @assertFalse( aimag(total).gt.0.0_dp )
+
+  end subroutine test_zero_C16_2d
+
+
+  !=========================================================
+  ! Zero Real 64 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_C16_3d
+    complex(dp) :: total
+    complex(dp), dimension(dim1,dim2,dim3) :: buffer
+    
+    call zero( buffer )
+
+    total = sum( buffer )
+    
+    @assertFalse( real(total).lt.0.0_dp )
+    @assertFalse( real(total).gt.0.0_dp )
+    @assertFalse( aimag(total).lt.0.0_dp )
+    @assertFalse( aimag(total).gt.0.0_dp )
+
+  end subroutine test_zero_C16_3d
+
+
+  !=========================================================
+  ! Zero Real 64 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_C16_4d
+    complex(dp) :: total
+    complex(dp), dimension(dim1,dim2,dim3,dim4) :: buffer
+    
+    call zero( buffer )
+
+    total = sum( buffer )
+    
+    @assertFalse( real(total).lt.0.0_dp )
+    @assertFalse( real(total).gt.0.0_dp )
+    @assertFalse( aimag(total).lt.0.0_dp )
+    @assertFalse( aimag(total).gt.0.0_dp )
+
+  end subroutine test_zero_C16_4d
+
+
+
+
+
+
+
+
+  !=========================================================
+  ! Set Real 64 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_C16_1d
+    complex(dp) :: total, test
+    complex(dp), dimension(dim1) :: buffer
+
+    call zero( buffer, C_MUL )
+
+    test = sum( buffer )
+
+    total = C_MUL * real( dim1, dp )
+
+    @assertFalse( real(total).lt.real(test) )
+    @assertFalse( real(total).gt.real(test) )
+    @assertFalse( aimag(total).lt.aimag(test) )
+    @assertFalse( aimag(total).gt.aimag(test) )
+
+  end subroutine test_set_C16_1d
+
+  
+  !=========================================================
+  ! Set Real 64 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_C16_2d
+    complex(dp) :: total, test
+    complex(dp), dimension(dim1,dim2) :: buffer
+
+    call zero( buffer, C_MUL )
+
+    test = sum( buffer )
+
+    total = C_MUL * real( dim1 * dim2, dp )
+
+    @assertFalse( real(total).lt.real(test) )
+    @assertFalse( real(total).gt.real(test) )
+    @assertFalse( aimag(total).lt.aimag(test) )
+    @assertFalse( aimag(total).gt.aimag(test) )
+
+  end subroutine test_set_C16_2d
+
+  
+  !=========================================================
+  ! Set Real 64 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_C16_3d
+    complex(dp) :: total, test
+    complex(dp), dimension(dim1,dim2,dim3) :: buffer
+
+    call zero( buffer, C_MUL )
+
+    test = sum( buffer )
+
+    total = C_MUL * real( dim1 * dim2 * dim3, dp )
+
+    @assertFalse( real(total).lt.real(test) )
+    @assertFalse( real(total).gt.real(test) )
+    @assertFalse( aimag(total).lt.aimag(test) )
+    @assertFalse( aimag(total).gt.aimag(test) )
+
+  end subroutine test_set_C16_3d
+
+  
+  !=========================================================
+  ! Set Real 64 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_C16_4d
+    complex(dp) :: total, test
+    complex(dp), dimension(dim1,dim2,dim3,dim4) :: buffer
+
+    call zero( buffer, C_MUL )
+
+    test = sum( buffer )
+
+    total = C_MUL * real( dim1 * dim2 * dim3 * dim4, dp )
+
+    @assertFalse( real(total).lt.real(test) )
+    @assertFalse( real(total).gt.real(test) )
+    @assertFalse( aimag(total).lt.aimag(test) )
+    @assertFalse( aimag(total).gt.aimag(test) )
+
+  end subroutine test_set_C16_4d
+
+  
+end module testZero_C16
+

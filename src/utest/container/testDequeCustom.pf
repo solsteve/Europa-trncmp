@@ -1,0 +1,501 @@
+module testDequeCustom
+  use pfunit_mod
+  use object_deque_class
+  implicit none
+
+  integer, parameter :: SAMPLES = 100
+
+  type :: my_obj
+     integer :: id = -1
+  end type my_obj
+
+  interface push
+     module procedure :: deque_node_push_myobj
+  end interface push
+
+  interface assert
+     module procedure :: deque_node_assert_myobj
+  end interface assert
+
+  interface pop
+     module procedure :: deque_node_pop_myobj
+  end interface pop
+
+  interface retract
+     module procedure :: deque_node_retract_myobj
+  end interface retract
+
+
+  interface peekHead
+     module procedure :: deque_node_peek_head_myobj
+  end interface peekHead
+
+  interface peekTail
+     module procedure :: deque_node_peek_tail_myobj
+  end interface peekTail
+
+
+  interface obj2int
+     module procedure :: convert_object_to_integer
+  end interface obj2int
+
+  interface int2obj
+     module procedure :: convert_integer_to_object
+  end interface int2obj
+
+
+contains
+
+!/ =====================================================================================
+  function convert_object_to_integer( obj ) result( n )
+    !/ -----------------------------------------------------------------------------------
+    class(*), pointer, intent(in) :: obj
+    integer                       :: n
+    !/ -----------------------------------------------------------------------------------
+
+    n = -1
+    select type ( obj )
+    type is (my_obj)
+       n = obj%id
+    end select
+    
+  end function convert_object_to_integer
+
+  !/ =====================================================================================
+  function convert_integer_to_object( n ) result( obj )
+    !/ -----------------------------------------------------------------------------------
+    integer, intent(in) :: n
+    class(*), pointer   :: obj
+    !/ -----------------------------------------------------------------------------------
+    class(my_obj), pointer :: mobj
+    !/ -----------------------------------------------------------------------------------
+
+    allocate( mobj )
+    mobj%id = n
+    obj => mobj
+ 
+  end function convert_integer_to_object
+
+
+  !/ =====================================================================================
+  subroutine deque_node_assert_myobj( queue, obj )
+    !/ -----------------------------------------------------------------------------------
+    !! Assert a generic object onto the head of the deque.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(deque),             intent(inout) :: queue  !! reference to this deque class.
+    class(my_obj), pointer, intent(inout) :: obj
+    !/ -----------------------------------------------------------------------------------
+
+    call queue%assert( obj )
+
+  end subroutine deque_node_assert_myobj
+
+
+  !/ =====================================================================================
+  subroutine deque_node_push_myobj( queue, obj )
+    !/ -----------------------------------------------------------------------------------
+    !! Push a generic object onto the head of the deque.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(deque),             intent(inout) :: queue  !! reference to this deque class.
+    class(my_obj), pointer, intent(inout) :: obj
+    !/ -----------------------------------------------------------------------------------
+
+    call queue%push( obj )
+
+  end subroutine deque_node_push_myobj
+
+
+  !/ =====================================================================================
+  subroutine deque_node_retract_myobj( queue, mobj, stat, errmsg )
+    !/ -----------------------------------------------------------------------------------
+    !! Helper subroutine to retract a specific type off of the tail of the deque
+    !!
+    !! |  stat  | errmsg                     |
+    !! | :----: | -------------------------- |
+    !! |    0   | n/a                        |
+    !! |    1   | deque empty                |
+    !! |    2   | node data not allocated    |
+    !! |    3   | node data not logical type |
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(deque),            intent(inout) :: queue  !! reference to a deque class.
+    class(my_obj), pointer, intent(out)   :: mobj   !! returned object data.
+    integer,      optional, intent(out)   :: stat   !! optional error status.
+    character(*), optional, intent(out)   :: errmsg !! optional error message.
+    !/ -----------------------------------------------------------------------------------
+    class(*), pointer :: obj
+    integer           :: istat
+    !/ -----------------------------------------------------------------------------------
+
+    obj => queue%retract( istat, errmsg )
+
+    if ( associated( obj ) ) then
+       select type ( obj )
+       type is (my_obj)
+          mobj  => obj
+          istat =  0
+          class default
+          istat = 3
+       end select
+    end if
+
+    if ( present( stat ) ) stat = istat
+
+    if ( present( errmsg ) ) then
+       if ( istat.eq.3 ) then
+          errmsg = 'deque%retract: node object not my object'
+       end if
+    end if
+
+  end subroutine deque_node_retract_myobj
+
+
+  !/ =====================================================================================
+  subroutine deque_node_pop_myobj( queue, mobj, stat, errmsg )
+    !/ -----------------------------------------------------------------------------------
+    !! Helper subroutine to pop a specific type off of the head of the deque
+    !!
+    !! |  stat  | errmsg                     |
+    !! | :----: | -------------------------- |
+    !! |    0   | n/a                        |
+    !! |    1   | deque empty                |
+    !! |    2   | node data not allocated    |
+    !! |    3   | node data not logical type |
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(deque),            intent(inout) :: queue  !! reference to a deque class.
+    class(my_obj), pointer, intent(out)   :: mobj   !! returned object data.
+    integer,      optional, intent(out)   :: stat   !! optional error status.
+    character(*), optional, intent(out)   :: errmsg !! optional error message.
+    !/ -----------------------------------------------------------------------------------
+    class(*), pointer :: obj
+    integer           :: istat
+    !/ -----------------------------------------------------------------------------------
+
+    obj => queue%pop( istat, errmsg )
+
+    if ( associated( obj ) ) then
+       select type ( obj )
+       type is (my_obj)
+          mobj  => obj
+          istat =  0
+          class default
+          istat = 3
+       end select
+    end if
+
+    if ( present( stat ) ) stat = istat
+
+    if ( present( errmsg ) ) then
+       if ( istat.eq.3 ) then
+          errmsg = 'deque%pop: node object not my object'
+       end if
+    end if
+
+  end subroutine deque_node_pop_myobj
+
+
+  !/ =====================================================================================
+  subroutine deque_node_peek_head_myobj( queue, mobj )
+    !/ -----------------------------------------------------------------------------------
+    !! Helper subroutine to retract a specific type off of the tail of the deque
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(deque),            intent(in)  :: queue  !! reference to a deque class.
+    class(my_obj), pointer, intent(out) :: mobj   !! returned object data.
+    !/ -----------------------------------------------------------------------------------
+    class(*), pointer :: obj
+    !/ -----------------------------------------------------------------------------------
+
+    obj => queue%peekHead()
+
+    if ( associated( obj ) ) then
+       select type ( obj )
+       type is (my_obj)
+          mobj  => obj
+       end select
+    end if
+
+  end subroutine deque_node_peek_head_myobj
+
+
+  !/ =====================================================================================
+  subroutine deque_node_peek_tail_myobj( queue, mobj )
+    !/ -----------------------------------------------------------------------------------
+    !! Helper subroutine to retract a specific type off of the tail of the deque
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(deque),            intent(in)  :: queue  !! reference to a deque class.
+    class(my_obj), pointer, intent(out) :: mobj   !! returned object data.
+    !/ -----------------------------------------------------------------------------------
+    class(*), pointer :: obj
+    !/ -----------------------------------------------------------------------------------
+
+    obj => queue%peekTail()
+
+    if ( associated( obj ) ) then
+       select type ( obj )
+       type is (my_obj)
+          mobj  => obj
+       end select
+    end if
+
+  end subroutine deque_node_peek_tail_myobj
+
+
+    
+  !/ -----------------------------------------------
+  @test
+  subroutine testCustomDeque_PP
+    type(deque)            :: S
+    class(my_obj), pointer :: P
+    integer                :: i, j, k, stat
+
+    do i=1,SAMPLES
+       allocate( P )
+       P%id = i
+       call push( S, P )
+       nullify( P )
+    end do
+
+    @assertEqual( SAMPLES, S%size() )
+    @assertFalse( S%empty() )
+
+    k = 0
+    do i=SAMPLES,1,-1
+       call pop( S, P, stat )
+       j = P%id
+       if ( 0.ne.stat ) k = k + 1
+       if ( i.ne.j )    k = k + 1
+       deallocate( P )
+    end do
+
+    @assertEqual( 0, S%size() )
+    @assertEqual( 0, k )
+    @assertTrue( S%empty() )
+
+  end subroutine testCustomDeque_PP
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testCustomDeque_AR
+    type(deque)            :: S
+    class(my_obj), pointer :: P
+    integer                :: i, j, k, stat
+
+    do i=1,SAMPLES
+       allocate( P )
+       P%id = i
+       call assert( S, P )
+       nullify( P )
+    end do
+
+    @assertEqual( SAMPLES, S%size() )
+    @assertFalse( S%empty() )
+
+    k = 0
+    do i=SAMPLES,1,-1
+       call retract( S, P, stat )
+       j = P%id
+       if ( 0.ne.stat ) k = k + 1
+       if ( i.ne.j )    k = k + 1
+       deallocate( P )
+    end do
+
+    @assertEqual( 0, S%size() )
+    @assertEqual( 0, k )
+    @assertTrue( S%empty() )
+
+  end subroutine testCustomDeque_AR
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testCustomDeque_PR
+    type(deque)            :: S
+    class(my_obj), pointer :: P
+    integer                :: i, j, k, stat
+
+    do i=1,SAMPLES
+       allocate( P )
+       P%id = i
+       call push( S, P )
+       nullify( P )
+    end do
+
+    @assertEqual( SAMPLES, S%size() )
+    @assertFalse( S%empty() )
+
+    k = 0
+    do i=1,SAMPLES
+       call retract( S, P, stat )
+       j = P%id
+       if ( 0.ne.stat ) k = k + 1
+       if ( i.ne.j )    k = k + 1
+       deallocate( P )
+    end do
+
+    @assertEqual( 0, S%size() )
+    @assertEqual( 0, k )
+    @assertTrue( S%empty() )
+
+  end subroutine testCustomDeque_PR
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testCustomDeque_AP
+    type(deque)            :: S
+    class(my_obj), pointer :: P
+    integer                :: i, j, k, stat
+
+    do i=1,SAMPLES
+       allocate( P )
+       P%id = i
+       call assert( S, P )
+       nullify( P )
+    end do
+
+    @assertEqual( SAMPLES, S%size() )
+    @assertFalse( S%empty() )
+
+    k = 0
+    do i=1,SAMPLES
+       call pop( S, P, stat )
+       j = P%id
+       if ( 0.ne.stat ) k = k + 1
+       if ( i.ne.j )    k = k + 1
+       deallocate( P )
+    end do
+
+    @assertEqual( 0, S%size() )
+    @assertEqual( 0, k )
+    @assertTrue( S%empty() )
+
+  end subroutine testCustomDeque_AP
+  
+  !/ -----------------------------------------------
+  @test
+  subroutine testCustomDeque_clear
+    type(deque)            :: S
+    class(my_obj), pointer :: P
+    integer                :: i
+
+    do i=1,SAMPLES
+       allocate( P )
+       P%id = i
+       call push( S, P )
+       nullify( P )
+    end do
+
+    @assertEqual( SAMPLES, S%size() )
+    @assertFalse( S%empty() )
+
+    call S%clear(del=.true.)
+
+    @assertEqual( 0, S%size() )
+    @assertTrue( S%empty() )
+
+  end subroutine testCustomDeque_clear
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testCustomDeque_peek
+    type(deque)            :: S
+    class(my_obj), pointer :: P, Q
+    integer                :: i
+
+    do i=1,SAMPLES
+       allocate( P )
+       P%id = i
+       call push( S, P )
+       nullify( P )
+    end do
+
+    @assertEqual( SAMPLES, S%size() )
+    @assertFalse( S%empty() )
+
+    call peekHead( S, P )
+    call peekTail( S, Q )
+
+    @assertEqual( 1,       Q%id )
+    @assertEqual( SAMPLES, P%id )
+
+    call S%clear(del=.true.)
+
+    @assertEqual( 0, S%size() )
+    @assertTrue( S%empty() )
+
+  end subroutine testCustomDeque_peek
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testCustomDeque_iterate_next
+
+    type(deque) :: S
+    integer     :: i, j, k
+    class(*), pointer :: obj
+
+    do i=1,SAMPLES
+       obj => int2obj(i)
+       call S%push( obj )
+    end do
+
+    call S%head
+
+    k = 0
+    i = SAMPLES
+    it_loop: do
+        if ( S%hasNext() ) then
+          j = obj2int( S%next() )
+          if ( i.ne.j ) k = k + 1
+       else
+          exit it_loop
+       end if
+      i = i - 1
+    end do it_loop
+    
+    @assertEqual( 0, k )
+
+
+
+  end subroutine testCustomDeque_iterate_next
+
+  
+  !/ -----------------------------------------------
+  @test
+  subroutine testCustomDeque_iterate_prev
+
+    type(deque) :: S
+    integer     :: i, j, k
+    class(*), pointer :: obj
+
+    do i=1,SAMPLES
+       obj => int2obj(i)
+       call S%push( obj )
+    end do
+
+    call S%tail
+
+    k = 0
+    i = 1
+    it_loop: do
+        if ( S%hasPrev() ) then
+          j = obj2int( S%prev() )
+          if ( i.ne.j ) k = k + 1
+       else
+          exit it_loop
+       end if
+      i = i + 1
+    end do it_loop
+    
+    @assertEqual( 0, k )
+
+
+
+  end subroutine testCustomDeque_iterate_prev
+
+
+end module testDequeCustom

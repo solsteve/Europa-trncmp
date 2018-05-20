@@ -1,0 +1,221 @@
+module testSum_I4
+  use pfunit_mod
+  use trncmp_env
+  implicit none
+
+  integer, parameter :: dim1 = 11
+  integer, parameter :: dim2 = 7
+  integer, parameter :: dim3 = 5
+  integer, parameter :: dim4 = 3
+
+
+contains
+
+  
+  !=========================================================
+  !Sum  Integer 32 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sum_I4_1d
+    integer :: i, idx, total
+    integer, dimension(dim1) :: buffer
+
+    idx   = 0
+    total = 0
+    do i=1,dim1
+       idx = idx + 1
+       buffer(i) = idx
+       total = total + ( idx*idx )
+    end do
+
+    @assertEqual(sumsq(buffer), total )
+
+  end subroutine test_sum_I4_1d
+
+
+  !=========================================================
+  ! Sum Integer 32 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sum_I4_2d
+    integer :: i, j, idx, total
+    integer, dimension(dim1,dim2) :: buffer
+
+    idx   = 0
+    total = 0
+    do i=1,dim1
+       do j=1,dim2
+          idx = idx + 1
+          buffer(i,j) = idx
+          total = total + ( idx*idx )
+       end do
+    end do
+
+    @assertEqual(sumsq(buffer), total )
+
+  end subroutine test_sum_I4_2d
+
+
+  !=========================================================
+  ! Sum Integer 32 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sum_I4_3d
+    integer :: i, j, k, idx, total
+    integer, dimension(dim1,dim2,dim3) :: buffer
+
+    idx   = 0
+    total = 0
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             idx = idx + 1
+             buffer(i,j,k) = idx
+             total = total + ( idx*idx )
+          end do
+       end do
+    end do
+
+    @assertEqual(sumsq(buffer), total )
+
+  end subroutine test_sum_I4_3d
+
+
+  !=========================================================
+  ! Sum Integer 32 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sum_I4_4d
+    integer :: i, j, k, l, idx, total
+    integer, dimension(dim1,dim2,dim3,dim4) :: buffer
+
+    idx   = 0
+    total = 0
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                idx = idx + 1
+                buffer(i,j,k,l) = idx
+                total = total + ( idx*idx )
+             end do
+          end do
+       end do
+    end do
+
+    @assertEqual(sumsq(buffer), total )
+
+  end subroutine test_sum_I4_4d
+
+
+
+
+
+
+
+
+  !=========================================================
+  ! Diff Integer 32 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sumdif_I4_1d
+    integer :: i, idx, total
+    integer, dimension(dim1) :: A
+    integer, dimension(dim1) :: B
+
+    idx   = 0
+    total = 0
+    do i=1,dim1
+                idx = idx + 1
+                A(i) = idx
+                B(i) = idx + 2
+                total = total + 4
+    end do
+
+    @assertEqual( sumsq(A,B), total )
+
+  end subroutine test_sumdif_I4_1d
+
+
+  !=========================================================
+  ! Diff Integer 32 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sumdif_I4_2d
+    integer :: i, j, idx, total
+    integer, dimension(dim1,dim2) :: A
+    integer, dimension(dim1,dim2) :: B
+
+    idx   = 0
+    total = 0
+    do i=1,dim1
+       do j=1,dim2
+                idx = idx + 1
+                A(i,j) = idx
+                B(i,j) = idx + 2
+                total = total + 4
+       end do
+    end do
+
+    @assertEqual( sumsq(A,B), total )
+
+  end subroutine test_sumdif_I4_2d
+
+
+  !=========================================================
+  ! Diff Integer 32 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sumdif_I4_3d
+    integer :: i, j, k, idx, total
+    integer, dimension(dim1,dim2,dim3) :: A
+    integer, dimension(dim1,dim2,dim3) :: B
+
+    idx   = 0
+    total = 0
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+                idx = idx + 1
+                A(i,j,k) = idx
+                B(i,j,k) = idx + 2
+                total = total + 4
+          end do
+       end do
+    end do
+
+    @assertEqual( sumsq(A,B), total )
+
+  end subroutine test_sumdif_I4_3d
+
+
+  !=========================================================
+  ! Diff Integer 32 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sumdif_I4_4d
+    integer :: i, j, k, l, idx, total
+    integer, dimension(dim1,dim2,dim3,dim4) :: A
+    integer, dimension(dim1,dim2,dim3,dim4) :: B
+
+    idx   = 0
+    total = 0
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                idx = idx + 1
+                A(i,j,k,l) = idx
+                B(i,j,k,l) = idx + 2
+                total = total + 4
+             end do
+          end do
+       end do
+    end do
+
+    @assertEqual( sumsq(A,B), total )
+
+  end subroutine test_sumdif_I4_4d
+
+
+end module testSum_I4

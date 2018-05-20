@@ -1,0 +1,22 @@
+module testMathAux
+    use pfunit_mod
+    use trncmp_ENV
+    implicit none
+
+contains
+
+  @test
+  subroutine testNSum
+    @assertEqual(nsum(10),55)
+    @assertEqual(nsum(31),496)
+    @assertEqual(nsum(127),8128)
+  end subroutine testNSum
+
+  @test
+  subroutine testN2Sum
+    @assertEqual(n2sum(10),385)
+    @assertEqual(n2sum(31),10416)
+    @assertEqual(n2sum(127),690880)
+  end subroutine testN2Sum
+
+end module testMathAux

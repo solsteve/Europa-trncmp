@@ -1,0 +1,148 @@
+module testCopy_R4
+  use pfunit_mod
+  use trncmp_env
+  implicit none
+
+
+  integer, parameter :: dim1 = 6
+  integer, parameter :: dim2 = 5
+  integer, parameter :: dim3 = 4
+  integer, parameter :: dim4 = 3
+
+
+contains
+
+
+  !=========================================================
+  ! Copy Real 32 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_copy_R4_1d
+    integer :: i
+    real(sp)                  :: idx
+    real(sp), dimension(dim1) :: ibuff
+    real(sp), dimension(dim1) :: obuff
+
+    idx = 0
+
+    do i=1,dim1
+       idx = idx + 1.1_sp
+       ibuff(i) = idx
+    end do
+
+    call copy( obuff, ibuff )
+
+    do i=1,dim1
+       @assertFalse( obuff(i).lt.ibuff(i) )
+       @assertFalse( obuff(i).gt.ibuff(i) )
+    end do
+
+  end subroutine test_copy_R4_1d
+
+
+  !=========================================================
+  ! Copy Real 32 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_copy_R4_2d
+    integer :: i, j
+    real(sp)                       :: idx
+    real(sp), dimension(dim1,dim2) :: ibuff
+    real(sp), dimension(dim1,dim2) :: obuff
+
+    idx = 0
+
+    do i=1,dim1
+       do j=1,dim2
+          idx = idx + 1.1_sp
+          ibuff(i,j) = idx
+       end do
+    end do
+
+    call copy( obuff, ibuff )
+
+    do i=1,dim1
+       do j=1,dim2
+          @assertFalse( obuff(i,j).lt.ibuff(i,j) )
+          @assertFalse( obuff(i,j).gt.ibuff(i,j) )
+       end do
+    end do
+
+  end subroutine test_copy_R4_2d
+
+
+  !=========================================================
+  ! Copy Real 32 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_copy_R4_3d
+    integer :: i, j, k
+    real(sp)                            :: idx
+    real(sp), dimension(dim1,dim2,dim3) :: ibuff
+    real(sp), dimension(dim1,dim2,dim3) :: obuff
+
+    idx = 0
+
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             idx = idx + 1.1_sp
+             ibuff(i,j,k) = idx
+          end do
+       end do
+    end do
+
+    call copy( obuff, ibuff )
+
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             @assertFalse( obuff(i,j,k).lt.ibuff(i,j,k) )
+             @assertFalse( obuff(i,j,k).gt.ibuff(i,j,k) )
+          end do
+       end do
+    end do
+
+  end subroutine test_copy_R4_3d
+
+
+  !=========================================================
+  ! Copy Real 32 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_copy_R4_4d
+    integer :: i, j, k, l
+    real(sp)                                 :: idx
+    real(sp), dimension(dim1,dim2,dim3,dim4) :: ibuff
+    real(sp), dimension(dim1,dim2,dim3,dim4) :: obuff
+
+    idx = 0
+
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                idx = idx + 1.1_sp
+                ibuff(i,j,k,l) = idx
+             end do
+          end do
+       end do
+    end do
+
+    call copy( obuff, ibuff )
+
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                @assertFalse( obuff(i,j,k,l).lt.ibuff(i,j,k,l) )
+                @assertFalse( obuff(i,j,k,l).gt.ibuff(i,j,k,l) )
+             end do
+          end do
+       end do
+    end do
+
+  end subroutine test_copy_R4_4d
+
+
+end module testCopy_R4

@@ -1,0 +1,156 @@
+module testCopy_C16
+  use pfunit_mod
+  use trncmp_env
+  implicit none
+
+
+  integer, parameter :: dim1 = 11
+  integer, parameter :: dim2 = 7
+  integer, parameter :: dim3 = 5
+  integer, parameter :: dim4 = 3
+
+
+contains
+
+
+  !=========================================================
+  ! Copy Complex 128 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_copy_C16_1d
+    integer :: i
+    complex(dp)                  :: idx
+    complex(dp), dimension(dim1) :: ibuff
+    complex(dp), dimension(dim1) :: obuff
+
+    idx = 0
+
+    do i=1,dim1
+             idx = idx + (1.1_dp, 1.3_dp)
+             ibuff(i) = idx
+    end do
+
+    call copy( obuff, ibuff )
+
+    do i=1,dim1
+             @assertFalse( real(obuff(i)).lt.real(ibuff(i)) )
+             @assertFalse( real(obuff(i)).gt.real(ibuff(i)) )
+             @assertFalse( aimag(obuff(i)).lt.aimag(ibuff(i)) )
+             @assertFalse( aimag(obuff(i)).gt.aimag(ibuff(i)) )
+    end do
+
+  end subroutine test_copy_C16_1d
+
+
+  !=========================================================
+  ! Copy Complex 128 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_copy_C16_2d
+    integer :: i, j
+    complex(dp)                       :: idx
+    complex(dp), dimension(dim1,dim2) :: ibuff
+    complex(dp), dimension(dim1,dim2) :: obuff
+
+    idx = 0
+
+    do i=1,dim1
+       do j=1,dim2
+             idx = idx + (1.1_dp, 1.3_dp)
+             ibuff(i,j) = idx
+       end do
+    end do
+
+    call copy( obuff, ibuff )
+
+    do i=1,dim1
+       do j=1,dim2
+             @assertFalse( real(obuff(i,j)).lt.real(ibuff(i,j)) )
+             @assertFalse( real(obuff(i,j)).gt.real(ibuff(i,j)) )
+             @assertFalse( aimag(obuff(i,j)).lt.aimag(ibuff(i,j)) )
+             @assertFalse( aimag(obuff(i,j)).gt.aimag(ibuff(i,j)) )
+       end do
+    end do
+
+  end subroutine test_copy_C16_2d
+
+
+  !=========================================================
+  ! Copy Complex 128 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_copy_C16_3d
+    integer :: i, j, k
+    complex(dp)                            :: idx
+    complex(dp), dimension(dim1,dim2,dim3) :: ibuff
+    complex(dp), dimension(dim1,dim2,dim3) :: obuff
+
+    idx = 0
+
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             idx = idx + (1.1_dp, 1.3_dp)
+             ibuff(i,j,k) = idx
+          end do
+       end do
+    end do
+
+    call copy( obuff, ibuff )
+
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             @assertFalse( real(obuff(i,j,k)).lt.real(ibuff(i,j,k)) )
+             @assertFalse( real(obuff(i,j,k)).gt.real(ibuff(i,j,k)) )
+             @assertFalse( aimag(obuff(i,j,k)).lt.aimag(ibuff(i,j,k)) )
+             @assertFalse( aimag(obuff(i,j,k)).gt.aimag(ibuff(i,j,k)) )
+          end do
+       end do
+    end do
+
+  end subroutine test_copy_C16_3d
+
+
+  !=========================================================
+  ! Copy Complex 128 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_copy_C16_4d
+    integer :: i, j, k, l
+    complex(dp)                                 :: idx
+    complex(dp), dimension(dim1,dim2,dim3,dim4) :: ibuff
+    complex(dp), dimension(dim1,dim2,dim3,dim4) :: obuff
+
+    idx = 0
+
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                idx = idx + (1.1_dp, 1.3_dp)
+                ibuff(i,j,k,l) = idx
+             end do
+          end do
+       end do
+    end do
+
+    call copy( obuff, ibuff )
+
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                @assertFalse( real(obuff(i,j,k,l)).lt.real(ibuff(i,j,k,l)) )
+                @assertFalse( real(obuff(i,j,k,l)).gt.real(ibuff(i,j,k,l)) )
+                @assertFalse( aimag(obuff(i,j,k,l)).lt.aimag(ibuff(i,j,k,l)) )
+                @assertFalse( aimag(obuff(i,j,k,l)).gt.aimag(ibuff(i,j,k,l)) )
+             end do
+          end do
+       end do
+    end do
+
+  end subroutine test_copy_C16_4d
+
+
+end module testCopy_C16

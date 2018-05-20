@@ -1,0 +1,140 @@
+module testCopy_I4
+  use pfunit_mod
+  use trncmp_env
+  implicit none
+
+
+  integer, parameter :: dim1 = 11
+  integer, parameter :: dim2 = 7
+  integer, parameter :: dim3 = 5
+  integer, parameter :: dim4 = 3
+
+
+contains
+
+
+  !=========================================================
+  ! Copy Integer 32 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_copy_I4_1d
+    integer :: i, idx
+    integer, dimension(dim1) :: ibuff
+    integer, dimension(dim1) :: obuff
+
+    idx = 0
+
+    do i=1,dim1
+       idx = idx + 1
+       ibuff(i) = idx
+    end do
+
+    call copy( obuff, ibuff )
+
+    do i=1,dim1
+       @assertEqual( obuff(i), ibuff(i) )
+    end do
+
+  end subroutine test_copy_I4_1d
+
+
+  !=========================================================
+  ! Copy Integer 32 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_copy_I4_2d
+    integer :: i, j, idx
+    integer, dimension(dim1,dim2) :: ibuff
+    integer, dimension(dim1,dim2) :: obuff
+
+    idx = 0
+
+    do i=1,dim1
+       do j=1,dim2
+          idx = idx + 1
+          ibuff(i,j) = idx
+       end do
+    end do
+
+    call copy( obuff, ibuff )
+
+    do i=1,dim1
+       do j=1,dim2
+          @assertEqual( obuff(i,j), ibuff(i,j) )
+       end do
+    end do
+
+  end subroutine test_copy_I4_2d
+
+
+  !=========================================================
+  ! Copy Integer 32 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_copy_I4_3d
+    integer :: i, j, k, idx
+    integer, dimension(dim1,dim2,dim3) :: ibuff
+    integer, dimension(dim1,dim2,dim3) :: obuff
+
+    idx = 0
+
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             idx = idx + 1
+             ibuff(i,j,k) = idx
+          end do
+       end do
+    end do
+
+    call copy( obuff, ibuff )
+
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             @assertEqual( obuff(i,j,k), ibuff(i,j,k) )
+          end do
+       end do
+    end do
+
+  end subroutine test_copy_I4_3d
+
+
+  !=========================================================
+  ! Copy Integer 32 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_copy_I4_4d
+    integer :: i, j, k, l, idx
+    integer, dimension(dim1,dim2,dim3,dim4) :: ibuff
+    integer, dimension(dim1,dim2,dim3,dim4) :: obuff
+
+    idx = 0
+
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                idx = idx + 1
+                ibuff(i,j,k,l) = idx
+             end do
+          end do
+       end do
+    end do
+
+    call copy( obuff, ibuff )
+
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                @assertEqual( obuff(i,j,k,l), ibuff(i,j,k,l) )
+             end do
+          end do
+       end do
+    end do
+
+  end subroutine test_copy_I4_4d
+
+
+end module testCopy_I4

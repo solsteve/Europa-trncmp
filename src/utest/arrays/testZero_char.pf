@@ -1,0 +1,40 @@
+module testZero_char
+    use pfunit_mod
+    use trncmp_env
+    implicit none
+    
+    character(1), parameter :: value = 'x'
+    character(1), parameter :: space = ' '
+    
+contains
+
+  !=========================================================
+  ! Character
+  !---------------------------------------------------------
+  @test
+  subroutine zero_char_1d
+    integer :: i, count
+    character(len=8) :: buffer
+    call zero(buffer)
+    count = 0
+    do i=1,8
+       if ( space.ne.buffer(i:i) ) count = count + 1
+    end do
+    @assertEqual(count,0)
+  end subroutine zero_char_1d
+
+  
+  !---------------------------------------------------------
+  @test
+  subroutine set_char_1d
+    integer :: i, count
+    character(len=8) :: buffer
+    call zero(buffer, value)
+    count = 0
+    do i=1,8
+       if ( value.ne.buffer(i:i) ) count = count + 1
+    end do
+    @assertEqual(count,0)
+  end subroutine set_char_1d
+
+end module testZero_char

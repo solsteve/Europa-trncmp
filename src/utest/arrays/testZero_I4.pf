@@ -1,0 +1,142 @@
+module testZero_I4
+  use pfunit_mod
+  use trncmp_env
+  implicit none
+
+
+  integer, parameter :: dim1 = 11
+  integer, parameter :: dim2 = 7
+  integer, parameter :: dim3 = 5
+  integer, parameter :: dim4 = 3
+
+
+contains
+
+
+  !=========================================================
+  ! Zero Integer 32 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_I4_1d
+    integer, dimension(dim1) :: buffer
+    call zero(buffer)
+    @assertEqual(sum(buffer),0)
+  end subroutine test_zero_I4_1d
+  
+
+  !=========================================================
+  ! Zero Integer 32 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_I4_2d
+    integer, dimension(dim1,dim2) :: buffer
+    call zero(buffer)
+    @assertEqual(sum(buffer),0)
+  end subroutine test_zero_I4_2d
+  
+
+  !=========================================================
+  ! Zero Integer 32 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_I4_3d
+    integer, dimension(dim1,dim2,dim3) :: buffer
+    call zero(buffer)
+    @assertEqual(sum(buffer),0)
+  end subroutine test_zero_I4_3d
+  
+
+  !=========================================================
+  ! Zero Integer 32 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_I4_4d
+    integer, dimension(dim1,dim2,dim3,dim4) :: buffer
+    call zero(buffer)
+    @assertEqual(sum(buffer),0)
+  end subroutine test_zero_I4_4d
+  
+
+
+
+
+
+
+  !=========================================================
+  ! Set Integer 32 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_I4_1d
+    integer :: total, test
+    integer, dimension(dim1) :: buffer
+
+    call zero( buffer, 3 )
+
+    test = sum( buffer )
+
+    total = 3 * dim1
+
+    @assertEqual( test, total )
+
+  end subroutine test_set_I4_1d
+
+  
+  !=========================================================
+  ! Set Integer 32 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_I4_2d
+    integer :: total, test
+    integer, dimension(dim1,dim2) :: buffer
+
+    call zero( buffer, 3 )
+
+    test = sum( buffer )
+
+    total = 3 * dim1 * dim2
+
+    @assertEqual( test, total )
+
+  end subroutine test_set_I4_2d
+
+  
+  !=========================================================
+  ! Set Integer 32 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_I4_3d
+    integer :: total, test
+    integer, dimension(dim1,dim2,dim3) :: buffer
+
+    call zero( buffer, 3 )
+
+    test = sum( buffer )
+
+    total = 3 * dim1 * dim2 * dim3
+
+    @assertEqual( test, total )
+
+  end subroutine test_set_I4_3d
+
+  
+  !=========================================================
+  ! Set Integer 32 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_I4_4d
+    integer :: total, test
+    integer, dimension(dim1,dim2,dim3,dim4) :: buffer
+
+    call zero( buffer, 3 )
+
+    test = sum( buffer )
+
+    total = 3 * dim1 * dim2 * dim3 * dim4
+
+    @assertEqual( test, total )
+
+  end subroutine test_set_I4_4d
+
+  
+end module testZero_I4
+

@@ -1,0 +1,364 @@
+module testSum_R8
+  use pfunit_mod
+  use trncmp_env
+  implicit none
+
+  integer, parameter :: dim1 = 13
+  integer, parameter :: dim2 = 11
+  integer, parameter :: dim3 = 5
+  integer, parameter :: dim4 = 3
+
+
+contains
+
+  
+  !=========================================================
+  ! Real 64 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_R8_1d
+    integer  :: i
+    real(dp) :: idx, total
+    real(dp), dimension(dim1) :: buffer
+
+    idx   = 0.0_dp
+    total = 0.0_dp
+    do i=1,dim1
+       idx = idx + 1.0_dp
+       buffer(i) = idx
+       total = total + ( idx*idx )
+    end do
+
+    @assertFalse(sumsq(buffer).lt.total )
+    @assertFalse(sumsq(buffer).gt.total )
+
+  end subroutine test_R8_1d
+
+
+  !=========================================================
+  ! Real 64 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_R8_2d
+    integer  :: i, j
+    real(dp) :: idx, total
+    real(dp), dimension(dim1,dim2) :: buffer
+
+    idx   = 0.0_dp
+    total = 0.0_dp
+    do i=1,dim1
+       do j=1,dim2
+          idx = idx + 1.0_dp
+          buffer(i,j) = idx
+          total = total + ( idx*idx )
+       end do
+    end do
+
+    @assertFalse(sumsq(buffer).lt.total )
+    @assertFalse(sumsq(buffer).gt.total )
+
+  end subroutine test_R8_2d
+
+
+  !=========================================================
+  ! Real 64 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_R8_3d
+    integer  :: i, j, k
+    real(dp) :: idx, total
+    real(dp), dimension(dim1,dim2,dim3) :: buffer
+
+    idx   = 0.0_dp
+    total = 0.0_dp
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             idx = idx + 1.0_dp
+             buffer(i,j,k) = idx
+             total = total + ( idx*idx )
+          end do
+       end do
+    end do
+
+    @assertFalse(sumsq(buffer).lt.total )
+    @assertFalse(sumsq(buffer).gt.total )
+
+  end subroutine test_R8_3d
+
+
+  !=========================================================
+  ! Real 64 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_R8_4d
+    integer  :: i, j, k, l
+    real(dp) :: idx, total
+    real(dp), dimension(dim1,dim2,dim3,dim4) :: buffer
+
+    idx   = 0.0_dp
+    total = 0.0_dp
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                idx = idx + 1.0_dp
+                buffer(i,j,k,l) = idx
+                total = total + ( idx*idx )
+             end do
+          end do
+       end do
+    end do
+
+    @assertFalse(sumsq(buffer).lt.total )
+    @assertFalse(sumsq(buffer).gt.total )
+
+  end subroutine test_R8_4d
+
+
+
+
+
+
+
+
+
+  !=========================================================
+  ! Diff Real 64 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sumdif_R8_1d
+    integer :: i
+    real(dp)                  :: idx, total
+    real(dp), dimension(dim1) :: A
+    real(dp), dimension(dim1) :: B
+
+    idx   = 0.0_dp
+    total = 0.0_dp
+    do i=1,dim1
+       idx = idx + 1.0d0
+       A(i) = idx
+       B(i) = idx + 3.0d0
+       total = total + 9.0d0
+    end do
+
+    @assertFalse( sumsq(A,B).lt.total )
+    @assertFalse( sumsq(A,B).gt.total )
+
+  end subroutine test_sumdif_R8_1d
+
+
+  !=========================================================
+  ! Diff Real 64 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sumdif_R8_2d
+    integer :: i, j
+    real(dp)                       :: idx, total
+    real(dp), dimension(dim1,dim2) :: A
+    real(dp), dimension(dim1,dim2) :: B
+
+    idx   = 0.0_dp
+    total = 0.0_dp
+    do i=1,dim1
+       do j=1,dim2
+          idx = idx + 1.0d0
+          A(i,j) = idx
+          B(i,j) = idx + 3.0d0
+          total = total + 9.0d0
+       end do
+    end do
+
+    @assertFalse( sumsq(A,B).lt.total )
+    @assertFalse( sumsq(A,B).gt.total )
+
+  end subroutine test_sumdif_R8_2d
+
+
+  !=========================================================
+  ! Diff Real 64 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sumdif_R8_3d
+    integer :: i, j, k
+    real(dp)                            :: idx, total
+    real(dp), dimension(dim1,dim2,dim3) :: A
+    real(dp), dimension(dim1,dim2,dim3) :: B
+
+    idx   = 0.0_dp
+    total = 0.0_dp
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             idx = idx + 1.0d0
+             A(i,j,k) = idx
+             B(i,j,k) = idx + 3.0d0
+             total = total + 9.0d0
+          end do
+       end do
+    end do
+
+    @assertFalse( sumsq(A,B).lt.total )
+    @assertFalse( sumsq(A,B).gt.total )
+
+  end subroutine test_sumdif_R8_3d
+
+
+  !=========================================================
+  ! Diff Real 64 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sumdif_R8_4d
+    integer :: i, j, k, l
+    real(dp)                                 :: idx, total
+    real(dp), dimension(dim1,dim2,dim3,dim4) :: A
+    real(dp), dimension(dim1,dim2,dim3,dim4) :: B
+
+    idx   = 0.0_dp
+    total = 0.0_dp
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                idx = idx + 1.0d0
+                A(i,j,k,l) = idx
+                B(i,j,k,l) = idx + 3.0d0
+                total = total + 9.0d0
+             end do
+          end do
+       end do
+    end do
+
+    @assertFalse( sumsq(A,B).lt.total )
+    @assertFalse( sumsq(A,B).gt.total )
+
+  end subroutine test_sumdif_R8_4d
+
+
+
+
+
+
+
+
+  !=========================================================
+  ! Weighted Real 64 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_wsum_R8_1d
+    integer  :: i
+    real(dp) :: idx, total, test
+    real(dp), dimension(dim1) :: A
+    real(dp), dimension(dim1) :: B
+
+    idx   = 0.0_dp
+    total = 0.0_dp
+    do i=1,dim1
+                idx = idx + 1.0_dp
+                A(i) = idx
+                B(i) = idx
+                total = total + ( idx*idx )
+    end do
+
+    test = wsum( A, B )
+
+    @assertFalse(test.lt.total )
+    @assertFalse(test.gt.total )
+
+  end subroutine test_wsum_R8_1d
+
+
+  !=========================================================
+  ! Weighted Real 64 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_wsum_R8_2d
+    integer  :: i, j
+    real(dp) :: idx, total, test
+    real(dp), dimension(dim1,dim2) :: A
+    real(dp), dimension(dim1,dim2) :: B
+
+    idx   = 0.0_dp
+    total = 0.0_dp
+    do i=1,dim1
+       do j=1,dim2
+                idx = idx + 1.0_dp
+                A(i,j) = idx
+                B(i,j) = idx
+                total = total + ( idx*idx )
+       end do
+    end do
+
+    test = wsum( A, B )
+
+    @assertFalse(test.lt.total )
+    @assertFalse(test.gt.total )
+
+  end subroutine test_wsum_R8_2d
+
+
+  !=========================================================
+  ! Weighted Real 64 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_wsum_R8_3d
+    integer  :: i, j, k
+    real(dp) :: idx, total, test
+    real(dp), dimension(dim1,dim2,dim3) :: A
+    real(dp), dimension(dim1,dim2,dim3) :: B
+
+    idx   = 0.0_dp
+    total = 0.0_dp
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+                idx = idx + 1.0_dp
+                A(i,j,k) = idx
+                B(i,j,k) = idx
+                total = total + ( idx*idx )
+          end do
+       end do
+    end do
+
+    test = wsum( A, B )
+
+    @assertFalse(test.lt.total )
+    @assertFalse(test.gt.total )
+
+  end subroutine test_wsum_R8_3d
+
+
+  !=========================================================
+  ! Weighted Real 64 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_wsum_R8_4d
+    integer  :: i, j, k, l
+    real(dp) :: idx, total, test
+    real(dp), dimension(dim1,dim2,dim3,dim4) :: A
+    real(dp), dimension(dim1,dim2,dim3,dim4) :: B
+
+    idx   = 0.0_dp
+    total = 0.0_dp
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                idx = idx + 1.0_dp
+                A(i,j,k,l) = idx
+                B(i,j,k,l) = idx
+                total = total + ( idx*idx )
+             end do
+          end do
+       end do
+    end do
+
+    test = wsum( A, B )
+
+    @assertFalse(test.lt.total )
+    @assertFalse(test.gt.total )
+
+  end subroutine test_wsum_R8_4d
+
+
+end module testSum_R8

@@ -1,0 +1,175 @@
+module testZero_R4
+  use pfunit_mod
+  use trncmp_env
+  implicit none
+
+
+  integer, parameter :: dim1 = 11
+  integer, parameter :: dim2 = 7
+  integer, parameter :: dim3 = 5
+  integer, parameter :: dim4 = 3
+
+
+contains
+
+
+  !=========================================================
+  ! Zero Real 32 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_R4_1d
+    real(sp) :: total
+    real(sp), dimension(dim1) :: buffer
+    
+    call zero( buffer )
+
+    total = sum( buffer )
+    
+    @assertFalse( total.lt.0.0_sp )
+    @assertFalse( total.gt.0.0_sp )
+
+  end subroutine test_zero_R4_1d
+
+
+  !=========================================================
+  ! Zero Real 32 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_R4_2d
+    real(sp) :: total
+    real(sp), dimension(dim1,dim2) :: buffer
+    
+    call zero( buffer )
+
+    total = sum( buffer )
+    
+    @assertFalse( total.lt.0.0_sp )
+    @assertFalse( total.gt.0.0_sp )
+
+  end subroutine test_zero_R4_2d
+
+
+  !=========================================================
+  ! Zero Real 32 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_R4_3d
+    real(sp) :: total
+    real(sp), dimension(dim1,dim2,dim3) :: buffer
+    
+    call zero( buffer )
+
+    total = sum( buffer )
+    
+    @assertFalse( total.lt.0.0_sp )
+    @assertFalse( total.gt.0.0_sp )
+
+  end subroutine test_zero_R4_3d
+
+
+  !=========================================================
+  ! Zero Real 32 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_zero_R4_4d
+    real(sp) :: total
+    real(sp), dimension(dim1,dim2,dim3,dim4) :: buffer
+    
+    call zero( buffer )
+
+    total = sum( buffer )
+    
+    @assertFalse( total.lt.0.0_sp )
+    @assertFalse( total.gt.0.0_sp )
+
+  end subroutine test_zero_R4_4d
+
+
+
+
+
+
+
+
+  !=========================================================
+  ! Set Real 32 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_R4_1d
+    real(sp) :: total, test
+    real(sp), dimension(dim1) :: buffer
+
+    call zero( buffer, 3.0_sp )
+
+    test = sum( buffer )
+
+    total = 3.0_sp * real( dim1, sp )
+
+    @assertFalse( total.lt.total )
+    @assertFalse( total.gt.total )
+
+  end subroutine test_set_R4_1d
+
+  
+  !=========================================================
+  ! Set Real 32 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_R4_2d
+    real(sp) :: total, test
+    real(sp), dimension(dim1,dim2) :: buffer
+
+    call zero( buffer, 3.0_sp )
+
+    test = sum( buffer )
+
+    total = 3.0_sp * real( dim1 * dim2, sp )
+
+    @assertFalse( total.lt.total )
+    @assertFalse( total.gt.total )
+
+  end subroutine test_set_R4_2d
+
+  
+  !=========================================================
+  ! Set Real 32 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_R4_3d
+    real(sp) :: total, test
+    real(sp), dimension(dim1,dim2,dim3) :: buffer
+
+    call zero( buffer, 3.0_sp )
+
+    test = sum( buffer )
+
+    total = 3.0_sp * real( dim1 * dim2 * dim3, sp )
+
+    @assertFalse( total.lt.total )
+    @assertFalse( total.gt.total )
+
+  end subroutine test_set_R4_3d
+
+  
+  !=========================================================
+  ! Set Real 32 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_set_R4_4d
+    real(sp) :: total, test
+    real(sp), dimension(dim1,dim2,dim3,dim4) :: buffer
+
+    call zero( buffer, 3.0_sp )
+
+    test = sum( buffer )
+
+    total = 3.0_sp * real( dim1 * dim2 * dim3 * dim4, sp )
+
+    @assertFalse( total.lt.total )
+    @assertFalse( total.gt.total )
+
+  end subroutine test_set_R4_4d
+
+  
+end module testZero_R4
+

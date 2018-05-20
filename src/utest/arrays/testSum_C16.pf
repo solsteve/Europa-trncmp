@@ -1,0 +1,422 @@
+module testSum_C16
+  use pfunit_mod
+  use trncmp_env
+  implicit none
+
+  integer, parameter :: dim1 = 5
+  integer, parameter :: dim2 = 4
+  integer, parameter :: dim3 = 3
+  integer, parameter :: dim4 = 2
+
+  complex(dp), parameter :: C_ZERO = ( 0.0_dp, 0.0_dp )
+  complex(dp), parameter :: C_ONE  = ( 1.0_dp, 1.0_dp )
+
+
+contains
+
+
+  !=========================================================
+  ! Complex 128 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_C16_1d
+    integer  :: i
+    complex(dp) :: idx, total, a
+    complex(dp), dimension(dim1) :: buffer
+
+    idx   = C_ZERO
+    total = C_ZERO
+    do i=1,dim1
+       idx = idx + C_ONE
+       buffer(i) = idx
+       total = total + ( idx*conjg(idx) )
+    end do
+
+    a = sumsq(buffer)
+
+    @assertFalse(real(a).lt.real(total))
+    @assertFalse(real(a).gt.real(total))
+    @assertFalse(aimag(a).lt.aimag(total))
+    @assertFalse(aimag(a).gt.aimag(total))
+
+  end subroutine test_C16_1d
+
+
+  !=========================================================
+  ! Complex 128 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_C16_2d
+    integer  :: i, j
+    complex(dp) :: idx, total, a
+    complex(dp), dimension(dim1,dim2) :: buffer
+
+    idx   = C_ZERO
+    total = C_ZERO
+    do i=1,dim1
+       do j=1,dim2
+          idx = idx + C_ONE
+          buffer(i,j) = idx
+          total = total + ( idx*conjg(idx) )
+       end do
+    end do
+
+    a = sumsq(buffer)
+
+    @assertFalse(real(a).lt.real(total))
+    @assertFalse(real(a).gt.real(total))
+    @assertFalse(aimag(a).lt.aimag(total))
+    @assertFalse(aimag(a).gt.aimag(total))
+
+  end subroutine test_C16_2d
+
+
+  !=========================================================
+  ! Complex 128 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_C16_3d
+    integer  :: i, j, k
+    complex(dp) :: idx, total, a
+    complex(dp), dimension(dim1,dim2,dim3) :: buffer
+
+    idx   = C_ZERO
+    total = C_ZERO
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             idx = idx + C_ONE
+             buffer(i,j,k) = idx
+             total = total + ( idx*conjg(idx) )
+          end do
+       end do
+    end do
+
+    a = sumsq(buffer)
+
+    @assertFalse(real(a).lt.real(total))
+    @assertFalse(real(a).gt.real(total))
+    @assertFalse(aimag(a).lt.aimag(total))
+    @assertFalse(aimag(a).gt.aimag(total))
+
+  end subroutine test_C16_3d
+
+
+  !=========================================================
+  ! Complex 128 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_C16_4d
+    integer  :: i, j, k, l
+    complex(dp) :: idx, total, a
+    complex(dp), dimension(dim1,dim2,dim3,dim4) :: buffer
+
+    idx   = C_ZERO
+    total = C_ZERO
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                idx = idx + C_ONE
+                buffer(i,j,k,l) = idx
+                total = total + ( idx*conjg(idx) )
+             end do
+          end do
+       end do
+    end do
+
+    a = sumsq(buffer)
+
+    @assertFalse(real(a).lt.real(total))
+    @assertFalse(real(a).gt.real(total))
+    @assertFalse(aimag(a).lt.aimag(total))
+    @assertFalse(aimag(a).gt.aimag(total))
+
+  end subroutine test_C16_4d
+
+
+
+
+
+
+
+
+  !=========================================================
+  ! Diff Complex 128 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sumdif_C16_1d
+    integer :: i
+    complex(dp)                  :: idx, test, total
+    complex(dp), dimension(dim1) :: A
+    complex(dp), dimension(dim1) :: B
+
+    complex(dp), parameter :: CONE = ( 1.0d0, 1.0d0 )
+    complex(dp), parameter :: CEXT = ( 3.0d0, 2.0d0 )
+    complex(dp), parameter :: CSQR = CEXT * CEXT
+
+    idx   = ( 0.0d0, 0.0d0 )
+    total = ( 0.0d0, 0.0d0 )
+    do i=1,dim1
+       idx   = idx + CONE
+       A(i)  = idx
+       B(i)  = idx + CEXT
+       total = total + CSQR
+    end do
+
+    test = sumsq(A,B)
+
+    @assertFalse( real(test).lt.real(total) )
+    @assertFalse( real(test).gt.real(total) )
+    @assertFalse( aimag(test).lt.aimag(total) )
+    @assertFalse( aimag(test).gt.aimag(total) )
+
+  end subroutine test_sumdif_C16_1d
+
+
+  !=========================================================
+  ! Diff Complex 128 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sumdif_C16_2d
+    integer :: i, j
+    complex(dp)                       :: idx, test, total
+    complex(dp), dimension(dim1,dim2) :: A
+    complex(dp), dimension(dim1,dim2) :: B
+
+    complex(dp), parameter :: CONE = ( 1.0d0, 1.0d0 )
+    complex(dp), parameter :: CEXT = ( 3.0d0, 2.0d0 )
+    complex(dp), parameter :: CSQR = CEXT * CEXT
+
+    idx   = ( 0.0d0, 0.0d0 )
+    total = ( 0.0d0, 0.0d0 )
+    do i=1,dim1
+       do j=1,dim2
+          idx    = idx + CONE
+          A(i,j) = idx
+          B(i,j) = idx + CEXT
+          total  = total + CSQR
+       end do
+    end do
+
+    test = sumsq(A,B)
+
+    @assertFalse( real(test).lt.real(total) )
+    @assertFalse( real(test).gt.real(total) )
+    @assertFalse( aimag(test).lt.aimag(total) )
+    @assertFalse( aimag(test).gt.aimag(total) )
+
+  end subroutine test_sumdif_C16_2d
+
+
+  !=========================================================
+  ! Diff Complex 128 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sumdif_C16_3d
+    integer :: i, j, k
+    complex(dp)                            :: idx, test, total
+    complex(dp), dimension(dim1,dim2,dim3) :: A
+    complex(dp), dimension(dim1,dim2,dim3) :: B
+
+    complex(dp), parameter :: CONE = ( 1.0d0, 1.0d0 )
+    complex(dp), parameter :: CEXT = ( 3.0d0, 2.0d0 )
+    complex(dp), parameter :: CSQR = CEXT * CEXT
+
+    idx   = ( 0.0d0, 0.0d0 )
+    total = ( 0.0d0, 0.0d0 )
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             idx      = idx + CONE
+             A(i,j,k) = idx
+             B(i,j,k) = idx + CEXT
+             total    = total + CSQR
+          end do
+       end do
+    end do
+
+    test = sumsq(A,B)
+
+    @assertFalse( real(test).lt.real(total) )
+    @assertFalse( real(test).gt.real(total) )
+    @assertFalse( aimag(test).lt.aimag(total) )
+    @assertFalse( aimag(test).gt.aimag(total) )
+
+  end subroutine test_sumdif_C16_3d
+
+
+  !=========================================================
+  ! Diff Complex 128 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_sumdif_C16_4d
+    integer :: i, j, k, l
+    complex(dp)                                 :: idx, test, total
+    complex(dp), dimension(dim1,dim2,dim3,dim4) :: A
+    complex(dp), dimension(dim1,dim2,dim3,dim4) :: B
+
+    complex(dp), parameter :: CONE = ( 1.0d0, 1.0d0 )
+    complex(dp), parameter :: CEXT = ( 3.0d0, 2.0d0 )
+    complex(dp), parameter :: CSQR = CEXT * CEXT
+
+    idx   = ( 0.0d0, 0.0d0 )
+    total = ( 0.0d0, 0.0d0 )
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                idx        = idx + CONE
+                A(i,j,k,l) = idx
+                B(i,j,k,l) = idx + CEXT
+                total      = total + CSQR
+             end do
+          end do
+       end do
+    end do
+
+    test = sumsq(A,B)
+
+    @assertFalse( real(test).lt.real(total) )
+    @assertFalse( real(test).gt.real(total) )
+    @assertFalse( aimag(test).lt.aimag(total) )
+    @assertFalse( aimag(test).gt.aimag(total) )
+
+  end subroutine test_sumdif_C16_4d
+
+
+
+
+
+
+
+
+  !=========================================================
+  ! Weighted Complex 128 bit 1D
+  !---------------------------------------------------------
+  @test
+  subroutine test_wsum_C16_1d
+    integer  :: i
+    complex(dp) :: idx, total, test
+    complex(dp), dimension(dim1) :: A
+    complex(dp), dimension(dim1) :: B
+
+    idx   = ( 0.0_dp, 0.0_dp )
+    total = ( 0.0_dp, 0.0_dp )
+    do i=1,dim1
+       idx = idx + ( 1.0_dp, 1.0_dp )
+       A(i) = idx
+       B(i) = idx
+       total = total + ( idx*idx )
+    end do
+
+    test = wsum( A, B )
+
+    @assertFalse( real(test).lt.real(total) )
+    @assertFalse( real(test).gt.real(total) )
+    @assertFalse( aimag(test).lt.aimag(total) )
+    @assertFalse( aimag(test).gt.aimag(total) )
+
+  end subroutine test_wsum_C16_1d
+
+
+  !=========================================================
+  ! Weighted Complex 128 bit 2D
+  !---------------------------------------------------------
+  @test
+  subroutine test_wsum_C16_2d
+    integer  :: i, j
+    complex(dp) :: idx, total, test
+    complex(dp), dimension(dim1,dim2) :: A
+    complex(dp), dimension(dim1,dim2) :: B
+
+    idx   = ( 0.0_dp, 0.0_dp )
+    total = ( 0.0_dp, 0.0_dp )
+    do i=1,dim1
+       do j=1,dim2
+          idx = idx + ( 1.0_dp, 1.0_dp )
+          A(i,j) = idx
+          B(i,j) = idx
+          total = total + ( idx*idx )
+       end do
+    end do
+
+    test = wsum( A, B )
+
+    @assertFalse( real(test).lt.real(total) )
+    @assertFalse( real(test).gt.real(total) )
+    @assertFalse( aimag(test).lt.aimag(total) )
+    @assertFalse( aimag(test).gt.aimag(total) )
+
+  end subroutine test_wsum_C16_2d
+
+
+  !=========================================================
+  ! Weighted Complex 128 bit 3D
+  !---------------------------------------------------------
+  @test
+  subroutine test_wsum_C16_3d
+    integer  :: i, j, k
+    complex(dp) :: idx, total, test
+    complex(dp), dimension(dim1,dim2,dim3) :: A
+    complex(dp), dimension(dim1,dim2,dim3) :: B
+
+    idx   = ( 0.0_dp, 0.0_dp )
+    total = ( 0.0_dp, 0.0_dp )
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             idx = idx + ( 1.0_dp, 1.0_dp )
+             A(i,j,k) = idx
+             B(i,j,k) = idx
+             total = total + ( idx*idx )
+          end do
+       end do
+    end do
+
+    test = wsum( A, B )
+
+    @assertFalse( real(test).lt.real(total) )
+    @assertFalse( real(test).gt.real(total) )
+    @assertFalse( aimag(test).lt.aimag(total) )
+    @assertFalse( aimag(test).gt.aimag(total) )
+
+  end subroutine test_wsum_C16_3d
+
+
+  !=========================================================
+  ! Weighted Complex 128 bit 4D
+  !---------------------------------------------------------
+  @test
+  subroutine test_wsum_C16_4d
+    integer  :: i, j, k, l
+    complex(dp) :: idx, total, test
+    complex(dp), dimension(dim1,dim2,dim3,dim4) :: A
+    complex(dp), dimension(dim1,dim2,dim3,dim4) :: B
+
+    idx   = ( 0.0_dp, 0.0_dp )
+    total = ( 0.0_dp, 0.0_dp )
+    do i=1,dim1
+       do j=1,dim2
+          do k=1,dim3
+             do l=1,dim4
+                idx = idx + ( 1.0_dp, 1.0_dp )
+                A(i,j,k,l) = idx
+                B(i,j,k,l) = idx
+                total = total + ( idx*idx )
+             end do
+          end do
+       end do
+    end do
+
+    test = wsum( A, B )
+
+    @assertFalse( real(test).lt.real(total) )
+    @assertFalse( real(test).gt.real(total) )
+    @assertFalse( aimag(test).lt.aimag(total) )
+    @assertFalse( aimag(test).gt.aimag(total) )
+
+  end subroutine test_wsum_C16_4d
+
+
+end module testSum_C16
