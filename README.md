@@ -1,5 +1,5 @@
 Europa
 ======
 
-Core FORTRAN libraries.
+Core FORTRAN 2008 libraries.
 
