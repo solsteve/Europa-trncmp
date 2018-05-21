@@ -91,9 +91,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     !! Convert an unlimited polymorphic object into an double precision.
     !!
-    !! |  stat  | errmsg                   |
-    !! | :----: | ------------------------ |
-    !! |    0   | n/a                      |
+    !! |  stat  | errmsg                            |
+    !! | :----: | --------------------------------- |
+    !! |    0   | n/a                               |
     !! |    3   | node data not an double precision |
     !/ -----------------------------------------------------------------------------------
     implicit none
@@ -101,7 +101,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !!                                               polymorphic object.
     integer,      optional, intent(out) :: stat   !! optional error status.
     character(*), optional, intent(out) :: errmsg !! optional error message.
-    real(dp)                             :: n      !! double precision return value
+    real(dp)                            :: n      !! double precision return value
     !/ -----------------------------------------------------------------------------------
 
     n = -1
@@ -122,11 +122,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   function double2object( n ) result( obj )
     !/ -----------------------------------------------------------------------------------
-    !! Convert an double precision into an unlimited polymorphic object. This is a deep copy.
+    !! Convert an double precision into an unlimited polymorphic object.
+    !! This is a deep copy.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp),  intent(in) :: n   !! the input double precision.
-    class(*), pointer    :: obj !! return the double precision as an unlimited polymorphic object.
+    real(dp), intent(in) :: n   !! the input double precision.
+    class(*), pointer    :: obj !! return the double precision as an unlimited
+    !!                             polymorphic object.
     !/ -----------------------------------------------------------------------------------
 
     allocate( obj, source=n )
@@ -163,7 +165,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -------------------------------------------------------------------------------------
     implicit none
     class(DoubleDeque), intent(in) :: self !! reference to this deque.
-    logical                         :: stat !! true if the deque is empty.
+    logical                        :: stat !! true if the deque is empty.
     !/ -------------------------------------------------------------------------------------
 
     stat = self%queue%empty()
@@ -178,7 +180,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -------------------------------------------------------------------------------------
     implicit none
     class(DoubleDeque), intent(in) :: self !! reference to this deque.
-    real(dp)                         :: n    !! number of items in deque.
+    real(dp)                       :: n    !! number of items in deque.
     !/ -------------------------------------------------------------------------------------
 
     n = self%queue%size()
@@ -193,7 +195,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -------------------------------------------------------------------------------------
     implicit none
     class(DoubleDeque), intent(inout) :: self !! reference to this deque.
-    logical,             optional      :: del  !! should the deque deallocate the contents?
+    logical,            optional      :: del  !! should the deque deallocate the contents?
     !/ -------------------------------------------------------------------------------------
 
     call self%queue%clear( del )
@@ -214,7 +216,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(DoubleDeque), intent(inout) :: self !! reference to this deque class.
-    real(dp),             intent(in)    :: n    !! data.
+    real(dp),           intent(in)    :: n    !! data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
@@ -232,7 +234,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(DoubleDeque), intent(inout) :: self !! reference to this deque class.
-    real(dp),             intent(in)    :: n    !! data.
+    real(dp),           intent(in)    :: n    !! data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
@@ -252,18 +254,18 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     !! Pop an double precision from the head of the deque.
     !!
-    !! |  stat  | errmsg                   |
-    !! | :----: | ------------------------ |
-    !! |    0   | n/a                      |
-    !! |    1   | deque empty              |
-    !! |    2   | node data not allocated  |
+    !! |  stat  | errmsg                            |
+    !! | :----: | --------------------------------- |
+    !! |    0   | n/a                               |
+    !! |    1   | deque empty                       |
+    !! |    2   | node data not allocated           |
     !! |    3   | node data not an double precision |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),    intent(inout) :: self   !! reference to this deque class.
+    class(DoubleDeque),     intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
-    real(dp)                               :: val    !! returned data.
+    real(dp)                              :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
@@ -279,18 +281,18 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     !! Pop an double precision from the tail of the deque.
     !!
-    !! |  stat  | errmsg                   |
-    !! | :----: | ------------------------ |
-    !! |    0   | n/a                      |
-    !! |    1   | deque empty              |
-    !! |    2   | node data not allocated  |
+    !! |  stat  | errmsg                            |
+    !! | :----: | --------------------------------- |
+    !! |    0   | n/a                               |
+    !! |    1   | deque empty                       |
+    !! |    2   | node data not allocated           |
     !! |    3   | node data not an double precision |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),    intent(inout) :: self   !! reference to this deque class.
+    class(DoubleDeque),     intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
-    real(dp)                               :: val    !! returned data.
+    real(dp)                              :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
@@ -308,20 +310,21 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   function ddeque_peek_head( self, stat, errmsg ) result( val )
     !/ -----------------------------------------------------------------------------------
-    !! Peek at the head double precision without removing it. Return a -1 if the deque is empty.
+    !! Peek at the head double precision without removing it.
+    !! Return a -1 if the deque is empty.
     !!
-    !! |  stat  | errmsg                   |
-    !! | :----: | ------------------------ |
-    !! |    0   | n/a                      |
-    !! |    1   | deque empty              |
-    !! |    2   | node data not allocated  |
+    !! |  stat  | errmsg                            |
+    !! | :----: | --------------------------------- |
+    !! |    0   | n/a                               |
+    !! |    1   | deque empty                       |
+    !! |    2   | node data not allocated           |
     !! |    3   | node data not an double precision |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),    intent(in)  :: self   !! reference to this deque class.
+    class(DoubleDeque),     intent(in)  :: self   !! reference to this deque class.
     integer,      optional, intent(out) :: stat   !! optional error status.
     character(*), optional, intent(out) :: errmsg !! optional error message.
-    real(dp)                             :: val    !! returned data.
+    real(dp)                            :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
@@ -335,20 +338,21 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   function ddeque_peek_tail( self, stat, errmsg ) result( val )
     !/ -----------------------------------------------------------------------------------
-    !! Peek at the tail double precision without removing it. Return a -1 if the deque is empty.
+    !! Peek at the tail double precision without removing it.
+    !! Return a -1 if the deque is empty.
     !!
-    !! |  stat  | errmsg                   |
-    !! | :----: | ------------------------ |
-    !! |    0   | n/a                      |
-    !! |    1   | deque empty              |
-    !! |    2   | node data not allocated  |
+    !! |  stat  | errmsg                            |
+    !! | :----: | --------------------------------- |
+    !! |    0   | n/a                               |
+    !! |    1   | deque empty                       |
+    !! |    2   | node data not allocated           |
     !! |    3   | node data not an double precision |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),    intent(in)  :: self   !! reference to this deque class.
+    class(DoubleDeque),     intent(in)  :: self   !! reference to this deque class.
     integer,      optional, intent(out) :: stat   !! optional error status.
     character(*), optional, intent(out) :: errmsg !! optional error message.
-    real(dp)                             :: val    !! returned data.
+    real(dp)                            :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
@@ -398,7 +402,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -------------------------------------------------------------------------------------
     implicit none
     class(DoubleDeque), intent(inout) :: self !! reference to this deque.
-    logical                            :: stat !! true if a next double precision can be returned.
+    logical                           :: stat !! true if a next double can be returned.
     !/ -------------------------------------------------------------------------------------
 
     stat = self%queue%hasNext()
@@ -413,7 +417,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -------------------------------------------------------------------------------------
     implicit none
     class(DoubleDeque), intent(inout) :: self !! reference to this deque.
-    logical                            :: stat !! true if a previous double precision can be returned.
+    logical                           :: stat !! true if a previous double  can be returned.
     !/ -------------------------------------------------------------------------------------
 
     stat = self%queue%hasPrev()
@@ -427,18 +431,18 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Get Next. Advance the iterator to the next position in the deque and return the
     !! double precision at that position. This does not remove the entry from the deque.
     !!
-    !! |  stat  | errmsg                    |
-    !! | :----: | ------------------------- |
-    !! |    0   | n/a                       |
-    !! |    1   | iterator in unknown state |
-    !! |    2   | node data not allocated   |
+    !! |  stat  | errmsg                             |
+    !! | :----: | ---------------------------------- |
+    !! |    0   | n/a                                |
+    !! |    1   | iterator in unknown state          |
+    !! |    2   | node data not allocated            |
     !! |    3   | node data not an double precision  |
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),    intent(inout) :: self   !! reference to this deque class.
+    class(DoubleDeque),     intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
-    real(dp)                               :: val    !! returned data.
+    real(dp)                              :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
@@ -455,18 +459,18 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Get Previous. Retard the iterator to the previous position in the deque and return
     !! the double precision at that position. This does not remove the entry from the deque.
     !!
-    !! |  stat  | errmsg                    |
-    !! | :----: | ------------------------- |
-    !! |    0   | n/a                       |
-    !! |    1   | iterator in unknown state |
-    !! |    2   | node data not allocated   |
+    !! |  stat  | errmsg                             |
+    !! | :----: | ---------------------------------- |
+    !! |    0   | n/a                                |
+    !! |    1   | iterator in unknown state          |
+    !! |    2   | node data not allocated            |
     !! |    3   | node data not an double precision  |
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),    intent(inout) :: self   !! reference to this deque class.
+    class(DoubleDeque),     intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
-    real(dp)                               :: val    !! returned data.
+    real(dp)                              :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
