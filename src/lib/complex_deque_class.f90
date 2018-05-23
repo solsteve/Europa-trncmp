@@ -1,5 +1,5 @@
 !/ ====================================================================== BEGIN FILE =====
-!/ **                        D O U B L E _ D E Q U E _ C L A S S                        **
+!/ **                       C O M P L E X _ D E Q U E _ C L A S S                       **
 !/ =======================================================================================
 !/ **                                                                                   **
 !/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
@@ -21,13 +21,13 @@
 !/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 !/ **                                                                                   **
 !/ =======================================================================================
-module double_deque_class
+module complex_deque_class
   !/ -------------------------------------------------------------------------------------
   !! author:  Stephen W. Soliday
   !! date:    2018-05-06
   !! license: GPL
   !!
-  !! Provides a double linked list of double precision by wrapping the procedures
+  !! Provides a double linked list of complex by wrapping the procedures
   !! from the object_deque_class module.
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
@@ -37,9 +37,9 @@ module double_deque_class
 
   
   !/ =====================================================================================
-  type, public :: DoubleDeque
+  type, public :: ComplexDeque
      !/ ----------------------------------------------------------------------------------
-     !! Double Precision Deque Structure.
+     !! Complex Deque Structure.
      !/ ----------------------------------------------------------------------------------
  
      type(Deque) :: queue
@@ -48,33 +48,33 @@ module double_deque_class
    contains
 
 
-     procedure, public :: empty    => ddeque_is_empty
-     procedure, public :: size     => ddeque_size
-     procedure, public :: clear    => ddeque_clear
-     procedure, public :: retract  => ddeque_pop_tail
-     procedure, public :: assert   => ddeque_push_tail
-     procedure, public :: pop      => ddeque_pop_head
-     procedure, public :: push     => ddeque_push_head
-     procedure, public :: peekHead => ddeque_peek_head
-     procedure, public :: peekTail => ddeque_peek_tail
+     procedure, public :: empty    => zdeque_is_empty
+     procedure, public :: size     => zdeque_size
+     procedure, public :: clear    => zdeque_clear
+     procedure, public :: retract  => zdeque_pop_tail
+     procedure, public :: assert   => zdeque_push_tail
+     procedure, public :: pop      => zdeque_pop_head
+     procedure, public :: push     => zdeque_push_head
+     procedure, public :: peekHead => zdeque_peek_head
+     procedure, public :: peekTail => zdeque_peek_tail
 
-     procedure, public :: head     => ddeque_goto_head
-     procedure, public :: tail     => ddeque_goto_tail
-     procedure, public :: hasNext  => ddeque_has_next
-     procedure, public :: hasPrev  => ddeque_has_prev
-     procedure, public :: next     => ddeque_get_next
-     procedure, public :: prev     => ddeque_get_prev
+     procedure, public :: head     => zdeque_goto_head
+     procedure, public :: tail     => zdeque_goto_tail
+     procedure, public :: hasNext  => zdeque_has_next
+     procedure, public :: hasPrev  => zdeque_has_prev
+     procedure, public :: next     => zdeque_get_next
+     procedure, public :: prev     => zdeque_get_prev
 
      ! ----- alias for FIFO operations ----------------------
-     procedure, public :: add      => ddeque_push_tail
-     procedure, public :: remove   => ddeque_pop_head
+     procedure, public :: add      => zdeque_push_tail
+     procedure, public :: remove   => zdeque_pop_head
 
-     final :: ddeque_destroy
+     final :: zdeque_destroy
      
-  end type DoubleDeque
+  end type ComplexDeque
 
-public :: object2double
-public :: double2object
+public :: object2complex
+public :: complex2object
 
 
 
@@ -87,53 +87,53 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function object2double( obj, stat, errmsg ) result( n )
+  function object2complex( obj, stat, errmsg ) result( n )
     !/ -----------------------------------------------------------------------------------
-    !! Convert an unlimited polymorphic object into a double precision.
+    !! Convert an unlimited polymorphic object into an complex.
     !!
-    !! |  stat  | errmsg                           |
-    !! | :----: | -------------------------------- |
-    !! |    0   | n/a                              |
-    !! |    3   | node data not a double precision |
+    !! |  stat  | errmsg                   |
+    !! | :----: | ------------------------ |
+    !! |    0   | n/a                      |
+    !! |    3   | node data not an complex |
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(*),     pointer,  intent(in)  :: obj    !! reference to an unlimited
     !!                                               polymorphic object.
     integer,      optional, intent(out) :: stat   !! optional error status.
     character(*), optional, intent(out) :: errmsg !! optional error message.
-    real(dp)                            :: n      !! double precision return value
+    complex(dp)                         :: n      !! complex return value
     !/ -----------------------------------------------------------------------------------
 
     n = -1
 
     if ( associated( obj ) ) then
        select type ( obj )
-       type is ( real(dp) )
+       type is ( complex(dp) )
           n = obj
           class default
           if ( present( stat ) )   stat = 3
-          if ( present( errmsg ) ) errmsg = 'ddeque: data is not double precision'             
+          if ( present( errmsg ) ) errmsg = 'zdeque: data is not complex'             
        end select
     end if
 
-  end function object2double
+  end function object2complex
 
 
   !/ =====================================================================================
-  function double2object( n ) result( obj )
+  function complex2object( n ) result( obj )
     !/ -----------------------------------------------------------------------------------
-    !! Convert a double precision into an unlimited polymorphic object.
+    !! Convert an complex into an unlimited polymorphic object.
     !! This is a deep copy.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp), intent(in) :: n   !! the input double precision.
-    class(*), pointer    :: obj !! return the double precision as an unlimited
-    !!                             polymorphic object.
+    complex(dp), intent(in) :: n   !! the input complex.
+    class(*),    pointer    :: obj !! return the complex as an unlimited
+    !!                                polymorphic object.
     !/ -----------------------------------------------------------------------------------
 
     allocate( obj, source=n )
 
-  end function double2object
+  end function complex2object
 
 
 
@@ -141,17 +141,17 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine ddeque_destroy( iqueue )
+  subroutine zdeque_destroy( iqueue )
     !/ -----------------------------------------------------------------------------------
     !! Deque destructor.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(DoubleDeque) :: iqueue !! new deque structure.
+    type(ComplexDeque) :: iqueue !! new deque structure.
     !/ -----------------------------------------------------------------------------------
 
     call iqueue%queue%clear( .true. )
 
-  end subroutine ddeque_destroy
+  end subroutine zdeque_destroy
 
 
 
@@ -159,48 +159,48 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =======================================================================================
-  pure function ddeque_is_empty( self ) result( stat )
+  pure function zdeque_is_empty( self ) result( stat )
     !/ -------------------------------------------------------------------------------------
     !! Determine if the deque is empty.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(in) :: self !! reference to this deque.
-    logical                        :: stat !! true if the deque is empty.
+    class(ComplexDeque), intent(in) :: self !! reference to this deque.
+    logical                         :: stat !! true if the deque is empty.
     !/ -------------------------------------------------------------------------------------
 
     stat = self%queue%empty()
 
-  end function ddeque_is_empty
+  end function zdeque_is_empty
 
 
   !/ =======================================================================================
-  pure function ddeque_size( self ) result( n )
+  pure function zdeque_size( self ) result( n )
     !/ -------------------------------------------------------------------------------------
     !! Return the number of items currently stored in this deque.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(in) :: self !! reference to this deque.
-    integer                        :: n    !! number of items in deque.
+    class(ComplexDeque), intent(in) :: self !! reference to this deque.
+    integer                         :: n    !! number of items in deque.
     !/ -------------------------------------------------------------------------------------
 
     n = self%queue%size()
 
-  end function ddeque_size
+  end function zdeque_size
 
 
   !/ =======================================================================================
-  subroutine ddeque_clear( self, del )
+  subroutine zdeque_clear( self, del )
     !/ -------------------------------------------------------------------------------------
-    !! Clear the contents of the ddeque
+    !! Clear the contents of the zdeque
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque.
-    logical,            optional      :: del  !! should the deque deallocate the contents?
+    class(ComplexDeque), intent(inout) :: self !! reference to this deque.
+    logical,             optional      :: del  !! should the deque deallocate the contents?
     !/ -------------------------------------------------------------------------------------
 
     call self%queue%clear( del )
 
-  end subroutine ddeque_clear
+  end subroutine zdeque_clear
 
 
 
@@ -210,39 +210,39 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine ddeque_push_head( self, n )
+  subroutine zdeque_push_head( self, n )
     !/ -----------------------------------------------------------------------------------
-    !! Push a double precision onto the head of the deque.
+    !! Push an complex onto the head of the deque.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque class.
-    real(dp),           intent(in)    :: n    !! data.
+    class(ComplexDeque), intent(inout) :: self !! reference to this deque class.
+    complex(dp),         intent(in)    :: n    !! data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
-    obj => double2object( n )
+    obj => complex2object( n )
     call self%queue%push( obj )
 
-  end subroutine ddeque_push_head
+  end subroutine zdeque_push_head
 
 
   !/ =====================================================================================
-  subroutine ddeque_push_tail( self, n )
+  subroutine zdeque_push_tail( self, n )
     !/ -----------------------------------------------------------------------------------
-    !! Push a double precision onto the tail of the deque.
+    !! Push an complex onto the tail of the deque.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque class.
-    real(dp),           intent(in)    :: n    !! data.
+    class(ComplexDeque), intent(inout) :: self !! reference to this deque class.
+    complex(dp),         intent(in)    :: n    !! data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
-    obj => double2object( n )
+    obj => complex2object( n )
     call self%queue%assert( obj )
 
-  end subroutine ddeque_push_tail
+  end subroutine zdeque_push_tail
 
 
 
@@ -250,57 +250,57 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function ddeque_pop_head( self, stat, errmsg ) result( val )
+  function zdeque_pop_head( self, stat, errmsg ) result( val )
     !/ -----------------------------------------------------------------------------------
-    !! Pop a double precision from the head of the deque.
+    !! Pop an complex from the head of the deque.
     !!
-    !! |  stat  | errmsg                           |
-    !! | :----: | -------------------------------- |
-    !! |    0   | n/a                              |
-    !! |    1   | deque empty                      |
-    !! |    2   | node data not allocated          |
-    !! |    3   | node data not a double precision |
+    !! |  stat  | errmsg                   |
+    !! | :----: | ------------------------ |
+    !! |    0   | n/a                      |
+    !! |    1   | deque empty              |
+    !! |    2   | node data not allocated  |
+    !! |    3   | node data not an complex |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),     intent(inout) :: self   !! reference to this deque class.
+    class(ComplexDeque),    intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
-    real(dp)                              :: val    !! returned data.
+    complex(dp)                           :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
     obj => self%queue%pop( stat, errmsg )
-    val =  object2double( obj, stat, errmsg )
+    val =  object2complex( obj, stat, errmsg )
 
-  end function ddeque_pop_head
+  end function zdeque_pop_head
 
 
   !/ =====================================================================================
-  function ddeque_pop_tail( self, stat, errmsg ) result( val )
+  function zdeque_pop_tail( self, stat, errmsg ) result( val )
     !/ -----------------------------------------------------------------------------------
-    !! Pop a double precision from the tail of the deque.
+    !! Pop an complex from the tail of the deque.
     !!
-    !! |  stat  | errmsg                           |
-    !! | :----: | -------------------------------- |
-    !! |    0   | n/a                              |
-    !! |    1   | deque empty                      |
-    !! |    2   | node data not allocated          |
-    !! |    3   | node data not a double precision |
+    !! |  stat  | errmsg                   |
+    !! | :----: | ------------------------ |
+    !! |    0   | n/a                      |
+    !! |    1   | deque empty              |
+    !! |    2   | node data not allocated  |
+    !! |    3   | node data not an complex |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),     intent(inout) :: self   !! reference to this deque class.
+    class(ComplexDeque),    intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
-    real(dp)                              :: val    !! returned data.
+    complex(dp)                           :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
     obj => self%queue%retract( stat, errmsg )
-    val =  object2double( obj, stat, errmsg )
+    val =  object2complex( obj, stat, errmsg )
 
-  end function ddeque_pop_tail
+  end function zdeque_pop_tail
 
 
 
@@ -308,59 +308,59 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function ddeque_peek_head( self, stat, errmsg ) result( val )
+  function zdeque_peek_head( self, stat, errmsg ) result( val )
     !/ -----------------------------------------------------------------------------------
-    !! Peek at the head double precision without removing it.
+    !! Peek at the head complex without removing it.
     !! Return a -1 if the deque is empty.
     !!
-    !! |  stat  | errmsg                           |
-    !! | :----: | -------------------------------- |
-    !! |    0   | n/a                              |
-    !! |    1   | deque empty                      |
-    !! |    2   | node data not allocated          |
-    !! |    3   | node data not a double precision |
+    !! |  stat  | errmsg                   |
+    !! | :----: | ------------------------ |
+    !! |    0   | n/a                      |
+    !! |    1   | deque empty              |
+    !! |    2   | node data not allocated  |
+    !! |    3   | node data not an complex |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),     intent(in)  :: self   !! reference to this deque class.
+    class(ComplexDeque),    intent(in)  :: self   !! reference to this deque class.
     integer,      optional, intent(out) :: stat   !! optional error status.
     character(*), optional, intent(out) :: errmsg !! optional error message.
-    real(dp)                            :: val    !! returned data.
+    complex(dp)                         :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
     obj => self%queue%peekHead( stat, errmsg )
-    val =  object2double( obj, stat, errmsg )
+    val =  object2complex( obj, stat, errmsg )
 
-  end function ddeque_peek_head
+  end function zdeque_peek_head
 
 
   !/ =====================================================================================
-  function ddeque_peek_tail( self, stat, errmsg ) result( val )
+  function zdeque_peek_tail( self, stat, errmsg ) result( val )
     !/ -----------------------------------------------------------------------------------
-    !! Peek at the tail double precision without removing it.
+    !! Peek at the tail complex without removing it.
     !! Return a -1 if the deque is empty.
     !!
-    !! |  stat  | errmsg                           |
-    !! | :----: | -------------------------------- |
-    !! |    0   | n/a                              |
-    !! |    1   | deque empty                      |
-    !! |    2   | node data not allocated          |
-    !! |    3   | node data not a double precision |
+    !! |  stat  | errmsg                   |
+    !! | :----: | ------------------------ |
+    !! |    0   | n/a                      |
+    !! |    1   | deque empty              |
+    !! |    2   | node data not allocated  |
+    !! |    3   | node data not an complex |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),     intent(in)  :: self   !! reference to this deque class.
+    class(ComplexDeque),    intent(in)  :: self   !! reference to this deque class.
     integer,      optional, intent(out) :: stat   !! optional error status.
     character(*), optional, intent(out) :: errmsg !! optional error message.
-    real(dp)                            :: val    !! returned data.
+    complex(dp)                         :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
     obj => self%queue%peekTail( stat, errmsg )
-    val =  object2double( obj, stat, errmsg )
+    val =  object2complex( obj, stat, errmsg )
 
-  end function ddeque_peek_tail
+  end function zdeque_peek_tail
 
 
 
@@ -368,122 +368,122 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =======================================================================================
-  subroutine ddeque_goto_head( self )
+  subroutine zdeque_goto_head( self )
     !/ -------------------------------------------------------------------------------------
     !! Goto Head. Set the iterator to the head of this deque.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque.
+    class(ComplexDeque), intent(inout) :: self !! reference to this deque.
     !/ -------------------------------------------------------------------------------------
 
     call self%queue%head
 
-  end subroutine ddeque_goto_head
+  end subroutine zdeque_goto_head
 
 
   !/ =======================================================================================
-  subroutine ddeque_goto_tail( self )
+  subroutine zdeque_goto_tail( self )
     !/ -------------------------------------------------------------------------------------
     !! Goto Tail. Set the iterator to the tail of this deque.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque.
+    class(ComplexDeque), intent(inout) :: self !! reference to this deque.
     !/ -------------------------------------------------------------------------------------
 
     call self%queue%tail
 
-  end subroutine ddeque_goto_tail
+  end subroutine zdeque_goto_tail
 
 
   !/ =======================================================================================
-  function ddeque_has_next( self ) result( stat )
+  function zdeque_has_next( self ) result( stat )
     !/ -------------------------------------------------------------------------------------
     !! Check if the iterator can perform a next operation.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque.
-    logical                           :: stat !! true if a next double can be returned.
+    class(ComplexDeque), intent(inout) :: self !! reference to this deque.
+    logical                            :: stat !! true if a next complex can be returned.
     !/ -------------------------------------------------------------------------------------
 
     stat = self%queue%hasNext()
 
-  end function ddeque_has_next
+  end function zdeque_has_next
 
 
   !/ =======================================================================================
-  function ddeque_has_prev( self ) result( stat )
+  function zdeque_has_prev( self ) result( stat )
     !/ -------------------------------------------------------------------------------------
     !! Check if the iterator can perform a previous operation.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque.
-    logical                           :: stat !! true if a previous double  can be returned.
+    class(ComplexDeque), intent(inout) :: self !! reference to this deque.
+    logical                            :: stat !! true if a previous complex can be returned.
     !/ -------------------------------------------------------------------------------------
 
     stat = self%queue%hasPrev()
 
-  end function ddeque_has_prev
+  end function zdeque_has_prev
 
 
   !/ =======================================================================================
-  function ddeque_get_next( self, stat, errmsg ) result( val )
+  function zdeque_get_next( self, stat, errmsg ) result( val )
     !/ -------------------------------------------------------------------------------------
     !! Get Next. Advance the iterator to the next position in the deque and return the
-    !! double precision at that position. This does not remove the entry from the deque.
+    !! complex at that position. This does not remove the entry from the deque.
     !!
-    !! |  stat  | errmsg                            |
-    !! | :----: | --------------------------------- |
-    !! |    0   | n/a                               |
-    !! |    1   | iterator in unknown state         |
-    !! |    2   | node data not allocated           |
-    !! |    3   | node data not a double precision  |
+    !! |  stat  | errmsg                    |
+    !! | :----: | ------------------------- |
+    !! |    0   | n/a                       |
+    !! |    1   | iterator in unknown state |
+    !! |    2   | node data not allocated   |
+    !! |    3   | node data not an complex  |
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),     intent(inout) :: self   !! reference to this deque class.
+    class(ComplexDeque),    intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
-    real(dp)                              :: val    !! returned data.
+    complex(dp)                           :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
     obj => self%queue%next( stat, errmsg )
-    val =  object2double( obj, stat, errmsg )
+    val =  object2complex( obj, stat, errmsg )
 
-  end function ddeque_get_next
+  end function zdeque_get_next
 
 
   !/ =======================================================================================
-  function ddeque_get_prev( self, stat, errmsg ) result( val )
+  function zdeque_get_prev( self, stat, errmsg ) result( val )
     !/ -------------------------------------------------------------------------------------
     !! Get Previous. Retard the iterator to the previous position in the deque and return
-    !! the double precision at that position. This does not remove the entry from the deque.
+    !! the complex at that position. This does not remove the entry from the deque.
     !!
-    !! |  stat  | errmsg                            |
-    !! | :----: | --------------------------------- |
-    !! |    0   | n/a                               |
-    !! |    1   | iterator in unknown state         |
-    !! |    2   | node data not allocated           |
-    !! |    3   | node data not a double precision  |
+    !! |  stat  | errmsg                    |
+    !! | :----: | ------------------------- |
+    !! |    0   | n/a                       |
+    !! |    1   | iterator in unknown state |
+    !! |    2   | node data not allocated   |
+    !! |    3   | node data not an complex  |
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),     intent(inout) :: self   !! reference to this deque class.
+    class(ComplexDeque),    intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
-    real(dp)                              :: val    !! returned data.
+    complex(dp)                           :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
     obj => self%queue%prev( stat, errmsg )
-    val =  object2double( obj, stat, errmsg )
+    val =  object2complex( obj, stat, errmsg )
 
-  end function ddeque_get_prev
+  end function zdeque_get_prev
 
 
-end module double_deque_class
+end module complex_deque_class
 
 
 !/ =======================================================================================
-!/ **                        D O U B L E _ D E Q U E _ C L A S S                        **
+!/ **                       C O M P L E X _ D E Q U E _ C L A S S                       **
 !/ =========================================================================== END FILE ==
