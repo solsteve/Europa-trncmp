@@ -1,7 +1,7 @@
 module testDequeDouble
   use trncmp_env
   use pfunit_mod
-  use double_deque_class
+  use deque_double_class
   implicit none
 
   integer, parameter :: SAMPLES = 100
@@ -10,8 +10,8 @@ contains
 
  !/ -----------------------------------------------
   @test
-  subroutine testDoubleDeque_PP
-    type(DoubleDeque) :: Q
+  subroutine testDequeDouble_PP
+    type(DequeDouble) :: Q
     integer           :: i, j, k, stat
 
     do i=1,SAMPLES
@@ -32,12 +32,12 @@ contains
     @assertEqual( 0, k )
     @assertTrue( Q%empty() )
 
-  end subroutine testDoubleDeque_PP
+  end subroutine testDequeDouble_PP
 
   !/ -----------------------------------------------
   @test
-  subroutine testDoubleDeque_AR
-    type(DoubleDeque) :: Q
+  subroutine testDequeDouble_AR
+    type(DequeDouble) :: Q
     integer           :: i, j, k, stat
 
     do i=1,SAMPLES
@@ -58,12 +58,12 @@ contains
     @assertEqual( 0, k )
     @assertTrue( Q%empty() )
 
-  end subroutine testDoubleDeque_AR
+  end subroutine testDequeDouble_AR
 
   !/ -----------------------------------------------
   @test
-  subroutine testDoubleDeque_AP
-    type(DoubleDeque) :: Q
+  subroutine testDequeDouble_AP
+    type(DequeDouble) :: Q
     integer            :: i, j, k, stat
 
     do i=1,SAMPLES
@@ -84,12 +84,12 @@ contains
     @assertEqual( 0, k )
     @assertTrue( Q%empty() )
 
-  end subroutine testDoubleDeque_AP
+  end subroutine testDequeDouble_AP
 
   !/ -----------------------------------------------
   @test
-  subroutine testDoubleDeque_PR
-    type(DoubleDeque) :: Q
+  subroutine testDequeDouble_PR
+    type(DequeDouble) :: Q
     integer            :: i, j, k, stat
 
     do i=1,SAMPLES
@@ -110,12 +110,12 @@ contains
     @assertEqual( 0, k )
     @assertTrue( Q%empty() )
 
-  end subroutine testDoubleDeque_PR
+  end subroutine testDequeDouble_PR
 
   !/ -----------------------------------------------
   @test
-  subroutine testDoubleDeque_clear
-    type(DoubleDeque) :: Q
+  subroutine testDequeDouble_clear
+    type(DequeDouble) :: Q
     integer            :: i
 
     do i=1,SAMPLES
@@ -130,12 +130,12 @@ contains
     @assertEqual( 0, Q%size() )
     @assertTrue( Q%empty() )
 
-  end subroutine testDoubleDeque_clear
+  end subroutine testDequeDouble_clear
 
   !/ -----------------------------------------------
   @test
-  subroutine testDoubleDeque_peek
-    type(DoubleDeque) :: Q
+  subroutine testDequeDouble_peek
+    type(DequeDouble) :: Q
     integer            :: i, a, b, stat
 
     do i=1,SAMPLES
@@ -166,12 +166,12 @@ contains
     @assertEqual( b, -1 )
     @assertEqual( 1, stat )
 
-  end subroutine testDoubleDeque_peek
+  end subroutine testDequeDouble_peek
 
 
   !/ -----------------------------------------------
   @test
-  subroutine testDoubleDeque_convert
+  subroutine testDequeDouble_convert
     real(dp)          :: a, b
     integer           :: s
     class(*), pointer :: P
@@ -185,14 +185,14 @@ contains
     @assertFalse( a .lt. b )
     @assertFalse( a .gt. b )
 
-  end subroutine testDoubleDeque_convert
+  end subroutine testDequeDouble_convert
 
 
 
   !/ -----------------------------------------------
   @test
-  subroutine testDoubleDeque_iterate_next
-    type(DoubleDeque) :: Q
+  subroutine testDequeDouble_iterate_next
+    type(DequeDouble) :: Q
     integer            :: i, j, k
 
     do i=1,SAMPLES
@@ -215,13 +215,13 @@ contains
     
     @assertEqual( 0, k )
 
-  end subroutine testDoubleDeque_iterate_next
+  end subroutine testDequeDouble_iterate_next
 
   
   !/ -----------------------------------------------
   @test
-  subroutine testDoubleDeque_iterate_prev
-    type(DoubleDeque) :: Q
+  subroutine testDequeDouble_iterate_prev
+    type(DequeDouble) :: Q
     integer            :: i, j, k
 
     do i=1,SAMPLES
@@ -244,13 +244,13 @@ contains
     
     @assertEqual( 0, k )
     
-  end subroutine testDoubleDeque_iterate_prev
+  end subroutine testDequeDouble_iterate_prev
 
 
   !/ -----------------------------------------------
   @test
-  subroutine testDoubleDeque_repeat_add_rem
-    type(DoubleDeque) :: Q
+  subroutine testDequeDouble_repeat_add_rem
+    type(DequeDouble) :: Q
     integer           :: i
     !/ -----------------------------------------------
 
@@ -277,7 +277,7 @@ contains
     @assertTrue( Q%empty() )
 
 
-  end subroutine testDoubleDeque_repeat_add_rem
+  end subroutine testDequeDouble_repeat_add_rem
 
   
 end module testDequeDouble

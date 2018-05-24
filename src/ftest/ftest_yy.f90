@@ -32,7 +32,7 @@ module ftest_yy
   !!
   !
   !/ -------------------------------------------------------------------------------------
-  use integer_deque_class
+  use deque_integer_class
   implicit none
 
 
@@ -44,7 +44,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine test01
     !/ -----------------------------------------------------------------------------------
-    type(IntegerDeque) :: Q
+    type(DequeInteger) :: Q
 
     write(*,*) Q%size()
 

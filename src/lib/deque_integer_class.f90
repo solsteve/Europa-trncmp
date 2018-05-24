@@ -1,5 +1,5 @@
 !/ ====================================================================== BEGIN FILE =====
-!/ **                       C O M P L E X _ D E Q U E _ C L A S S                       **
+!/ **                       D E Q U E _ I N T E G E R _ C L A S S                       **
 !/ =======================================================================================
 !/ **                                                                                   **
 !/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
@@ -21,25 +21,24 @@
 !/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 !/ **                                                                                   **
 !/ =======================================================================================
-module complex_deque_class
+module deque_integer_class
   !/ -------------------------------------------------------------------------------------
   !! author:  Stephen W. Soliday
   !! date:    2018-05-06
   !! license: GPL
   !!
-  !! Provides a double linked list of complex by wrapping the procedures
-  !! from the object_deque_class module.
+  !! Provides a double linked list of integers by wrapping the procedures from the
+  !! object_deque_class module.
   !/ -------------------------------------------------------------------------------------
-  use trncmp_env
-  use object_deque_class
+  use deque_object_class
   implicit none
   private
 
   
   !/ =====================================================================================
-  type, public :: ComplexDeque
+  type, public :: DequeInteger
      !/ ----------------------------------------------------------------------------------
-     !! Complex Deque Structure.
+     !! Integer Deque Structure.
      !/ ----------------------------------------------------------------------------------
  
      type(Deque) :: queue
@@ -48,33 +47,33 @@ module complex_deque_class
    contains
 
 
-     procedure, public :: empty    => zdeque_is_empty
-     procedure, public :: size     => zdeque_size
-     procedure, public :: clear    => zdeque_clear
-     procedure, public :: retract  => zdeque_pop_tail
-     procedure, public :: assert   => zdeque_push_tail
-     procedure, public :: pop      => zdeque_pop_head
-     procedure, public :: push     => zdeque_push_head
-     procedure, public :: peekHead => zdeque_peek_head
-     procedure, public :: peekTail => zdeque_peek_tail
+     procedure, public :: empty    => ideque_is_empty
+     procedure, public :: size     => ideque_size
+     procedure, public :: clear    => ideque_clear
+     procedure, public :: retract  => ideque_pop_tail
+     procedure, public :: assert   => ideque_push_tail
+     procedure, public :: pop      => ideque_pop_head
+     procedure, public :: push     => ideque_push_head
+     procedure, public :: peekHead => ideque_peek_head
+     procedure, public :: peekTail => ideque_peek_tail
 
-     procedure, public :: head     => zdeque_goto_head
-     procedure, public :: tail     => zdeque_goto_tail
-     procedure, public :: hasNext  => zdeque_has_next
-     procedure, public :: hasPrev  => zdeque_has_prev
-     procedure, public :: next     => zdeque_get_next
-     procedure, public :: prev     => zdeque_get_prev
+     procedure, public :: head     => ideque_goto_head
+     procedure, public :: tail     => ideque_goto_tail
+     procedure, public :: hasNext  => ideque_has_next
+     procedure, public :: hasPrev  => ideque_has_prev
+     procedure, public :: next     => ideque_get_next
+     procedure, public :: prev     => ideque_get_prev
 
      ! ----- alias for FIFO operations ----------------------
-     procedure, public :: add      => zdeque_push_tail
-     procedure, public :: remove   => zdeque_pop_head
+     procedure, public :: add      => ideque_push_tail
+     procedure, public :: remove   => ideque_pop_head
 
-     final :: zdeque_destroy
+     final :: ideque_destroy
      
-  end type ComplexDeque
+  end type DequeInteger
 
-public :: object2complex
-public :: complex2object
+public :: object2integer
+public :: integer2object
 
 
 
@@ -87,53 +86,51 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function object2complex( obj, stat, errmsg ) result( n )
+  function object2integer( obj, stat, errmsg ) result( n )
     !/ -----------------------------------------------------------------------------------
-    !! Convert an unlimited polymorphic object into an complex.
+    !! Convert an unlimited polymorphic object into an integer.
     !!
     !! |  stat  | errmsg                   |
     !! | :----: | ------------------------ |
     !! |    0   | n/a                      |
-    !! |    3   | node data not an complex |
+    !! |    3   | node data not an integer |
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(*),     pointer,  intent(in)  :: obj    !! reference to an unlimited
     !!                                               polymorphic object.
     integer,      optional, intent(out) :: stat   !! optional error status.
     character(*), optional, intent(out) :: errmsg !! optional error message.
-    complex(dp)                         :: n      !! complex return value
+    integer                             :: n      !! integer return value
     !/ -----------------------------------------------------------------------------------
 
     n = -1
 
     if ( associated( obj ) ) then
        select type ( obj )
-       type is ( complex(dp) )
+       type is ( integer )
           n = obj
           class default
           if ( present( stat ) )   stat = 3
-          if ( present( errmsg ) ) errmsg = 'zdeque: data is not complex'             
+          if ( present( errmsg ) ) errmsg = 'ideque: data is not integer'             
        end select
     end if
 
-  end function object2complex
+  end function object2integer
 
 
   !/ =====================================================================================
-  function complex2object( n ) result( obj )
+  function integer2object( n ) result( obj )
     !/ -----------------------------------------------------------------------------------
-    !! Convert an complex into an unlimited polymorphic object.
-    !! This is a deep copy.
+    !! Convert an integer into an unlimited polymorphic object. This is a deep copy.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    complex(dp), intent(in) :: n   !! the input complex.
-    class(*),    pointer    :: obj !! return the complex as an unlimited
-    !!                                polymorphic object.
+    integer,  intent(in) :: n   !! the input integer.
+    class(*), pointer    :: obj !! return the integer as an unlimited polymorphic object.
     !/ -----------------------------------------------------------------------------------
 
     allocate( obj, source=n )
 
-  end function complex2object
+  end function integer2object
 
 
 
@@ -141,17 +138,17 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine zdeque_destroy( iqueue )
+  subroutine ideque_destroy( iqueue )
     !/ -----------------------------------------------------------------------------------
     !! Deque destructor.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(ComplexDeque) :: iqueue !! new deque structure.
+    type(DequeInteger) :: iqueue !! new deque structure.
     !/ -----------------------------------------------------------------------------------
 
     call iqueue%queue%clear( .true. )
 
-  end subroutine zdeque_destroy
+  end subroutine ideque_destroy
 
 
 
@@ -159,48 +156,48 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =======================================================================================
-  pure function zdeque_is_empty( self ) result( stat )
+  pure function ideque_is_empty( self ) result( stat )
     !/ -------------------------------------------------------------------------------------
     !! Determine if the deque is empty.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque), intent(in) :: self !! reference to this deque.
+    class(DequeInteger), intent(in) :: self !! reference to this deque.
     logical                         :: stat !! true if the deque is empty.
     !/ -------------------------------------------------------------------------------------
 
     stat = self%queue%empty()
 
-  end function zdeque_is_empty
+  end function ideque_is_empty
 
 
   !/ =======================================================================================
-  pure function zdeque_size( self ) result( n )
+  pure function ideque_size( self ) result( n )
     !/ -------------------------------------------------------------------------------------
     !! Return the number of items currently stored in this deque.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque), intent(in) :: self !! reference to this deque.
+    class(DequeInteger), intent(in) :: self !! reference to this deque.
     integer                         :: n    !! number of items in deque.
     !/ -------------------------------------------------------------------------------------
 
     n = self%queue%size()
 
-  end function zdeque_size
+  end function ideque_size
 
 
   !/ =======================================================================================
-  subroutine zdeque_clear( self, del )
+  subroutine ideque_clear( self, del )
     !/ -------------------------------------------------------------------------------------
-    !! Clear the contents of the zdeque
+    !! Clear the contents of the ideque
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque), intent(inout) :: self !! reference to this deque.
+    class(DequeInteger), intent(inout) :: self !! reference to this deque.
     logical,             optional      :: del  !! should the deque deallocate the contents?
     !/ -------------------------------------------------------------------------------------
 
     call self%queue%clear( del )
 
-  end subroutine zdeque_clear
+  end subroutine ideque_clear
 
 
 
@@ -210,39 +207,39 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine zdeque_push_head( self, n )
+  subroutine ideque_push_head( self, n )
     !/ -----------------------------------------------------------------------------------
-    !! Push an complex onto the head of the deque.
+    !! Push an integer onto the head of the deque.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque), intent(inout) :: self !! reference to this deque class.
-    complex(dp),         intent(in)    :: n    !! data.
+    class(DequeInteger), intent(inout) :: self !! reference to this deque class.
+    integer,             intent(in)    :: n    !! data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
-    obj => complex2object( n )
+    obj => integer2object( n )
     call self%queue%push( obj )
 
-  end subroutine zdeque_push_head
+  end subroutine ideque_push_head
 
 
   !/ =====================================================================================
-  subroutine zdeque_push_tail( self, n )
+  subroutine ideque_push_tail( self, n )
     !/ -----------------------------------------------------------------------------------
-    !! Push an complex onto the tail of the deque.
+    !! Push an integer onto the tail of the deque.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque), intent(inout) :: self !! reference to this deque class.
-    complex(dp),         intent(in)    :: n    !! data.
+    class(DequeInteger), intent(inout) :: self !! reference to this deque class.
+    integer,             intent(in)    :: n    !! data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
-    obj => complex2object( n )
+    obj => integer2object( n )
     call self%queue%assert( obj )
 
-  end subroutine zdeque_push_tail
+  end subroutine ideque_push_tail
 
 
 
@@ -250,57 +247,57 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function zdeque_pop_head( self, stat, errmsg ) result( val )
+  function ideque_pop_head( self, stat, errmsg ) result( val )
     !/ -----------------------------------------------------------------------------------
-    !! Pop an complex from the head of the deque.
+    !! Pop an integer from the head of the deque.
     !!
     !! |  stat  | errmsg                   |
     !! | :----: | ------------------------ |
     !! |    0   | n/a                      |
     !! |    1   | deque empty              |
     !! |    2   | node data not allocated  |
-    !! |    3   | node data not an complex |
+    !! |    3   | node data not an integer |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque),    intent(inout) :: self   !! reference to this deque class.
+    class(DequeInteger),    intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
-    complex(dp)                           :: val    !! returned data.
+    integer                               :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
     obj => self%queue%pop( stat, errmsg )
-    val =  object2complex( obj, stat, errmsg )
+    val =  object2integer( obj, stat, errmsg )
 
-  end function zdeque_pop_head
+  end function ideque_pop_head
 
 
   !/ =====================================================================================
-  function zdeque_pop_tail( self, stat, errmsg ) result( val )
+  function ideque_pop_tail( self, stat, errmsg ) result( val )
     !/ -----------------------------------------------------------------------------------
-    !! Pop an complex from the tail of the deque.
+    !! Pop an integer from the tail of the deque.
     !!
     !! |  stat  | errmsg                   |
     !! | :----: | ------------------------ |
     !! |    0   | n/a                      |
     !! |    1   | deque empty              |
     !! |    2   | node data not allocated  |
-    !! |    3   | node data not an complex |
+    !! |    3   | node data not an integer |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque),    intent(inout) :: self   !! reference to this deque class.
+    class(DequeInteger),    intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
-    complex(dp)                           :: val    !! returned data.
+    integer                               :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
     obj => self%queue%retract( stat, errmsg )
-    val =  object2complex( obj, stat, errmsg )
+    val =  object2integer( obj, stat, errmsg )
 
-  end function zdeque_pop_tail
+  end function ideque_pop_tail
 
 
 
@@ -308,59 +305,57 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function zdeque_peek_head( self, stat, errmsg ) result( val )
+  function ideque_peek_head( self, stat, errmsg ) result( val )
     !/ -----------------------------------------------------------------------------------
-    !! Peek at the head complex without removing it.
-    !! Return a -1 if the deque is empty.
+    !! Peek at the head integer without removing it. Return a -1 if the deque is empty.
     !!
     !! |  stat  | errmsg                   |
     !! | :----: | ------------------------ |
     !! |    0   | n/a                      |
     !! |    1   | deque empty              |
     !! |    2   | node data not allocated  |
-    !! |    3   | node data not an complex |
+    !! |    3   | node data not an integer |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque),    intent(in)  :: self   !! reference to this deque class.
+    class(DequeInteger),    intent(in)  :: self   !! reference to this deque class.
     integer,      optional, intent(out) :: stat   !! optional error status.
     character(*), optional, intent(out) :: errmsg !! optional error message.
-    complex(dp)                         :: val    !! returned data.
+    integer                             :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
     obj => self%queue%peekHead( stat, errmsg )
-    val =  object2complex( obj, stat, errmsg )
+    val =  object2integer( obj, stat, errmsg )
 
-  end function zdeque_peek_head
+  end function ideque_peek_head
 
 
   !/ =====================================================================================
-  function zdeque_peek_tail( self, stat, errmsg ) result( val )
+  function ideque_peek_tail( self, stat, errmsg ) result( val )
     !/ -----------------------------------------------------------------------------------
-    !! Peek at the tail complex without removing it.
-    !! Return a -1 if the deque is empty.
+    !! Peek at the tail integer without removing it. Return a -1 if the deque is empty.
     !!
     !! |  stat  | errmsg                   |
     !! | :----: | ------------------------ |
     !! |    0   | n/a                      |
     !! |    1   | deque empty              |
     !! |    2   | node data not allocated  |
-    !! |    3   | node data not an complex |
+    !! |    3   | node data not an integer |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque),    intent(in)  :: self   !! reference to this deque class.
+    class(DequeInteger),    intent(in)  :: self   !! reference to this deque class.
     integer,      optional, intent(out) :: stat   !! optional error status.
     character(*), optional, intent(out) :: errmsg !! optional error message.
-    complex(dp)                         :: val    !! returned data.
+    integer                             :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
     obj => self%queue%peekTail( stat, errmsg )
-    val =  object2complex( obj, stat, errmsg )
+    val =  object2integer( obj, stat, errmsg )
 
-  end function zdeque_peek_tail
+  end function ideque_peek_tail
 
 
 
@@ -368,122 +363,122 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =======================================================================================
-  subroutine zdeque_goto_head( self )
+  subroutine ideque_goto_head( self )
     !/ -------------------------------------------------------------------------------------
     !! Goto Head. Set the iterator to the head of this deque.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque), intent(inout) :: self !! reference to this deque.
+    class(DequeInteger), intent(inout) :: self !! reference to this deque.
     !/ -------------------------------------------------------------------------------------
 
     call self%queue%head
 
-  end subroutine zdeque_goto_head
+  end subroutine ideque_goto_head
 
 
   !/ =======================================================================================
-  subroutine zdeque_goto_tail( self )
+  subroutine ideque_goto_tail( self )
     !/ -------------------------------------------------------------------------------------
     !! Goto Tail. Set the iterator to the tail of this deque.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque), intent(inout) :: self !! reference to this deque.
+    class(DequeInteger), intent(inout) :: self !! reference to this deque.
     !/ -------------------------------------------------------------------------------------
 
     call self%queue%tail
 
-  end subroutine zdeque_goto_tail
+  end subroutine ideque_goto_tail
 
 
   !/ =======================================================================================
-  function zdeque_has_next( self ) result( stat )
+  function ideque_has_next( self ) result( stat )
     !/ -------------------------------------------------------------------------------------
     !! Check if the iterator can perform a next operation.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque), intent(inout) :: self !! reference to this deque.
-    logical                            :: stat !! true if a next complex can be returned.
+    class(DequeInteger), intent(inout) :: self !! reference to this deque.
+    logical                            :: stat !! true if a next integer can be returned.
     !/ -------------------------------------------------------------------------------------
 
     stat = self%queue%hasNext()
 
-  end function zdeque_has_next
+  end function ideque_has_next
 
 
   !/ =======================================================================================
-  function zdeque_has_prev( self ) result( stat )
+  function ideque_has_prev( self ) result( stat )
     !/ -------------------------------------------------------------------------------------
     !! Check if the iterator can perform a previous operation.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque), intent(inout) :: self !! reference to this deque.
-    logical                            :: stat !! true if a previous complex can be returned.
+    class(DequeInteger), intent(inout) :: self !! reference to this deque.
+    logical                            :: stat !! true if a previous integer can be returned.
     !/ -------------------------------------------------------------------------------------
 
     stat = self%queue%hasPrev()
 
-  end function zdeque_has_prev
+  end function ideque_has_prev
 
 
   !/ =======================================================================================
-  function zdeque_get_next( self, stat, errmsg ) result( val )
+  function ideque_get_next( self, stat, errmsg ) result( val )
     !/ -------------------------------------------------------------------------------------
     !! Get Next. Advance the iterator to the next position in the deque and return the
-    !! complex at that position. This does not remove the entry from the deque.
+    !! integer at that position. This does not remove the entry from the deque.
     !!
     !! |  stat  | errmsg                    |
     !! | :----: | ------------------------- |
     !! |    0   | n/a                       |
     !! |    1   | iterator in unknown state |
     !! |    2   | node data not allocated   |
-    !! |    3   | node data not an complex  |
+    !! |    3   | node data not an integer  |
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque),    intent(inout) :: self   !! reference to this deque class.
+    class(DequeInteger),    intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
-    complex(dp)                           :: val    !! returned data.
+    integer                               :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
     obj => self%queue%next( stat, errmsg )
-    val =  object2complex( obj, stat, errmsg )
+    val =  object2integer( obj, stat, errmsg )
 
-  end function zdeque_get_next
+  end function ideque_get_next
 
 
   !/ =======================================================================================
-  function zdeque_get_prev( self, stat, errmsg ) result( val )
+  function ideque_get_prev( self, stat, errmsg ) result( val )
     !/ -------------------------------------------------------------------------------------
     !! Get Previous. Retard the iterator to the previous position in the deque and return
-    !! the complex at that position. This does not remove the entry from the deque.
+    !! the integer at that position. This does not remove the entry from the deque.
     !!
     !! |  stat  | errmsg                    |
     !! | :----: | ------------------------- |
     !! |    0   | n/a                       |
     !! |    1   | iterator in unknown state |
     !! |    2   | node data not allocated   |
-    !! |    3   | node data not an complex  |
+    !! |    3   | node data not an integer  |
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(ComplexDeque),    intent(inout) :: self   !! reference to this deque class.
+    class(DequeInteger),    intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
-    complex(dp)                           :: val    !! returned data.
+    integer                               :: val    !! returned data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
     !/ -----------------------------------------------------------------------------------
 
     obj => self%queue%prev( stat, errmsg )
-    val =  object2complex( obj, stat, errmsg )
+    val =  object2integer( obj, stat, errmsg )
 
-  end function zdeque_get_prev
+  end function ideque_get_prev
 
 
-end module complex_deque_class
+end module deque_integer_class
 
 
 !/ =======================================================================================
-!/ **                       C O M P L E X _ D E Q U E _ C L A S S                       **
+!/ **                       D E Q U E _ I N T E G E R _ C L A S S                       **
 !/ =========================================================================== END FILE ==

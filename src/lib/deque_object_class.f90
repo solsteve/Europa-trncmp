@@ -1,5 +1,5 @@
 !/ ====================================================================== BEGIN FILE =====
-!/ **                        O B J E C T _ D E Q U E _ C L A S S                        **
+!/ **                        D E Q U E _ O B J E C T _ C L A S S                        **
 !/ =======================================================================================
 !/ **                                                                                   **
 !/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
@@ -21,7 +21,7 @@
 !/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 !/ **                                                                                   **
 !/ =======================================================================================
-module object_deque_class
+module deque_object_class
   !/ -------------------------------------------------------------------------------------
   !! author:  Stephen W. Soliday
   !! date:    2018-05-01
@@ -786,9 +786,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function deque_get_prev
 
 
-end module object_deque_class
+end module deque_object_class
 
 
 !/ =======================================================================================
-!/ **                        O B J E C T _ D E Q U E _ C L A S S                        **
+!/ **                        D E Q U E _ O B J E C T _ C L A S S                        **
 !/ =========================================================================== END FILE ==

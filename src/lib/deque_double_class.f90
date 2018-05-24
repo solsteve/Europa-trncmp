@@ -1,5 +1,5 @@
 !/ ====================================================================== BEGIN FILE =====
-!/ **                        D O U B L E _ D E Q U E _ C L A S S                        **
+!/ **                        D E Q U E _ D O U B L E _ C L A S S                        **
 !/ =======================================================================================
 !/ **                                                                                   **
 !/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
@@ -21,7 +21,7 @@
 !/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 !/ **                                                                                   **
 !/ =======================================================================================
-module double_deque_class
+module deque_double_class
   !/ -------------------------------------------------------------------------------------
   !! author:  Stephen W. Soliday
   !! date:    2018-05-06
@@ -31,13 +31,13 @@ module double_deque_class
   !! from the object_deque_class module.
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
-  use object_deque_class
+  use deque_object_class
   implicit none
   private
 
   
   !/ =====================================================================================
-  type, public :: DoubleDeque
+  type, public :: DequeDouble
      !/ ----------------------------------------------------------------------------------
      !! Double Precision Deque Structure.
      !/ ----------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ module double_deque_class
 
      final :: ddeque_destroy
      
-  end type DoubleDeque
+  end type DequeDouble
 
 public :: object2double
 public :: double2object
@@ -146,7 +146,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Deque destructor.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(DoubleDeque) :: iqueue !! new deque structure.
+    type(DequeDouble) :: iqueue !! new deque structure.
     !/ -----------------------------------------------------------------------------------
 
     call iqueue%queue%clear( .true. )
@@ -164,7 +164,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Determine if the deque is empty.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(in) :: self !! reference to this deque.
+    class(DequeDouble), intent(in) :: self !! reference to this deque.
     logical                        :: stat !! true if the deque is empty.
     !/ -------------------------------------------------------------------------------------
 
@@ -179,7 +179,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Return the number of items currently stored in this deque.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(in) :: self !! reference to this deque.
+    class(DequeDouble), intent(in) :: self !! reference to this deque.
     integer                        :: n    !! number of items in deque.
     !/ -------------------------------------------------------------------------------------
 
@@ -194,7 +194,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Clear the contents of the ddeque
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque.
+    class(DequeDouble), intent(inout) :: self !! reference to this deque.
     logical,            optional      :: del  !! should the deque deallocate the contents?
     !/ -------------------------------------------------------------------------------------
 
@@ -215,7 +215,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Push a double precision onto the head of the deque.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque class.
+    class(DequeDouble), intent(inout) :: self !! reference to this deque class.
     real(dp),           intent(in)    :: n    !! data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
@@ -233,7 +233,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Push a double precision onto the tail of the deque.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque class.
+    class(DequeDouble), intent(inout) :: self !! reference to this deque class.
     real(dp),           intent(in)    :: n    !! data.
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: obj
@@ -262,7 +262,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! |    3   | node data not a double precision |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),     intent(inout) :: self   !! reference to this deque class.
+    class(DequeDouble),     intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
     real(dp)                              :: val    !! returned data.
@@ -289,7 +289,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! |    3   | node data not a double precision |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),     intent(inout) :: self   !! reference to this deque class.
+    class(DequeDouble),     intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
     real(dp)                              :: val    !! returned data.
@@ -321,7 +321,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! |    3   | node data not a double precision |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),     intent(in)  :: self   !! reference to this deque class.
+    class(DequeDouble),     intent(in)  :: self   !! reference to this deque class.
     integer,      optional, intent(out) :: stat   !! optional error status.
     character(*), optional, intent(out) :: errmsg !! optional error message.
     real(dp)                            :: val    !! returned data.
@@ -349,7 +349,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! |    3   | node data not a double precision |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),     intent(in)  :: self   !! reference to this deque class.
+    class(DequeDouble),     intent(in)  :: self   !! reference to this deque class.
     integer,      optional, intent(out) :: stat   !! optional error status.
     character(*), optional, intent(out) :: errmsg !! optional error message.
     real(dp)                            :: val    !! returned data.
@@ -373,7 +373,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Goto Head. Set the iterator to the head of this deque.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque.
+    class(DequeDouble), intent(inout) :: self !! reference to this deque.
     !/ -------------------------------------------------------------------------------------
 
     call self%queue%head
@@ -387,7 +387,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Goto Tail. Set the iterator to the tail of this deque.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque.
+    class(DequeDouble), intent(inout) :: self !! reference to this deque.
     !/ -------------------------------------------------------------------------------------
 
     call self%queue%tail
@@ -401,7 +401,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Check if the iterator can perform a next operation.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque.
+    class(DequeDouble), intent(inout) :: self !! reference to this deque.
     logical                           :: stat !! true if a next double can be returned.
     !/ -------------------------------------------------------------------------------------
 
@@ -416,7 +416,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Check if the iterator can perform a previous operation.
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque), intent(inout) :: self !! reference to this deque.
+    class(DequeDouble), intent(inout) :: self !! reference to this deque.
     logical                           :: stat !! true if a previous double  can be returned.
     !/ -------------------------------------------------------------------------------------
 
@@ -439,7 +439,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! |    3   | node data not a double precision  |
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),     intent(inout) :: self   !! reference to this deque class.
+    class(DequeDouble),     intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
     real(dp)                              :: val    !! returned data.
@@ -467,7 +467,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! |    3   | node data not a double precision  |
     !/ -------------------------------------------------------------------------------------
     implicit none
-    class(DoubleDeque),     intent(inout) :: self   !! reference to this deque class.
+    class(DequeDouble),     intent(inout) :: self   !! reference to this deque class.
     integer,      optional, intent(out)   :: stat   !! optional error status.
     character(*), optional, intent(out)   :: errmsg !! optional error message.
     real(dp)                              :: val    !! returned data.
@@ -481,7 +481,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function ddeque_get_prev
 
 
-end module double_deque_class
+end module deque_double_class
 
 
 !/ =======================================================================================

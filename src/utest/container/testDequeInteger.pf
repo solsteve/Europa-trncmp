@@ -1,6 +1,6 @@
 module testDequeInteger
   use pfunit_mod
-  use integer_deque_class
+  use deque_integer_class
   implicit none
 
   integer, parameter :: SAMPLES = 100
@@ -9,8 +9,8 @@ contains
 
   !/ -----------------------------------------------
   @test
-  subroutine testIntegerDeque_PP
-    type(IntegerDeque) :: Q
+  subroutine testDequeInteger_PP
+    type(DequeInteger) :: Q
     integer            :: i, j, k, stat
 
     do i=1,SAMPLES
@@ -31,13 +31,13 @@ contains
     @assertEqual( 0, k )
     @assertTrue( Q%empty() )
 
-  end subroutine testIntegerDeque_PP
+  end subroutine testDequeInteger_PP
 
 
   !/ -----------------------------------------------
   @test
-  subroutine testIntegerDeque_AR
-    type(IntegerDeque) :: Q
+  subroutine testDequeInteger_AR
+    type(DequeInteger) :: Q
     integer            :: i, j, k, stat
 
     do i=1,SAMPLES
@@ -58,13 +58,13 @@ contains
     @assertEqual( 0, k )
     @assertTrue( Q%empty() )
 
-  end subroutine testIntegerDeque_AR
+  end subroutine testDequeInteger_AR
 
 
   !/ -----------------------------------------------
   @test
-  subroutine testIntegerDeque_AP
-    type(IntegerDeque) :: Q
+  subroutine testDequeInteger_AP
+    type(DequeInteger) :: Q
     integer            :: i, j, k, stat
 
     do i=1,SAMPLES
@@ -85,13 +85,13 @@ contains
     @assertEqual( 0, k )
     @assertTrue( Q%empty() )
 
-  end subroutine testIntegerDeque_AP
+  end subroutine testDequeInteger_AP
 
 
   !/ -----------------------------------------------
   @test
-  subroutine testIntegerDeque_PR
-    type(IntegerDeque) :: Q
+  subroutine testDequeInteger_PR
+    type(DequeInteger) :: Q
     integer            :: i, j, k, stat
 
     do i=1,SAMPLES
@@ -112,13 +112,13 @@ contains
     @assertEqual( 0, k )
     @assertTrue( Q%empty() )
 
-  end subroutine testIntegerDeque_PR
+  end subroutine testDequeInteger_PR
 
 
   !/ -----------------------------------------------
   @test
-  subroutine testIntegerDeque_clear
-    type(IntegerDeque) :: Q
+  subroutine testDequeInteger_clear
+    type(DequeInteger) :: Q
     integer            :: i
 
     do i=1,SAMPLES
@@ -133,13 +133,13 @@ contains
     @assertEqual( 0, Q%size() )
     @assertTrue( Q%empty() )
 
-  end subroutine testIntegerDeque_clear
+  end subroutine testDequeInteger_clear
 
 
   !/ -----------------------------------------------
   @test
-  subroutine testIntegerDeque_peek
-    type(IntegerDeque) :: Q
+  subroutine testDequeInteger_peek
+    type(DequeInteger) :: Q
     integer            :: i, a, b, stat
 
     do i=1,SAMPLES
@@ -170,12 +170,12 @@ contains
     @assertEqual( b, -1 )
     @assertEqual( 1, stat )
 
-  end subroutine testIntegerDeque_peek
+  end subroutine testDequeInteger_peek
 
 
   !/ -----------------------------------------------
   @test
-  subroutine testIntegerDeque_convert
+  subroutine testDequeInteger_convert
     integer           :: a, b, s
     class(*), pointer :: P
     character(32)     :: msg
@@ -187,13 +187,13 @@ contains
 
     @assertEqual( a, b )
 
-  end subroutine testIntegerDeque_convert
+  end subroutine testDequeInteger_convert
 
 
   !/ -----------------------------------------------
   @test
-  subroutine testIntegerDeque_iterate_next
-    type(IntegerDeque) :: Q
+  subroutine testDequeInteger_iterate_next
+    type(DequeInteger) :: Q
     integer            :: i, j, k
 
     do i=1,SAMPLES
@@ -216,13 +216,13 @@ contains
     
     @assertEqual( 0, k )
 
-  end subroutine testIntegerDeque_iterate_next
+  end subroutine testDequeInteger_iterate_next
 
   
   !/ -----------------------------------------------
   @test
-  subroutine testIntegerDeque_iterate_prev
-    type(IntegerDeque) :: Q
+  subroutine testDequeInteger_iterate_prev
+    type(DequeInteger) :: Q
     integer            :: i, j, k
 
     do i=1,SAMPLES
@@ -245,11 +245,11 @@ contains
     
     @assertEqual( 0, k )
     
-  end subroutine testIntegerDeque_iterate_prev
+  end subroutine testDequeInteger_iterate_prev
 
   @test
-  subroutine testIntegerDeque_repeat_add_rem
-    type(IntegerDeque) :: Q
+  subroutine testDequeInteger_repeat_add_rem
+    type(DequeInteger) :: Q
     integer            :: i
     !/ -----------------------------------------------
 
@@ -276,7 +276,7 @@ contains
     @assertTrue( Q%empty() )
 
 
-  end subroutine testIntegerDeque_repeat_add_rem
+  end subroutine testDequeInteger_repeat_add_rem
 
  
 end module testDequeInteger
