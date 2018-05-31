@@ -159,11 +159,13 @@ contains
     @assertTrue( Q%empty() )
 
     a = int( Q%peekHead( stat ) )
-    @assertEqual( a, -1 )
+    @assertFalse( a .lt. 0.0_dp )
+    @assertFalse( a .gt. 0.0_dp )
     @assertEqual( 1, stat )
 
     b = int( Q%peekTail(stat) )
-    @assertEqual( b, -1 )
+    @assertFalse( b .lt. 0.0_dp )
+    @assertFalse( b .gt. 0.0_dp )
     @assertEqual( 1, stat )
 
   end subroutine testDequeDouble_peek

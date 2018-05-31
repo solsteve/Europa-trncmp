@@ -104,7 +104,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     complex(dp)                         :: n      !! complex return value
     !/ -----------------------------------------------------------------------------------
 
-    n = -1
+    n = cmplx( 0.0, 0.0, dp )
 
     if ( associated( obj ) ) then
        select type ( obj )

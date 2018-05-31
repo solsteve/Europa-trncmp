@@ -150,7 +150,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     implicit none
     type(Dice), intent(inout) :: dd !! reference to a Dice object.
     !/ -----------------------------------------------------------------------------------
-
+    
   end subroutine dice_destroy
 
 

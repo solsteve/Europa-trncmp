@@ -163,11 +163,11 @@ contains
     @assertTrue( Q%empty() )
 
     a = Q%peekHead( stat )
-    @assertEqual( a, -1 )
+    @assertEqual( a, 0 )
     @assertEqual( 1, stat )
 
     b = Q%peekTail(stat)
-    @assertEqual( b, -1 )
+    @assertEqual( b, 0 )
     @assertEqual( 1, stat )
 
   end subroutine testDequeInteger_peek

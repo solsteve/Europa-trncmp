@@ -103,7 +103,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer                             :: n      !! integer return value
     !/ -----------------------------------------------------------------------------------
 
-    n = -1
+    n = 0
 
     if ( associated( obj ) ) then
        select type ( obj )

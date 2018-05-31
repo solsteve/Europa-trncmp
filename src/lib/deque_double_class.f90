@@ -104,7 +104,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(dp)                            :: n      !! double precision return value
     !/ -----------------------------------------------------------------------------------
 
-    n = -1
+    n = 0.0_dp
 
     if ( associated( obj ) ) then
        select type ( obj )

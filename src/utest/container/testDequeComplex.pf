@@ -1,0 +1,360 @@
+module testDequeComplex
+  use trncmp_env
+  use pfunit_mod
+  use deque_complex_class
+  implicit none
+
+  integer, parameter :: SAMPLES = 100
+
+  interface isEqual
+     procedure :: is_complex_equal
+  end interface isEqual
+
+contains
+
+  pure function is_complex_equal( A, B ) result( test )
+    implicit none
+    complex(dp), intent(in) :: A
+    complex(dp), intent(in) :: B
+    logical                 :: test
+    test = .true.
+    if ( real(A).lt.real(B) ) then
+       test = .false.
+       goto 100
+    end if
+    if ( real(A).gt.real(B) ) then
+       test = .false.
+       goto 100
+    end if
+    if ( dimag(A).lt.dimag(B) ) then
+       test = .false.
+       goto 100
+    end if
+    if ( dimag(A).gt.dimag(B) ) then
+       test = .false.
+       goto 100
+    end if
+100 continue
+
+  end function is_complex_equal
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testDequeComplex_PP
+    type(DequeComplex) :: Q
+    complex(dp)        :: C,Z
+    integer            :: i, j, k, stat
+
+    do i=1,SAMPLES
+       C = cmplx(i*3, i*2,dp)
+       call Q%push( C )
+    end do
+
+    @assertEqual( SAMPLES, Q%size() )
+    @assertFalse( Q%empty() )
+
+    k = 0
+    do i=SAMPLES,1,-1
+       C = cmplx(i*3, i*2,dp)
+       Z = Q%pop(stat)
+       j = int( real(z)/3.0 )
+       if ( 0.ne.stat )          k = k + 1
+       if ( .not. isEqual(C,Z) ) k = k + 1
+    end do
+
+    @assertEqual( 0, Q%size() )
+    @assertEqual( 0, k )
+    @assertTrue( Q%empty() )
+
+  end subroutine testDequeComplex_PP
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testDequeComplex_AR
+    type(DequeComplex) :: Q
+    complex(dp)        :: C,Z
+    integer            :: i, j, k, stat
+
+    do i=1,SAMPLES
+       C = cmplx(i*3, i*2,dp)
+       call Q%assert( C )
+    end do
+
+    @assertEqual( SAMPLES, Q%size() )
+    @assertFalse( Q%empty() )
+
+    k = 0
+    do i=SAMPLES,1,-1
+       C = cmplx(i*3, i*2,dp)
+       Z = Q%retract(stat)
+       j = int( real(z)/3.0 )
+       if ( 0.ne.stat )          k = k + 1
+       if ( .not. isEqual(C,Z) ) k = k + 1
+    end do
+
+    @assertEqual( 0, Q%size() )
+    @assertEqual( 0, k )
+    @assertTrue( Q%empty() )
+
+  end subroutine testDequeComplex_AR
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testDequeComplex_AP
+    type(DequeComplex) :: Q
+    complex(dp)        :: C,Z
+    integer            :: i, j, k, stat
+
+    do i=1,SAMPLES
+       C = cmplx(i*3, i*2,dp)
+       call Q%assert( C )
+    end do
+
+    @assertEqual( SAMPLES, Q%size() )
+    @assertFalse( Q%empty() )
+
+    k = 0
+    do i=1,SAMPLES
+       C = cmplx(i*3, i*2,dp)
+       Z = Q%pop(stat)
+       j = int( real(z)/3.0 )
+       if ( 0.ne.stat )          k = k + 1
+       if ( .not. isEqual(C,Z) ) k = k + 1
+    end do
+
+    @assertEqual( 0, Q%size() )
+    @assertEqual( 0, k )
+    @assertTrue( Q%empty() )
+
+  end subroutine testDequeComplex_AP
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testDequeComplex_PR
+    type(DequeComplex) :: Q
+    complex(dp)        :: C, Z
+    integer            :: i, j, k, stat
+
+    do i=1,SAMPLES
+       C = cmplx(i*3, i*2,dp)
+       call Q%push( C )
+    end do
+
+    @assertEqual( SAMPLES, Q%size() )
+    @assertFalse( Q%empty() )
+
+    k = 0
+    do i=1,SAMPLES
+       C = cmplx(i*3, i*2,dp)
+       Z = Q%retract(stat)
+       j = int( real(z)/3.0 )
+       if ( 0.ne.stat )          k = k + 1
+       if ( .not. isEqual(C,Z) ) k = k + 1
+    end do
+
+    @assertEqual( 0, Q%size() )
+    @assertEqual( 0, k )
+    @assertTrue( Q%empty() )
+
+  end subroutine testDequeComplex_PR
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testDequeComplex_clear
+    type(DequeComplex) :: Q
+    complex(dp)        :: C
+    integer            :: i
+
+    do i=1,SAMPLES
+       C = cmplx(i*3, i*2,dp)
+       call Q%push( C )
+    end do
+
+    @assertEqual( SAMPLES, Q%size() )
+    @assertFalse( Q%empty() )
+
+    call Q%clear(del=.true.)
+
+    @assertEqual( 0, Q%size() )
+    @assertTrue( Q%empty() )
+
+  end subroutine testDequeComplex_clear
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testDequeComplex_peek
+    type(DequeComplex) :: Q
+    complex(dp)        :: C, Z, first, last, zero
+    integer            :: i, stat
+
+    first = cmplx(  93, -17, dp )
+    last  = cmplx( -23,  41, dp )
+    zero  = cmplx(   0,   0, dp )
+
+    call Q%assert( first )
+    do i=3,SAMPLES
+       C = cmplx(i*3, i*2, dp)
+       call Q%assert( C )
+    end do
+    call Q%assert( last )
+
+    @assertEqual( SAMPLES, Q%size() )
+    @assertFalse( Q%empty() )
+
+    Z = Q%peekHead( stat )
+    @assertEqual( Z, first )
+    @assertEqual( 0, stat )
+
+    Z = Q%peekTail( stat )
+    @assertEqual( Z, last )
+    @assertEqual( 0, stat )
+
+    call Q%clear(del=.true.)
+
+    @assertEqual( 0, Q%size() )
+    @assertTrue( Q%empty() )
+
+    Z = Q%peekHead( stat )
+    @assertTrue( isEqual( Z, zero ) )
+    @assertEqual( 1, stat )
+
+    Z = Q%peekTail( stat )
+    @assertTrue( isEqual( Z, zero ) )
+    @assertEqual( 1, stat )
+
+  end subroutine testDequeComplex_peek
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testDequeComplex_convert
+    complex(dp)       :: a, b
+    integer           :: s
+    class(*), pointer :: P
+    character(32)     :: msg
+    msg = ''
+    a = cmplx( 7.3, -2.7, dp )
+
+    P => complex2object( a )
+    b = object2complex( P, s, msg )
+
+    @assertTrue( isEqual( a, b ) )
+
+  end subroutine testDequeComplex_convert
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testDequeComplex_iterate_next
+    type(DequeComplex) :: Q
+    complex(dp)        :: C, Z
+    integer            :: i, k
+
+    do i=1,SAMPLES
+       C = cmplx(i*3, i*2,dp)
+       call Q%push( C )
+    end do
+
+    call Q%head
+
+    k = 0
+    i = SAMPLES
+    it_loop: do
+       if ( Q%hasNext() ) then
+          C = cmplx(i*3, i*2,dp)
+          Z = Q%next()
+          if ( .not. isEqual( C, Z ) ) k = k + 1
+       else
+          exit it_loop
+       end if
+       i = i - 1
+    end do it_loop
+
+    @assertEqual( 0, k )
+
+  end subroutine testDequeComplex_iterate_next
+
+  
+  !/ -----------------------------------------------
+  @test
+  subroutine testDequeComplex_iterate_prev
+    type(DequeComplex) :: Q
+    complex(dp)        :: C, Z
+    integer            :: i, k
+
+    do i=1,SAMPLES
+       C = cmplx(i*3, i*2,dp)
+       call Q%push( C )
+    end do
+
+    call Q%tail
+
+    k = 0
+    i = 1
+    it_loop: do
+       if ( Q%hasPrev() ) then
+          C = cmplx(i*3, i*2,dp)
+          Z = Q%prev()
+          if ( .not. isEqual( C, Z ) ) k = k + 1
+       else
+          exit it_loop
+       end if
+      i = i + 1
+    end do it_loop
+    
+    @assertEqual( 0, k )
+    
+  end subroutine testDequeComplex_iterate_prev
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testDequeComplex_repeat_add_rem
+    type(DequeComplex)        :: Q
+    integer                   :: i
+    complex(dp)               :: C1, C2, C3, ans, Z
+    complex(dp), dimension(3) :: A
+    !/ -----------------------------------------------
+
+    C1 = cmplx(  1.2, -3.4, dp )
+    C2 = cmplx( -5.6,  7.8, dp )
+    C3 = cmplx(  9.1, -2.3, dp )
+
+    A(1) = C1
+    A(2) = C2
+    A(3) = C3
+
+    ans = C1 + C2 + C3
+
+    @assertEqual( 0, Q%size() )
+    call Q%add(C1)
+    call Q%add(C2)
+    call Q%add(C3)
+    @assertEqual( 3, Q%size() )
+
+    !/ -----------------------------------------------
+    Z =     Q%remove()
+    Z = Z + Q%remove()
+    Z = Z + Q%remove()
+
+    @assertTrue( isEqual( Z, ans ) )
+    @assertTrue( Q%empty() )
+
+    !/ -----------------------------------------------
+    do i=1,3
+       call Q%add( A(i) )
+    end do
+    @assertEqual( 3, Q%size() )
+
+    call Q%clear
+    @assertTrue( Q%empty() )
+
+
+  end subroutine testDequeComplex_repeat_add_rem
+
+
+end module testDequeComplex
