@@ -1,0 +1,145 @@
+module testCasting
+  use trncmp_env
+  use pfunit_mod
+  use poly_cast_mod
+  implicit none
+
+
+
+contains
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testCastCharacter
+
+    character(len=:), allocatable :: a, b
+    integer                       :: s
+    class(*), pointer             :: P
+
+    a = "Heather"
+
+    P => toObject( a )
+    b = castCharacter( P, s )
+
+    @assertEqual( a, b )
+    @assertEqual( 0, s )
+
+    a = "Marie"
+
+    P => toObject( a )
+    b = castCharacter( P, s )
+
+    @assertEqual( a, b )
+    @assertEqual( 0, s )
+
+  end subroutine testCastCharacter
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testCastLogical
+
+    logical           :: a, b
+    integer           :: s
+    class(*), pointer :: P
+
+    a = .true.
+
+    P => toObject( a )
+    b = castLogical( P, s )
+
+    @assertEqual( a, b )
+    @assertEqual( 0, s )
+
+    a = .false.
+
+    P => toObject( a )
+    b = castLogical( P, s )
+
+    @assertEqual( a, b )
+    @assertEqual( 0, s )
+
+ end subroutine testCastLogical
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testCastInteger
+
+    integer           :: a, b, s
+    class(*), pointer :: P
+
+    a = 7
+
+    P => toObject( a )
+    b = castInteger( P, s )
+
+    @assertEqual( a, b )
+    @assertEqual( 0, s )
+
+ end subroutine testCastInteger
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testCastSingle
+
+    real(sp)          :: a, b
+    integer           :: s
+    class(*), pointer :: P
+
+    a = 7.3_sp
+
+    P => toObject( a )
+    b = castSingle( P, s )
+
+    @assertFalse( a .lt. b )
+    @assertFalse( a .gt. b )
+    @assertEqual( 0, s )
+
+ end subroutine testCastSingle
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testCastDouble
+
+    real(dp)          :: a, b
+    integer           :: s
+    class(*), pointer :: P
+
+    a = 7.3_dp
+
+    P => toObject( a )
+    b = castDouble( P, s )
+
+    @assertFalse( a .lt. b )
+    @assertFalse( a .gt. b )
+    @assertEqual( 0, s )
+
+ end subroutine testCastDouble
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testCastComplex
+
+    complex(dp)       :: a, b
+    integer           :: s
+    class(*), pointer :: P
+
+    a = cmplx( 7.3, -2.3, dp )
+
+    P => toObject( a )
+    b = castComplex( P, s )
+
+    @assertFalse(  real(a) .lt.  real(b) )
+    @assertFalse( aimag(a) .lt. aimag(b) )
+    @assertFalse(  real(a) .gt.  real(b) )
+    @assertFalse( aimag(a) .gt. aimag(b) )
+    @assertEqual( 0, s )
+
+ end subroutine testCastComplex
+
+
+end module testCasting

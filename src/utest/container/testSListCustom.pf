@@ -1,0 +1,158 @@
+module testSListCustom
+  use pfunit_mod
+  use sllist_object_class
+  use poly_cast_mod
+  implicit none
+
+  integer, parameter :: SAMPLES = 100
+
+contains
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testCustomSLList_AR
+    type(SLList)      :: S
+    integer           :: i, j, k, stat
+    class(*), pointer :: obj
+
+    do i=1,SAMPLES
+       obj => toObject(i)
+       call S%add( obj )
+    end do
+
+    @assertEqual( SAMPLES, S%size() )
+    @assertFalse( S%empty() )
+
+    k = 0
+    do i=1,SAMPLES
+       obj => S%remove()
+       j = castInteger( obj )
+       if ( 0.ne.stat ) k = k + 1
+       if ( i.ne.j )    k = k + 1
+       deallocate(obj)
+    end do
+
+    @assertEqual( 0, S%size() )
+    @assertEqual( 0, k )
+    @assertTrue( S%empty() )
+
+  end subroutine testCustomSLList_AR
+
+  
+  !/ -----------------------------------------------
+  @test
+  subroutine testCustomSLList_clear
+    type(SLList)      :: S
+    integer           :: i
+    class(*), pointer :: obj
+
+    do i=1,SAMPLES
+       call S%add( toObject(i) )
+    end do
+
+!    @assertEqual( SAMPLES, S%size() )
+!    @assertFalse( S%empty() )
+
+!    call S%clear(del=.true.)
+
+!    @assertEqual( 0, S%size() )
+!    @assertTrue( S%empty() )
+
+  end subroutine testCustomSLList_clear
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testSLList_peek
+    type(SLList) :: S
+    integer      :: i, a, b, stat
+
+    do i=1,SAMPLES
+       call S%add( toObject(i) )
+    end do
+
+    @assertEqual( SAMPLES, S%size() )
+    @assertFalse( S%empty() )
+
+    a = castInteger( S%peekHead( stat ) )
+    @assertEqual( a, 1 )
+    @assertEqual( 0, stat )
+
+    call S%clear(del=.true.)
+
+    @assertEqual( 0, S%size() )
+    @assertTrue( S%empty() )
+
+    a = castInteger( S%peekHead( stat ) )
+    @assertEqual( a, 0 )
+    @assertEqual( 1, stat )
+
+  end subroutine testSLList_peek
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testDLList_iterate_next
+    type(SLList) :: S
+    integer      :: i, j, k
+
+    do i=1,SAMPLES
+       call S%add( toObject(i) )
+    end do
+
+    call S%rewind
+
+    k = 0
+    i = 1
+    it_loop: do
+        if ( S%hasNext() ) then
+          j = castInteger( S%next() )
+          if ( i.ne.j )  k = k + 1
+       else
+          exit it_loop
+       end if
+      i = i + 1
+    end do it_loop
+    
+    @assertEqual( 0, k )
+
+  end subroutine testDLList_iterate_next
+
+  
+  !/ -----------------------------------------------
+  @test
+  subroutine testSLList_repeat_add_rem
+    type(SLList) :: S
+    integer      :: i
+    !/ -----------------------------------------------
+
+    @assertEqual( 0, S%size() )
+    call S%add( toObject(1) )
+    call S%add( toObject(3) )
+    call S%add( toObject(7) )
+    call S%add( toObject(11) )
+    @assertEqual( 4, S%size() )
+
+    !/ -----------------------------------------------
+    i = castInteger(S%remove())
+    i = i + castInteger(S%remove())
+    i = i + castInteger(S%remove())
+    i = i + castInteger(S%remove())
+    @assertEqual( 22, i )
+    @assertTrue( S%empty() )
+
+    !/ -----------------------------------------------
+    do i=1,10
+       call S%add( toObject(i) )
+    end do
+    @assertEqual( 10, S%size() )
+
+    call S%clear
+    @assertTrue( S%empty() )
+
+
+  end subroutine testSLList_repeat_add_rem
+
+  
+end module testSListCustom

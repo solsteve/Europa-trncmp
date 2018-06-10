@@ -84,10 +84,13 @@ contains
     !/ -----------------------------------------------------------------------------------
     implicit none
     type(deque),             intent(inout) :: queue  !! reference to this deque class.
-    class(my_obj), pointer, intent(inout) :: obj
+    class(my_obj), target, intent(in) :: obj
     !/ -----------------------------------------------------------------------------------
+    class(*), pointer :: P
+    P=> obj
 
-    call queue%assert( obj )
+    
+    call queue%assert( P )
 
   end subroutine deque_node_assert_myobj
 
@@ -99,10 +102,12 @@ contains
     !/ -----------------------------------------------------------------------------------
     implicit none
     type(deque),             intent(inout) :: queue  !! reference to this deque class.
-    class(my_obj), pointer, intent(inout) :: obj
+    class(my_obj), target, intent(in) :: obj
     !/ -----------------------------------------------------------------------------------
+    class(*), pointer :: P
+    P=> obj
 
-    call queue%push( obj )
+    call queue%push( P )
 
   end subroutine deque_node_push_myobj
 

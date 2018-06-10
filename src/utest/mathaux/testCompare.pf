@@ -1,0 +1,279 @@
+module testCompare
+  use trncmp_env
+  use pfunit_mod
+  use poly_cast_mod
+  use compare_types_mod
+  implicit none
+
+contains
+
+  !/ -----------------------------------------------
+  @test
+  subroutine compString
+    integer                   :: r, stat
+    character(:), allocatable :: a, b
+    real(dp)                  :: d
+    complex(dp)               :: z
+    class(*), pointer         :: obj1, obj2
+
+    a = 'Heasher'
+    b = 'Heather'
+    d = 3.7
+
+    !/ -------------------------------
+    obj1 => toObject( a )
+    obj2 => toObject( b )
+    r = compare( obj1, obj2, stat )  ! b < obj
+    @assertTrue( r .lt. 0 )
+    @assertEqual( 0, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( a )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! b == obj
+    @assertTrue( r .eq. 0 )
+    @assertEqual( 0, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( b )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! b > obj
+    @assertTrue( r .gt. 0 )
+    @assertEqual( 0, stat )
+
+     !/ -------------------------------
+    nullify(obj1)
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! object 1 is NULL
+    @assertEqual( 1, stat )
+
+   !/ -------------------------------
+    obj1 => toObject( a )
+    nullify(obj2)
+    r = compare( obj1, obj2, stat )  ! object 2 is NULL
+    @assertEqual( 2, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( a )
+    obj2 => toObject( d )
+    r = compare( obj1, obj2, stat )  ! object 2 is not a character string
+    @assertEqual( 3, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( d )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! object 1 is not a character string
+    @assertEqual( 3, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( z )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! object 1 is not valid type
+    @assertEqual( 4, stat )
+
+  end subroutine compString
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine compInteger
+    integer                   :: r, stat
+    integer                   :: a, b
+    real(dp)                  :: d
+    complex(dp)               :: z
+    class(*), pointer         :: obj1, obj2
+
+    a = 1
+    b = 7
+    d = 3.7
+
+    !/ -------------------------------
+    obj1 => toObject( a )
+    obj2 => toObject( b )
+    r = compare( obj1, obj2, stat )  ! b < obj
+    @assertTrue( r .lt. 0 )
+    @assertEqual( 0, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( a )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! b == obj
+    @assertTrue( r .eq. 0 )
+    @assertEqual( 0, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( b )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! b > obj
+    @assertTrue( r .gt. 0 )
+    @assertEqual( 0, stat )
+
+     !/ -------------------------------
+    nullify(obj1)
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! object 1 is NULL
+    @assertEqual( 1, stat )
+
+   !/ -------------------------------
+    obj1 => toObject( a )
+    nullify(obj2)
+    r = compare( obj1, obj2, stat )  ! object 2 is NULL
+    @assertEqual( 2, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( a )
+    obj2 => toObject( d )
+    r = compare( obj1, obj2, stat )  ! object 2 is not an integer
+    @assertEqual( 3, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( d )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! object 1 is not an integer
+    @assertEqual( 3, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( z )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! object 1 is not valid type
+    @assertEqual( 4, stat )
+
+  end subroutine compInteger
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine compSingle
+    integer                   :: r, stat
+    real(sp)                  :: a, b
+    real(dp)                  :: d
+    complex(dp)               :: z
+    class(*), pointer         :: obj1, obj2
+
+    a = 2.3_sp
+    b = 7.1_sp
+    d = 3.7
+
+    !/ -------------------------------
+    obj1 => toObject( a )
+    obj2 => toObject( b )
+    r = compare( obj1, obj2, stat )  ! b < obj
+    @assertTrue( r .lt. 0 )
+    @assertEqual( 0, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( a )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! b == obj
+    @assertTrue( r .eq. 0 )
+    @assertEqual( 0, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( b )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! b > obj
+    @assertTrue( r .gt. 0 )
+    @assertEqual( 0, stat )
+
+     !/ -------------------------------
+    nullify(obj1)
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! object 1 is NULL
+    @assertEqual( 1, stat )
+
+   !/ -------------------------------
+    obj1 => toObject( a )
+    nullify(obj2)
+    r = compare( obj1, obj2, stat )  ! object 2 is NULL
+    @assertEqual( 2, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( a )
+    obj2 => toObject( d )
+    r = compare( obj1, obj2, stat )  ! object 2 is not a single precision
+    @assertEqual( 3, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( d )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! object 1 is not a single precision
+    @assertEqual( 3, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( z )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! object 1 is not valid type
+    @assertEqual( 4, stat )
+
+  end subroutine compSingle
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine compDouble
+    integer                   :: r, stat
+    real(dp)                  :: a, b
+    integer                   :: d
+    complex(dp)               :: z
+    class(*), pointer         :: obj1, obj2
+
+    a = 2.3_dp
+    b = 7.1_dp
+    d = 3
+
+    !/ -------------------------------
+    obj1 => toObject( a )
+    obj2 => toObject( b )
+    r = compare( obj1, obj2, stat )  ! b < obj
+    @assertTrue( r .lt. 0 )
+    @assertEqual( 0, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( a )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! b == obj
+    @assertTrue( r .eq. 0 )
+    @assertEqual( 0, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( b )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! b > obj
+    @assertTrue( r .gt. 0 )
+    @assertEqual( 0, stat )
+
+     !/ -------------------------------
+    nullify(obj1)
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! object 1 is NULL
+    @assertEqual( 1, stat )
+
+   !/ -------------------------------
+    obj1 => toObject( a )
+    nullify(obj2)
+    r = compare( obj1, obj2, stat )  ! object 2 is NULL
+    @assertEqual( 2, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( a )
+    obj2 => toObject( d )
+    r = compare( obj1, obj2, stat )  ! object 2 is not a double precision
+    @assertEqual( 3, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( d )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! object 1 is not a double precision
+    @assertEqual( 3, stat )
+
+    !/ -------------------------------
+    obj1 => toObject( z )
+    obj2 => toObject( a )
+    r = compare( obj1, obj2, stat )  ! object 1 is not valid type
+    @assertEqual( 4, stat )
+
+  end subroutine compDouble
+
+
+
+end module testCompare

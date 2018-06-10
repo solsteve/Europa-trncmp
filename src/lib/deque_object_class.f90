@@ -276,8 +276,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Push an unlimited polymorphic object onto the head of the deque.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(Deque),     intent(inout) :: self !! reference to this deque class.
-    class(*), target, intent(inout) :: obj  !! deque data.
+    class(Deque),      intent(inout) :: self !! reference to this deque class.
+    class(*), pointer, intent(in) :: obj  !! deque data.
     !/ -----------------------------------------------------------------------------------
     type(deque_node), pointer :: new_node
     !/ -----------------------------------------------------------------------------------
@@ -309,8 +309,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Push an unlimited polymorphic object onto the tail of the deque.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(Deque),     intent(inout) :: self !! reference to this deque class.
-    class(*), target, intent(inout) :: obj  !! deque data.
+    class(Deque),      intent(inout) :: self !! reference to this deque class.
+    class(*), pointer, intent(in)    :: obj  !! deque data.
     !/ -----------------------------------------------------------------------------------
     type(deque_node), pointer :: new_node
     !/ -----------------------------------------------------------------------------------

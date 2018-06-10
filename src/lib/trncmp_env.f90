@@ -37,7 +37,14 @@ module trncmp_env
   use copy_mod
   use zero_mod
   use summation_mod
+  use compare_types_mod
+  use poly_cast_mod
   implicit none
+
+
+  type, public :: object_pointer
+     class(*), pointer :: ptr
+  end type object_pointer
 
   
   integer, public, parameter :: MAX_PATH = 128 !! Maximum charaters in file path
