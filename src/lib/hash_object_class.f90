@@ -31,29 +31,48 @@ module hash_object_class
   !!
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
-  use sllist_object_class
-  use poly_cast_mod
+  use btree_object_class
   implicit none
   private
 
   
-  type HashSlot
-     class(SLList), pointer :: list
-  end type HashSlot
+  !/ =====================================================================================
+  type, public :: HashChain
+     !/ ----------------------------------------------------------------------------------
+     class(BTree), pointer :: chain => null()
+  end type HashChain
 
   
-  type ObjectHash
-     type(HashSlot), allocatable, dimension(:) :: slots
-  end type ObjectHash
+  !/ =====================================================================================
+  type, public :: HashMap
+     !/ ----------------------------------------------------------------------------------
 
-  
-  interface computeHash
+     type(BTree), allocatable, dimension(:) :: map
+     integer :: num_chain = 0
+
+   contains
+
+     procedure, public :: set  => hashmap_set
+     procedure, public :: get  => hashmap_get
+
+     final :: hashmap_destroy
+  end type HashMap
+
+
+  !/ -------------------------------------------------------------------------------------
+  interface hash
+     !/ ----------------------------------------------------------------------------------
      module procedure :: object_to_hash
-  end interface computeHash
+  end interface hash
 
-
+  public :: hash
   
 
+  !/ -------------------------------------------------------------------------------------
+  interface create
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: hashmap_create
+  end interface create
   
   
   !/ =====================================================================================
@@ -62,91 +81,123 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
 
+  !/ =====================================================================================
+  subroutine hashmap_create( H, alloc )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(HashMap),     intent(inout) :: H
+    integer, optional, intent(in)    :: alloc
+    !/ -----------------------------------------------------------------------------------
+
+    H%num_chain = 16384
+    if ( present( alloc ) ) then
+       H%num_chain = alloc
+    end if
+
+    allocate( H%map(H%num_chain) )
+
+  end subroutine hashmap_create
 
   !/ =====================================================================================
-  function string_to_hash( key, mod ) result( hash )
+  subroutine hashmap_destroy( H )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(HashMap),     intent(inout) :: H
+    !/ -----------------------------------------------------------------------------------
+  end subroutine hashmap_destroy
+
+  !/ =====================================================================================
+  pure function string_to_hash( key, mod ) result( H )
     !/ -----------------------------------------------------------------------------------
     !! Creates a HASH from an integer key with modulo.
     !/ -----------------------------------------------------------------------------------
     implicit none
     character(*), intent(in) :: key  !! string key to hash.
     integer,      intent(in) :: mod  !! modulo to aply to the hash.
-    integer                  :: hash !! return hash.
+    integer                  :: H    !! return hash.
     !/ -----------------------------------------------------------------------------------
+    integer :: i
+    
+    H = 5381
 
-    hash = 1
+    do i=1,len(key)
+       H = ( ishft(H,5) + H ) + ichar( key(i:i) )
+    end do
+    H = modulo( H, mod )
 
   end function string_to_hash
 
 
   !/ =====================================================================================
-  function integer_to_hash( key, mod ) result( hash )
+  pure function integer_to_hash( key, mod ) result( H )
     !/ -----------------------------------------------------------------------------------
     !! Creates a HASH from an integer key with modulo.
     !/ -----------------------------------------------------------------------------------
     implicit none
     integer, intent(in) :: key  !! integer key to hash.
     integer, intent(in) :: mod  !! modulo to aply to the hash.
-    integer             :: hash !! return hash.
+    integer             :: H    !! return hash.
     !/ -----------------------------------------------------------------------------------
 
-    hash = MODULO( key, mod )
+    H = modulo( key, mod )
 
   end function integer_to_hash
 
 
   !/ =====================================================================================
-  function single_to_hash( key, mod ) result( hash )
+  pure function single_to_hash( key, mod ) result( H )
     !/ -----------------------------------------------------------------------------------
     !! Creates a HASH from an integer key with modulo.
     !/ -----------------------------------------------------------------------------------
     implicit none
     real(sp), intent(in) :: key  !! single precision key to hash.
     integer,  intent(in) :: mod  !! modulo to aply to the hash.
-    integer              :: hash !! return hash.
+    integer              :: H    !! return hash.
     !/ -----------------------------------------------------------------------------------
 
-    hash = 1
+    H = modulo( int( log(key) * 8.192e3 ), mod )
 
   end function single_to_hash
 
 
   !/ =====================================================================================
-  function double_to_hash( key, mod ) result( hash )
+  pure function double_to_hash( key, mod ) result( H )
     !/ -----------------------------------------------------------------------------------
     !! Creates a HASH from an integer key with modulo.
     !/ -----------------------------------------------------------------------------------
     implicit none
     real(dp), intent(in) :: key  !! single precision key to hash.
     integer,  intent(in) :: mod  !! modulo to aply to the hash.
-    integer              :: hash !! return hash.
+    integer              :: H    !! return hash.
     !/ -----------------------------------------------------------------------------------
 
-    hash = 1
+    H = modulo( int( log(key) * 3.2768d4 ), mod )
 
   end function double_to_hash
 
 
   !/ =====================================================================================
-  function object_to_hash( key, mod ) result( hash )
+  pure function object_to_hash( key, mod ) result( H )
     !/ -----------------------------------------------------------------------------------
     !! Creates a HASH from an integer key with modulo.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(*), intent(in) :: key  !! single precision key to hash.
     integer,  intent(in) :: mod  !! modulo to aply to the hash.
-    integer              :: hash !! return hash.
+    integer              :: H    !! return hash.
     !/ -----------------------------------------------------------------------------------
 
+    H = 1
+    
     select type( key )
     type is( character(*) )
-       hash = string_to_hash( key, mod )
+       H = string_to_hash( key, mod )
     type is( integer )
-       hash = integer_to_hash( key, mod )
+       H = integer_to_hash( key, mod )
     type is( real(sp) )
-       hash = single_to_hash( key, mod )
+       H = single_to_hash( key, mod )
     type is( real(dp) )
-       hash = double_to_hash( key, mod )
+       H = double_to_hash( key, mod )
     end select
     
   end function object_to_hash
@@ -154,12 +205,31 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
 
+  !/ =====================================================================================
+  subroutine hashmap_set( self, key, obj )
+    !/ -----------------------------------------------------------------------------------
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(HashMap), intent(inout) :: self !! reference to this object
+    class(*),       intent(in)    :: key  !! key to hash
+    class(*),       intent(in)    :: obj  !! object to store
+    !/ -----------------------------------------------------------------------------------
+
+  end subroutine hashmap_set
 
 
+  !/ =====================================================================================
+  function hashmap_get( self, key, stat ) result( obj )
+    !/ -----------------------------------------------------------------------------------
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(HashMap),    intent(inout) :: self !! reference to this object
+    class(*),          intent(in)    :: key  !! key to hash
+    integer, optional, intent(out)   :: stat !! optional return status
+    class(*), pointer                :: obj
+    !/ -----------------------------------------------------------------------------------
 
-
-
-
+  end function hashmap_get
 
   
 end module hash_object_class

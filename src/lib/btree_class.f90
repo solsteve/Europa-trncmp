@@ -41,10 +41,10 @@ module btree_object_class
      !! BTree Node.
      !/ ----------------------------------------------------------------------------------
 
-     class(*),         pointer :: key    => null() !! key object.
-     class(*),         pointer :: object => null() !! storage object.
-     type(btree_node), pointer :: left   => null() !! pointer to the left  child node.
-     type(btree_node), pointer :: right  => null() !! pointer to the right child node.
+     class(*),          pointer :: key    => null() !! key object.
+     class(*),          pointer :: object => null() !! storage object.
+     class(btree_node), pointer :: left   => null() !! pointer to the left  child node.
+     class(btree_node), pointer :: right  => null() !! pointer to the right child node.
 
 
    contains
@@ -82,6 +82,7 @@ module btree_object_class
      procedure, public :: isEmpty     => btree_is_empty
      procedure, public :: size        => btree_size
      procedure, public :: insert      => btree_insert_object
+     procedure, public :: find        => btree_find_object
      procedure, public :: execute     => btree_execute_lcr_node
      procedure, public :: buildIndex  => btree_build_index
      procedure, public :: index       => btree_get_object_at_index
@@ -281,6 +282,69 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     self%needs_index_rebuild = .true.
 
   end subroutine btree_insert_object
+
+
+  !/ =====================================================================================
+  function recursive_find_node( root, key, stat ) result( node )
+    !/ -----------------------------------------------------------------------------------
+    !!
+    !! |  stat  | errmsg        |
+    !! | :----: | ------------- |
+    !! |    0   | n/a           |
+    !! |    1   | no node found |
+    !! |    2   | key is NULL   |
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(btree_node), pointer, intent(in)  :: root !! search new node here.
+    class(*),          pointer, intent(in)  :: key  !! btree key.
+    integer,                    intent(out) :: stat !! return status
+    type(btree_node),  pointer              :: node !! start execution here.
+    !/ -----------------------------------------------------------------------------------
+    integer :: c
+
+    stat = 0
+
+    nullify( node )
+
+    if ( associated( root ) ) then
+       if ( associated( key ) ) then
+          c = compare( key, root%key )
+          select case(c)
+          case(:-1) ! key < root
+             node => recursive_find_node( root%left, key, stat )
+          case(0)   ! key = root
+             node => root
+             stat =  0
+          case(1:)  ! key > root
+             node => recursive_find_node( root%right, key, stat )
+          end select
+       else
+          stat = 2
+       end if
+    else
+       stat = 1
+    end if
+
+  end function recursive_find_node
+
+
+  !/ =====================================================================================
+  function btree_find_object( self, key, stat ) result( node )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(BTree),               intent(inout) :: self !! reference to this btree class.
+    class(*),         pointer,  intent(in)    :: key  !! btree key.
+    integer,          optional, intent(out)   :: stat !! optional return status
+    type(btree_node), pointer                 :: node !! start execution here.
+    !/ -----------------------------------------------------------------------------------
+    integer :: istat
+    istat = 0
+
+    node => recursive_find_node( self%root_node, key, istat )
+
+    if ( present( stat ) ) stat = istat
+
+  end function btree_find_object
 
 
   !/ =====================================================================================

@@ -34,6 +34,7 @@ module ftest_btree
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
   use btree_object_class
+  use hash_object_class
   use poly_cast_mod
   implicit none
 
@@ -160,21 +161,46 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        write(*,*) castInteger( node%key ), castInteger( node%object )
     end do
 
+    node => T%find( toObject( 32 ) )
+    write(*,*) 'found',32,castInteger( node%object )
+
+    node => T%find( toObject( 70 ), stat=x )
+    write(*,*) 'found stat=',x
 
 
 
-
-
-
-
-
-
-    
     deallocate( table )  
 
   end subroutine test02
 
-end module ftest_btree
+  !/ =====================================================================================
+  subroutine test03( SAMPLES )
+    !/ -----------------------------------------------------------------------------------
+    integer, intent( in ) :: SAMPLES
+    !/ -----------------------------------------------------------------------------------
+
+    write(*,*) hash( 'heather',    1000 )
+    write(*,*) hash( 'anthea',     1000 )
+    write(*,*) hash( 'cassiopeia', 1000 )
+
+    write(*,*) hash( 23,     1000 )
+    write(*,*) hash( 17731,  1000 )
+    write(*,*) hash( 187621, 1000 )
+
+    write(*,*) hash( 2.3_sp,     1000 )
+    write(*,*) hash( 177.31_sp,  1000 )
+    write(*,*) hash( 18762.1_sp, 1000 )
+
+    write(*,*) hash( 2.3_dp,     1000 )
+    write(*,*) hash( 177.31_dp,  1000 )
+    write(*,*) hash( 18762.1_dp, 1000 )
+
+    
+  end subroutine test03
+
+
+
+  end module ftest_btree
 
      
 !/ =======================================================================================
@@ -191,6 +217,10 @@ program main
   write (*,*) '--------------------------------------------------'
   write (*,*)
   call test02( SAMPLES )
+  write (*,*)
+  write (*,*) '--------------------------------------------------'
+  write (*,*)
+  call test03( SAMPLES )
   write (*,*)
   
 end program main

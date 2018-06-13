@@ -1,8 +1,6 @@
 module testCompare
   use trncmp_env
   use pfunit_mod
-  use poly_cast_mod
-  use compare_types_mod
   implicit none
 
 contains
