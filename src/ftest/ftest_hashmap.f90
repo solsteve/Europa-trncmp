@@ -1,5 +1,5 @@
 !/ ====================================================================== BEGIN FILE =====
-!/ **                               F T E S T _ B T R E E                               **
+!/ **                             F T E S T _ H A S H M A P                             **
 !/ =======================================================================================
 !/ **                                                                                   **
 !/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
@@ -21,10 +21,10 @@
 !/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 !/ **                                                                                   **
 !/ =======================================================================================
-module ftest_btree
+module ftest_hashmap
   !/ -------------------------------------------------------------------------------------
   !! author:  Stephen W. Soliday
-  !! date:    2018-mm-dd
+  !! date:    2018-06-20
   !! license: GPL
   !!
   !!##Test of .
@@ -33,7 +33,6 @@ module ftest_btree
   !
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
-  use btree_object_class
   use hash_object_class
   use poly_cast_mod
   implicit none
@@ -43,22 +42,6 @@ module ftest_btree
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
 
-
-  
-  
-  
-  !/ =====================================================================================
-  subroutine print_nodes( key, obj )
-    !/ -----------------------------------------------------------------------------------
-    class(*), pointer, intent(in) :: key !! pointer to a key.
-    class(*), pointer, intent(in) :: obj !! pointer to an object.
-    !/ -----------------------------------------------------------------------------------
-
-    write(*,*) castInteger( key ), castInteger( obj )
-    
-  end subroutine print_nodes
-
-  
 
   !/ =====================================================================================
   function get_integer( range ) result( z )
@@ -81,14 +64,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer, intent( in ) :: SAMPLES
     !/ -----------------------------------------------------------------------------------
 
-    type(BTree) :: T
+    type(HashMap) :: map
     integer     :: i, a, b, x
     integer, allocatable, dimension(:) :: table
 
-    procedure (btree_node_procedure), pointer :: f_ptr => null()
-
-    f_ptr => print_nodes
-
+    call create( map, 8 )
+    
     allocate( table( SAMPLES ) )
 
     do i=1,SAMPLES
@@ -108,121 +89,34 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end do
 
     do i=1,SAMPLES
-       x = get_integer( SAMPLES*317 )
-       call T%insert( toObject( i ), toObject( x ) )
+       call map%set( toObject( table(i) ), toObject( table(i) ) )
     end do
 
-    call T%execute( f_ptr )
+     do i=1,SAMPLES
+        write(*,*) i, castInteger( map%get( toObject( i ) ) )
+    end do
 
-    deallocate( table )  
+   deallocate( table )  
 
   end subroutine test01
 
 
 
-  !/ =====================================================================================
-  subroutine test02( SAMPLES )
-    !/ -----------------------------------------------------------------------------------
-    integer, intent( in ) :: SAMPLES
-    !/ -----------------------------------------------------------------------------------
-
-    type(BTree) :: T
-    integer     :: i, a, b, x
-    integer, allocatable, dimension(:) :: table
-    class(btree_node), pointer :: node => null()
-
-    allocate( table( SAMPLES ) )
-
-    do i=1,SAMPLES
-       table(i) = i
-    end do
-
-    call random_seed
-
-    do i=1,SAMPLES*3
-       a = get_integer( SAMPLES )
-       b = get_integer( SAMPLES )
-       if ( a.ne.b ) then
-          x        = table(a)
-          table(a) = table(b)
-          table(b) = x
-       end if
-    end do
-
-    do i=1,SAMPLES
-       x = get_integer( SAMPLES*317 )
-       call T%insert( toObject( i ), toObject( x ) )
-    end do
-
-    call T%buildIndex
-    
-    do i=1,SAMPLES
-       node => T%index(i)
-       write(*,*) castInteger( node%key ), castInteger( node%object )
-    end do
-
-    node => T%find( toObject( 32 ) )
-    write(*,*) 'found',32,castInteger( node%object )
-
-    node => T%find( toObject( 70 ), stat=x )
-    write(*,*) 'found stat=',x
 
 
-
-    deallocate( table )  
-
-  end subroutine test02
-
-  !/ =====================================================================================
-  subroutine test03( SAMPLES )
-    !/ -----------------------------------------------------------------------------------
-    integer, intent( in ) :: SAMPLES
-    !/ -----------------------------------------------------------------------------------
-
-    write(*,*) 'These numbers should all be different'
-
-    write(*,*) hash( 'heather',    1000 )
-    write(*,*) hash( 'anthea',     1000 )
-    write(*,*) hash( 'cassiopeia', 1000 )
-
-    write(*,*) hash( 23,     1000 )
-    write(*,*) hash( 17731,  1000 )
-    write(*,*) hash( 187621, 1000 )
-
-    write(*,*) hash( 2.3_sp,     1000 )
-    write(*,*) hash( 177.31_sp,  1000 )
-    write(*,*) hash( 18762.1_sp, 1000 )
-
-    write(*,*) hash( 2.3_dp,     1000 )
-    write(*,*) hash( 177.31_dp,  1000 )
-    write(*,*) hash( 18762.1_dp, 1000 )
-
-    
-  end subroutine test03
-
-
-
-  end module ftest_btree
+end module ftest_hashmap
 
      
 !/ =======================================================================================
 program main
   !/ -------------------------------------------------------------------------------------
-  use ftest_btree
+  use ftest_hashmap
   implicit none
   !/ -------------------------------------------------------------------------------------
   integer, parameter :: SAMPLES = 64
 
   write (*,*)
   call test01( SAMPLES )
-  write (*,*)
-  write (*,*) '--------------------------------------------------'
-  write (*,*)
-  call test02( SAMPLES )
-  write (*,*)
-  write (*,*) '--------------------------------------------------'
-  write (*,*)
-  call test03( SAMPLES )
   write (*,*)
   
 end program main

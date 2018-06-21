@@ -35,23 +35,23 @@ module hash_object_class
   implicit none
   private
 
-  
-  !/ =====================================================================================
   type, public :: HashChain
-     !/ ----------------------------------------------------------------------------------
-     class(BTree), pointer :: chain => null()
+     class(BTree), pointer :: ptr => null()
   end type HashChain
+
 
   
   !/ =====================================================================================
   type, public :: HashMap
      !/ ----------------------------------------------------------------------------------
 
-     type(BTree), allocatable, dimension(:) :: map
-     integer :: num_chain = 0
+     type(HashChain), allocatable, dimension(:) :: chain
+     integer                                    :: num_chain = 0
+     integer                                    :: num_items = 0
 
    contains
 
+     procedure, public :: find => hashmap_find
      procedure, public :: set  => hashmap_set
      procedure, public :: get  => hashmap_get
 
@@ -65,7 +65,6 @@ module hash_object_class
      module procedure :: object_to_hash
   end interface hash
 
-  public :: hash
   
 
   !/ -------------------------------------------------------------------------------------
@@ -74,6 +73,8 @@ module hash_object_class
      module procedure :: hashmap_create
   end interface create
   
+  public :: hash
+  public :: create
   
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
@@ -94,10 +95,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        H%num_chain = alloc
     end if
 
-    allocate( H%map(H%num_chain) )
+    allocate( H%chain(H%num_chain) )
 
   end subroutine hashmap_create
 
+  
   !/ =====================================================================================
   subroutine hashmap_destroy( H )
     !/ -----------------------------------------------------------------------------------
@@ -106,6 +108,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
   end subroutine hashmap_destroy
 
+  
   !/ =====================================================================================
   pure function string_to_hash( key, mod ) result( H )
     !/ -----------------------------------------------------------------------------------
@@ -123,7 +126,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     do i=1,len(key)
        H = ( ishft(H,5) + H ) + ichar( key(i:i) )
     end do
-    H = modulo( H, mod )
+    H = modulo( H, mod ) + 1
 
   end function string_to_hash
 
@@ -139,7 +142,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer             :: H    !! return hash.
     !/ -----------------------------------------------------------------------------------
 
-    H = modulo( key, mod )
+    H = modulo( key, mod ) + 1
 
   end function integer_to_hash
 
@@ -155,7 +158,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer              :: H    !! return hash.
     !/ -----------------------------------------------------------------------------------
 
-    H = modulo( int( log(key) * 8.192e3 ), mod )
+    H = modulo( int( log(key) * 8.192e3 ), mod ) + 1
 
   end function single_to_hash
 
@@ -171,7 +174,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer              :: H    !! return hash.
     !/ -----------------------------------------------------------------------------------
 
-    H = modulo( int( log(key) * 3.2768d4 ), mod )
+    H = modulo( int( log(key) * 3.2768d4 ), mod ) + 1
 
   end function double_to_hash
 
@@ -203,32 +206,141 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function object_to_hash
 
 
+  !/ =====================================================================================
+  function hashmap_find( self, key, stat ) result( node )
+    !/ -----------------------------------------------------------------------------------
+    !!
+    !! |  stat  | errmsg         |
+    !! | :----: | -------------- |
+    !! |    0   | n/a            |
+    !! |    1   | key is NULL    |
+    !! |    2   | no chain found |
+    !! |    3   | no node found  |
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(HashMap),    intent(inout) :: self !! reference to this object
+    class(*), pointer, intent(in)    :: key  !! key to hash
+    integer, optional, intent(out)   :: stat !! optional return status
+    class(btree_node), pointer       :: node
+    !/ -----------------------------------------------------------------------------------
+    integer               :: index
+    integer               :: istat
+    integer               :: kstat
+    class(BTree), pointer :: tree
+    !/ -----------------------------------------------------------------------------------
+    istat = 0
+
+    nullify( node )
+
+    if ( associated( key ) ) then
+       index = object_to_hash( key, self%num_chain )
+
+       tree => self%chain( index )%ptr
+
+       if ( associated( tree ) ) then
+          node => tree%find( key, kstat )
+          if ( 0.eq.kstat ) then
+             istat = 0
+          else
+             istat = 3
+          end if
+       else
+          istat = 2
+       end if
+    else
+       istat = 1
+    end if
+
+    if ( present( stat ) ) stat = istat
+
+  end function hashmap_find
+
+  
 
 
   !/ =====================================================================================
-  subroutine hashmap_set( self, key, obj )
+  subroutine hashmap_set( self, key, obj, recover, stat )
     !/ -----------------------------------------------------------------------------------
+    !!
+    !! |  stat  | errmsg      |
+    !! | :----: | ----------- |
+    !! |    0   | n/a         |
+    !! |    1   | key is NULL |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(HashMap), intent(inout) :: self !! reference to this object
-    class(*),       intent(in)    :: key  !! key to hash
-    class(*),       intent(in)    :: obj  !! object to store
+    class(HashMap),              intent(inout) :: self     !! reference to this object
+    class(*), pointer,           intent(in)    :: key      !! key to hash
+    class(*), pointer,           intent(in)    :: obj      !! object to store
+    class(*), optional, pointer, intent(inout) :: recover  !! optional recovery
+    integer,  optional,          intent(out)   :: stat     !! optional return status
     !/ -----------------------------------------------------------------------------------
+    class(btree_node), pointer :: node
+    class(*),          pointer :: old_data
+    integer                    :: index
+    integer                    :: istat
+   !/ -----------------------------------------------------------------------------------
 
+    nullify( old_data )
+    
+    node => self%find( key, istat )
+
+    select case( istat )
+    case (0) !----- old node found
+       old_data => node%object
+       node%object => obj
+       istat = 0
+    case (1) !----- key is null
+       istat = 1
+    case (2) !----- no existing chain
+       index = hash( key, self%num_chain )
+       allocate( self%chain(index)%ptr )
+       call self%chain(index)%ptr%insert( key, obj )
+       istat = 0
+    case (3) !----- no existing node in the chain
+       index = hash( key, self%num_chain )
+       call self%chain(index)%ptr%insert( key, obj )
+       istat = 0
+    case default
+    end select
+
+    if ( present( recover ) ) recover => old_data
+
+    if ( present( stat ) ) stat = istat
+    
   end subroutine hashmap_set
 
 
   !/ =====================================================================================
   function hashmap_get( self, key, stat ) result( obj )
     !/ -----------------------------------------------------------------------------------
+    !!
+    !! |  stat  | errmsg         |
+    !! | :----: | -------------- |
+    !! |    0   | n/a            |
+    !! |    1   | key is NULL    |
+    !! |    2   | no node found  |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(HashMap),    intent(inout) :: self !! reference to this object
-    class(*),          intent(in)    :: key  !! key to hash
-    integer, optional, intent(out)   :: stat !! optional return status
-    class(*), pointer                :: obj
+    class(HashMap),     intent(inout) :: self !! reference to this object
+    class(*), pointer,  intent(in)    :: key  !! key to hash
+    integer,  optional, intent(out)   :: stat !! optional return status
+    class(*), pointer                 :: obj
+    !/ -----------------------------------------------------------------------------------
+    class(btree_node), pointer :: node
+    integer :: istat
     !/ -----------------------------------------------------------------------------------
 
+    nullify( obj )
+    
+    node => self%find( key, istat )
+
+    if ( 0.eq.istat ) obj => node%object
+    
+    if ( present( stat ) ) then
+       if ( 2.lt.istat ) istat = 2
+       stat = istat
+    end if
+    
   end function hashmap_get
 
   

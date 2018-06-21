@@ -79,13 +79,13 @@ module btree_object_class
 
      procedure :: internal_build_index
 
-     procedure, public :: isEmpty     => btree_is_empty
-     procedure, public :: size        => btree_size
-     procedure, public :: insert      => btree_insert_object
-     procedure, public :: find        => btree_find_object
-     procedure, public :: execute     => btree_execute_lcr_node
-     procedure, public :: buildIndex  => btree_build_index
-     procedure, public :: index       => btree_get_object_at_index
+     procedure, public :: isEmpty    => btree_is_empty
+     procedure, public :: size       => btree_size
+     procedure, public :: insert     => btree_insert_object
+     procedure, public :: find       => btree_find_object
+     procedure, public :: execute    => btree_execute_lcr_node
+     procedure, public :: buildIndex => btree_build_index
+     procedure, public :: index      => btree_get_object_at_index
 
      final :: btree_destroy
   end type BTree
