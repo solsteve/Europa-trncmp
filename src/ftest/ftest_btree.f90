@@ -167,39 +167,25 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     node => T%find( toObject( 70 ), stat=x )
     write(*,*) 'found stat=',x
 
+    write(*,*)
+    write(*,*) '---------------------------------------'
+    write(*,*)
+
+    call T%rewind
+
+    testloop: do
+       if ( .not. T%hasNext() ) exit testloop
+
+       node => T%nextNode()
+       
+       write(*,*) castInteger( node%key ), castInteger( node%object )
+
+    end do testloop
 
 
     deallocate( table )  
 
   end subroutine test02
-
-  !/ =====================================================================================
-  subroutine test03( SAMPLES )
-    !/ -----------------------------------------------------------------------------------
-    integer, intent( in ) :: SAMPLES
-    !/ -----------------------------------------------------------------------------------
-
-    write(*,*) 'These numbers should all be different'
-
-    write(*,*) hash( 'heather',    1000 )
-    write(*,*) hash( 'anthea',     1000 )
-    write(*,*) hash( 'cassiopeia', 1000 )
-
-    write(*,*) hash( 23,     1000 )
-    write(*,*) hash( 17731,  1000 )
-    write(*,*) hash( 187621, 1000 )
-
-    write(*,*) hash( 2.3_sp,     1000 )
-    write(*,*) hash( 177.31_sp,  1000 )
-    write(*,*) hash( 18762.1_sp, 1000 )
-
-    write(*,*) hash( 2.3_dp,     1000 )
-    write(*,*) hash( 177.31_dp,  1000 )
-    write(*,*) hash( 18762.1_dp, 1000 )
-
-    
-  end subroutine test03
-
 
 
   end module ftest_btree
@@ -219,10 +205,6 @@ program main
   write (*,*) '--------------------------------------------------'
   write (*,*)
   call test02( SAMPLES )
-  write (*,*)
-  write (*,*) '--------------------------------------------------'
-  write (*,*)
-  call test03( SAMPLES )
   write (*,*)
   
 end program main

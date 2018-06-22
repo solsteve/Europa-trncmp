@@ -87,6 +87,15 @@ module btree_object_class
      procedure, public :: buildIndex => btree_build_index
      procedure, public :: index      => btree_get_object_at_index
 
+     ! built-in iterator
+
+     procedure, public :: rewind   => btree_iter_rewind
+     procedure, public :: hasNext  => btree_iter_has_next
+     procedure, public :: next     => btree_iter_next
+     procedure, public :: nextNode => btree_iter_next_node
+     procedure, public :: nextKey  => btree_iter_next_key
+     
+
      final :: btree_destroy
   end type BTree
 
@@ -233,7 +242,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine recursive_insert_node( root, node )
     !/ -----------------------------------------------------------------------------------
-    !/ Internal procedure to recursivly insert nodes.
+    !! Internal procedure to recursivly insert nodes.
     !/ -----------------------------------------------------------------------------------
     implicit none
     type(btree_node),          intent(inout) :: root !! insert new node here.
@@ -287,6 +296,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   function recursive_find_node( root, key, stat ) result( node )
     !/ -----------------------------------------------------------------------------------
+    !! Find a node with a matching key. This is a private internal recursive function.
     !!
     !! |  stat  | errmsg        |
     !! | :----: | ------------- |
@@ -331,6 +341,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   function btree_find_object( self, key, stat ) result( node )
     !/ -----------------------------------------------------------------------------------
+    !! Find a node with a matching key.
+    !!
+    !! |  stat  | errmsg        |
+    !! | :----: | ------------- |
+    !! |    0   | n/a           |
+    !! |    1   | no node found |
+    !! |    2   | key is NULL   |
+    !/ -----------------------------------------------------------------------------------
     implicit none
     class(BTree),               intent(inout) :: self !! reference to this btree class.
     class(*),         pointer,  intent(in)    :: key  !! btree key.
@@ -349,6 +367,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   !/ =====================================================================================
   subroutine recursive_execute_node( node, proc )
+    !/ -----------------------------------------------------------------------------------
+    !! Execute a function on every node of this tree using in order traversal.
+    !! This is a recursive private internal function.
     !/ -----------------------------------------------------------------------------------
     implicit none
     type(btree_node),                pointer, intent(in) :: node !! start execution here.
@@ -375,6 +396,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine btree_execute_lcr_node( self, proc )
     !/ -----------------------------------------------------------------------------------
+    !! Execute a function on every node of this tree using in order traversal.
+    !/ -----------------------------------------------------------------------------------
     implicit none
     class(BTree),                             intent(inout) :: self !! this btree class.
     procedure(btree_node_procedure), pointer, intent(in)    :: proc !! pointer to procedure.
@@ -387,6 +410,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   !/ =====================================================================================
   subroutine internal_build_index( self, node )
+    !/ -----------------------------------------------------------------------------------
+    !! Build an internal index that may be retrieved as an array with an index.
+    !! This is a recursive private internal function.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(BTree),              intent(inout) :: self !! reference to this btree class.
@@ -414,7 +440,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine btree_build_index( self )
     !/ -----------------------------------------------------------------------------------
-    !/ Build an in-order index of the objects in this tree
+    !! Build an in-order index of the objects in this tree
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(BTree), intent(inout) :: self
@@ -438,7 +464,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   function btree_get_object_at_index( self, n, stat ) result( node )
     !/ -----------------------------------------------------------------------------------
-    !/ get the object stored at an in-order position.
+    !! get the object stored at an in-order position.
     !!
     !! |  stat  | errmsg                             |
     !! | :----: | ---------------------------------- |
@@ -471,7 +497,182 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   end function btree_get_object_at_index
 
-  
+
+
+
+
+
+  !/ =====================================================================================
+  subroutine btree_iter_rewind( self )
+    !/ -----------------------------------------------------------------------------------
+    !! Rewind the internal iterator.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(BTree), intent(inout) :: self !! reference to this btree
+    !/ -----------------------------------------------------------------------------------
+
+    if ( self%needs_index_rebuild ) then
+       call self%buildIndex
+    end if
+
+    self%current = 1
+
+  end subroutine btree_iter_rewind
+
+
+  !/ =====================================================================================
+  function btree_iter_has_next( self, stat ) result( res )
+    !/ -----------------------------------------------------------------------------------
+    !! Can this BTree's internal iterator return more nodes?
+    !!
+    !! |  stat  | errmsg                          |
+    !! | :----: | ------------------------------- |
+    !! |    0   | n/a                             |
+    !! |    1   | btree index needs to be rebuilt |
+    !! |    2   | no more nodes may be retrievied |
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(BTree),      intent(in)  :: self  !! reference to this btree
+    integer, optional, intent(out) :: stat  !! optional retuen status
+    logical                        :: res   !! true if there are more nodes to be returned
+    !/ -----------------------------------------------------------------------------------
+    integer :: istat
+    !/ -----------------------------------------------------------------------------------
+
+    istat = 0
+    res   = .false.
+    if ( self%needs_index_rebuild ) then
+       istat = 1
+    else
+       if ( self%current.gt.self%count ) then
+          istat = 2
+       else
+          res = .true.
+       end if
+    end if
+
+    if ( present( stat ) ) stat = istat
+
+  end function btree_iter_has_next
+
+
+
+  !/ =====================================================================================
+  function btree_iter_next_node( self, stat ) result( node )
+    !/ -----------------------------------------------------------------------------------
+    !! Attempt to return a pointer to the next node in this BTree's internal iterattor.
+    !!
+    !! |  stat  | errmsg                          |
+    !! | :----: | ------------------------------- |
+    !! |    0   | n/a                             |
+    !! |    1   | btree index needs to be rebuilt |
+    !! |    2   | no more nodes may be retrievied |
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(BTree),      intent(inout) :: self  !! reference to this btree
+    integer, optional, intent(out)   :: stat  !! optional retuen status
+    class(btree_node), pointer       :: node  !! pointer to the next node
+    !/ -----------------------------------------------------------------------------------
+    integer :: istat
+    !/ -----------------------------------------------------------------------------------
+    
+    istat = 0
+    nullify( node )
+    
+    if ( self%needs_index_rebuild ) then
+       istat = 1
+    else
+       if ( self%current.gt.self%count ) then
+          istat = 2
+       else
+          node => self%table( self%current )%ptr
+          self%current = self%current + 1
+       end if
+    end if
+
+    if ( present( stat ) ) stat = istat
+
+  end function btree_iter_next_node
+
+
+  !/ =====================================================================================
+  function btree_iter_next( self, stat ) result( obj )
+    !/ -----------------------------------------------------------------------------------
+    !! Attempt to return a pointer to the next stored object in this BTree's
+    !! internal iterattor.
+    !!
+    !! |  stat  | errmsg                          |
+    !! | :----: | ------------------------------- |
+    !! |    0   | n/a                             |
+    !! |    1   | btree index needs to be rebuilt |
+    !! |    2   | no more nodes may be retrievied |
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(BTree),      intent(inout) :: self  !! reference to this btree
+    integer, optional, intent(out)   :: stat  !! optional retuen status
+    class(*), pointer                :: obj   !! pointer to the object
+    !/ -----------------------------------------------------------------------------------
+    integer :: istat
+    !/ -----------------------------------------------------------------------------------
+
+    istat = 0
+    nullify( obj )
+    
+    if ( self%needs_index_rebuild ) then
+       istat = 1
+    else
+       if ( self%current.gt.self%count ) then
+          istat = 2
+       else
+          obj => self%table( self%current )%ptr%object
+          self%current = self%current + 1
+       end if
+    end if
+
+    if ( present( stat ) ) stat = istat
+
+  end function btree_iter_next
+
+
+  !/ =====================================================================================
+  function btree_iter_next_key( self, stat ) result( obj )
+    !/ -----------------------------------------------------------------------------------
+    !! Attempt to return a pointer to the next key in this BTree's
+    !! internal iterattor.
+    !!
+    !! |  stat  | errmsg                          |
+    !! | :----: | ------------------------------- |
+    !! |    0   | n/a                             |
+    !! |    1   | btree index needs to be rebuilt |
+    !! |    2   | no more nodes may be retrievied |
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(BTree),      intent(inout) :: self  !! reference to this btree
+    integer, optional, intent(out)   :: stat  !! optional retuen status
+    class(*), pointer                :: obj   !! pointer to the key
+    !/ -----------------------------------------------------------------------------------
+    integer :: istat
+    !/ -----------------------------------------------------------------------------------
+
+    istat = 0
+    nullify( obj )
+    
+    if ( self%needs_index_rebuild ) then
+       istat = 1
+    else
+       if ( self%current.gt.self%count ) then
+          istat = 2
+       else
+          obj => self%table( self%current )%ptr%key
+          self%current = self%current + 1
+       end if
+    end if
+
+    if ( present( stat ) ) stat = istat
+
+  end function btree_iter_next_key
+
+
 end module btree_object_class
 
 

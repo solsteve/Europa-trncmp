@@ -50,7 +50,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer               :: z
     !/ -----------------------------------------------------------------------------------
     real(dp) :: a
-    
+
     call RANDOM_NUMBER( a )
 
     z = modulo( int( a * 1073741823.0 ), range ) + 1
@@ -69,7 +69,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer, allocatable, dimension(:) :: table
 
     call create( map, 8 )
-    
+
     allocate( table( SAMPLES ) )
 
     do i=1,SAMPLES
@@ -92,13 +92,41 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        call map%set( toObject( table(i) ), toObject( table(i) ) )
     end do
 
-     do i=1,SAMPLES
-        write(*,*) i, castInteger( map%get( toObject( i ) ) )
+    do i=1,SAMPLES
+       write(*,*) i, castInteger( map%get( toObject( i ) ) )
     end do
 
-   deallocate( table )  
+    deallocate( table )  
 
   end subroutine test01
+
+
+  !/ =====================================================================================
+  subroutine test02( SAMPLES )
+    !/ -----------------------------------------------------------------------------------
+    integer, intent( in ) :: SAMPLES
+    !/ -----------------------------------------------------------------------------------
+
+    write(*,*) 'These numbers should all be different'
+
+    write(*,*) hash( 'heather',    1000 )
+    write(*,*) hash( 'anthea',     1000 )
+    write(*,*) hash( 'cassiopeia', 1000 )
+
+    write(*,*) hash( 23,     1000 )
+    write(*,*) hash( 17731,  1000 )
+    write(*,*) hash( 187621, 1000 )
+
+    write(*,*) hash( 2.3_sp,     1000 )
+    write(*,*) hash( 177.31_sp,  1000 )
+    write(*,*) hash( 18762.1_sp, 1000 )
+
+    write(*,*) hash( 2.3_dp,     1000 )
+    write(*,*) hash( 177.31_dp,  1000 )
+    write(*,*) hash( 18762.1_dp, 1000 )
+
+
+  end subroutine test02
 
 
 
@@ -106,7 +134,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 end module ftest_hashmap
 
-     
+
 !/ =======================================================================================
 program main
   !/ -------------------------------------------------------------------------------------
@@ -118,7 +146,11 @@ program main
   write (*,*)
   call test01( SAMPLES )
   write (*,*)
-  
+  write (*,*) '--------------------------------------------------'
+  write (*,*)
+  call test02( SAMPLES )
+  write (*,*)
+
 end program main
 
 !/ =======================================================================================
