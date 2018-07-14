@@ -45,13 +45,174 @@ module compare_types_mod
 
   public :: compare
 
+  !/ -------------------------------------------------------------------------------------
+  interface isZero
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: is_zero_single
+     module procedure :: is_zero_double
+  end interface isZero
+     
+  !/ -------------------------------------------------------------------------------------
+  interface isEqual
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: is_equal_single
+     module procedure :: is_equal_double
+  end interface isEqual
+     
+  public :: isZero
+  public :: isEqual
+
+
+
   
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
 
 
+
   
+  !/ =====================================================================================
+  pure function is_zero_single( a, tol ) result( cmp )
+    !/ -----------------------------------------------------------------------------------
+    !! Compare a single precision floating point number.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(sp), intent(in)           :: a   !! Number.
+    real(sp), optional, intent(in) :: tol !! Optional tolerance (default: epsilon)
+    logical                        :: cmp !! true if a==b.
+    !/ -----------------------------------------------------------------------------------
+
+    real(sp) :: small
+
+    small = epsilon(1.0_sp)
+    if ( present( tol ) ) then
+       small = tol
+    end if
+
+    cmp = .true.
+
+    if ( -small.gt.a ) then
+       cmp = .false.
+    else
+       if ( small.lt.a ) then
+          cmp = .false.
+       end if
+    end if
+
+  end function is_zero_single
+
+
+  !/ =====================================================================================
+  pure function is_zero_double( a, tol ) result( cmp )
+    !/ -----------------------------------------------------------------------------------
+    !! Compare a double precision floating point number.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in)           :: a   !! Number.
+    real(dp), optional, intent(in) :: tol !! Optional tolerance (default: epsilon)
+    logical                        :: cmp !! true if a==b.
+    !/ -----------------------------------------------------------------------------------
+
+    real(dp) :: small
+
+    small = epsilon(1.0_dp)
+    if ( present( tol ) ) then
+       small = tol
+    end if
+
+    cmp = .true.
+
+    if ( -small.gt.a ) then
+       cmp = .false.
+    else
+       if ( small.lt.a ) then
+          cmp = .false.
+       end if
+    end if
+
+  end function is_zero_double
+
+
+
+
+
+
+
+
+  !/ =====================================================================================
+  pure function is_equal_single( a, b, tol ) result( cmp )
+    !/ -----------------------------------------------------------------------------------
+    !! Compare a single precision floating point number.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(sp), intent(in)           :: a   !! First number.
+    real(sp), intent(in)           :: b   !! Second number.
+    real(sp), optional, intent(in) :: tol !! Optional tolerance (default: epsilon)
+    logical                        :: cmp !! true if a==b.
+    !/ -----------------------------------------------------------------------------------
+
+    real(sp) :: small, diff
+
+    small = epsilon(1.0_sp)
+    if ( present( tol ) ) then
+       small = tol
+    end if
+
+    diff = a - b
+
+    cmp = .true.
+
+    if ( -small.gt.diff ) then
+       cmp = .false.
+    else
+       if ( small.lt.diff ) then
+          cmp = .false.
+       end if
+    end if
+
+  end function is_equal_single
+
+
+  !/ =====================================================================================
+  pure function is_equal_double( a, b, tol ) result( cmp )
+    !/ -----------------------------------------------------------------------------------
+    !! Compare a single precision floating point number.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in)           :: a   !! First number.
+    real(dp), intent(in)           :: b   !! Second number.
+    real(dp), optional, intent(in) :: tol !! Optional tolerance (default: epsilon)
+    logical                        :: cmp !! true if a==b.
+    !/ -----------------------------------------------------------------------------------
+
+    real(dp) :: small, diff
+
+    small = epsilon(1.0_dp)
+    if ( present( tol ) ) then
+       small = tol
+    end if
+
+    diff = a - b
+
+    cmp = .true.
+
+    if ( -small.gt.diff ) then
+       cmp = .false.
+    else
+       if ( small.lt.diff ) then
+          cmp = .false.
+       end if
+    end if
+
+  end function is_equal_double
+
+
+
+
+
+
+
 
   !/ =====================================================================================
   function compare_string_to_object( cval, obj, stat ) result( res )

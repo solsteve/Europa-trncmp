@@ -32,10 +32,13 @@ foreach ( ft ${fsrc} )
   set ( CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/temp )
 
   add_executable ( ${_exec} ${ft} )
+  
+target_include_directories( ${_exec} PRIVATE ${HDF5_INCLUDE_DIRS})
 
   target_link_libraries ( ${_exec} europa )
   target_link_libraries ( ${_exec} ${LAPACK_LIBRARIES} )
   target_link_libraries ( ${_exec} ${BLAS_LIBRARIES} )
+  target_link_libraries ( ${_exec} ${HDF5_Fortran_LIBRARIES} )
   
   install (TARGETS ${_exec}
     RUNTIME DESTINATION bin

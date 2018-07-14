@@ -274,4 +274,67 @@ contains
 
 
 
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testZero
+    real(sp) :: small4
+    real(dp) :: small8
+
+    small4 = epsilon(1.0_sp) / 2.0_sp
+    small8 = epsilon(1.0_dp) / 2.0_dp
+
+    @assertTrue( isZero( small4 ) )
+    @assertTrue( isZero( small8 ) )
+
+    @assertFalse( isZero( -1.0_sp ) )
+    @assertFalse( isZero(  1.0_sp ) )
+    @assertFalse( isZero( -1.0_dp ) )
+    @assertFalse( isZero(  1.0_dp ) )
+
+    @assertTrue( isZero( -1.0_sp, tol = 2.0_sp ) )
+    @assertTrue( isZero(  1.0_sp, tol = 2.0_sp ) )
+    @assertTrue( isZero( -1.0_dp, tol = 2.0_dp ) )
+    @assertTrue( isZero(  1.0_dp, tol = 2.0_dp ) )
+
+  end subroutine testZero
+
+  
+  !/ -----------------------------------------------
+  @test
+  subroutine testEquals
+    real(sp) :: small4, a4, b4
+    real(dp) :: small8, a8, b8
+
+    small4 = epsilon(1.0_sp) / 2.0_sp
+    small8 = epsilon(1.0_dp) / 2.0_dp
+
+    a4 = 3.5e-2
+    b4 = a4 + small4
+
+    a8 = 2.1d3
+    b8 = a8 + small8
+
+    @assertTrue( isEqual( a4, b4 ) )
+    @assertTrue( isEqual( a8, b8 ) )
+    @assertTrue( isEqual( b4, a4 ) )
+    @assertTrue( isEqual( b8, a8 ) )
+
+    b4 = a4 + 1.0_sp
+    b8 = a8 + 1.0_dp
+
+    @assertFalse( isEqual( a4, b4 ) )
+    @assertFalse( isEqual( a8, b8 ) )
+    @assertFalse( isEqual( b4, a4 ) )
+    @assertFalse( isEqual( b8, a8 ) )
+    
+    @assertTrue( isEqual( a4, b4, tol = 2.0_sp ) )
+    @assertTrue( isEqual( a8, b8, tol = 2.0_dp ) )
+    @assertTrue( isEqual( b4, a4, tol = 2.0_sp ) )
+    @assertTrue( isEqual( b8, a8, tol = 2.0_dp ) )
+   
+  end subroutine testEquals
+
+  
 end module testCompare

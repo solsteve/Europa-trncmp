@@ -79,13 +79,14 @@ module btree_object_class
 
      procedure :: internal_build_index
 
-     procedure, public :: isEmpty    => btree_is_empty
-     procedure, public :: size       => btree_size
-     procedure, public :: insert     => btree_insert_object
-     procedure, public :: find       => btree_find_object
-     procedure, public :: execute    => btree_execute_lcr_node
-     procedure, public :: buildIndex => btree_build_index
-     procedure, public :: index      => btree_get_object_at_index
+     procedure, public  :: isEmpty    => btree_is_empty
+     procedure, public  :: size       => btree_size
+     procedure, public  :: insert     => btree_insert_object
+     procedure, public  :: find       => btree_find_object
+     procedure, public  :: hasKey     => btree_has_key
+     procedure, public  :: execute    => btree_execute_lcr_node
+     procedure, public  :: buildIndex => btree_build_index
+     procedure, public  :: index      => btree_get_object_at_index
 
      ! built-in iterator
 
@@ -240,7 +241,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine recursive_insert_node( root, node )
+  recursive subroutine recursive_insert_node( root, node )
     !/ -----------------------------------------------------------------------------------
     !! Internal procedure to recursivly insert nodes.
     !/ -----------------------------------------------------------------------------------
@@ -294,7 +295,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function recursive_find_node( root, key, stat ) result( node )
+  recursive function recursive_find_node( root, key, stat ) result( node )
     !/ -----------------------------------------------------------------------------------
     !! Find a node with a matching key. This is a private internal recursive function.
     !!
@@ -339,6 +340,35 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
+  function btree_has_key( self, key, stat ) result( res )
+    !/ -----------------------------------------------------------------------------------
+    !! test for an association between a key and an object.
+    !! |  stat  | errmsg         |
+    !! | :----: | -------------- |
+    !! |    0   | n/a            |
+    !! |    1   | key is NULL    |
+    !! |    2   | no chain found |
+    !! |    3   | no node found  |
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(BTree),    intent(inout) :: self !! reference to this object
+    class(*), pointer, intent(in)  :: key  !! key to hash
+    integer, optional, intent(out) :: stat !! optional return status
+    logical                        :: res  !! true if object is assoiated with key
+    !/ -----------------------------------------------------------------------------------
+    integer                    :: istat
+    class(btree_node), pointer :: node
+    !/ -----------------------------------------------------------------------------------
+
+    res = .false.
+    node => self%find( key, istat )
+    if ( 0.eq.istat ) res = .true.
+    
+    if ( present( stat ) ) stat = istat
+  end function btree_has_key
+    
+
+  !/ =====================================================================================
   function btree_find_object( self, key, stat ) result( node )
     !/ -----------------------------------------------------------------------------------
     !! Find a node with a matching key.
@@ -366,7 +396,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine recursive_execute_node( node, proc )
+  recursive subroutine recursive_execute_node( node, proc )
     !/ -----------------------------------------------------------------------------------
     !! Execute a function on every node of this tree using in order traversal.
     !! This is a recursive private internal function.
@@ -409,7 +439,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine internal_build_index( self, node )
+  recursive subroutine internal_build_index( self, node )
     !/ -----------------------------------------------------------------------------------
     !! Build an internal index that may be retrieved as an array with an index.
     !! This is a recursive private internal function.
@@ -495,6 +525,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        end if
     end if
 
+    if ( present( stat ) ) stat = istat
   end function btree_get_object_at_index
 
 
@@ -612,24 +643,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer, optional, intent(out)   :: stat  !! optional retuen status
     class(*), pointer                :: obj   !! pointer to the object
     !/ -----------------------------------------------------------------------------------
-    integer :: istat
+    type(btree_node), pointer :: bnode
     !/ -----------------------------------------------------------------------------------
 
-    istat = 0
     nullify( obj )
-    
-    if ( self%needs_index_rebuild ) then
-       istat = 1
-    else
-       if ( self%current.gt.self%count ) then
-          istat = 2
-       else
-          obj => self%table( self%current )%ptr%object
-          self%current = self%current + 1
-       end if
-    end if
-
-    if ( present( stat ) ) stat = istat
+    bnode => self%nextNode(stat)
+    if ( associated( bnode ) ) obj => bnode%object
 
   end function btree_iter_next
 
@@ -651,24 +670,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer, optional, intent(out)   :: stat  !! optional retuen status
     class(*), pointer                :: obj   !! pointer to the key
     !/ -----------------------------------------------------------------------------------
-    integer :: istat
+    type(btree_node), pointer :: bnode
     !/ -----------------------------------------------------------------------------------
 
-    istat = 0
     nullify( obj )
-    
-    if ( self%needs_index_rebuild ) then
-       istat = 1
-    else
-       if ( self%current.gt.self%count ) then
-          istat = 2
-       else
-          obj => self%table( self%current )%ptr%key
-          self%current = self%current + 1
-       end if
-    end if
-
-    if ( present( stat ) ) stat = istat
+    bnode => self%nextNode(stat)
+    if ( associated( bnode ) ) obj => bnode%key
 
   end function btree_iter_next_key
 

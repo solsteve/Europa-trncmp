@@ -1,8 +1,8 @@
 !/ ====================================================================== BEGIN FILE =====
-!/ **                                T R N C M P _ E N V                                **
+!/ **                           S T O P W A T C H _ C L A S S                           **
 !/ =======================================================================================
 !/ **                                                                                   **
-!/ **  Copyright (c) 2017, Stephen W. Soliday                                           **
+!/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
 !/ **                      stephen.soliday@trncmp.org                                   **
 !/ **                      http://research.trncmp.org                                   **
 !/ **                                                                                   **
@@ -21,68 +21,50 @@
 !/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 !/ **                                                                                   **
 !/ =======================================================================================
-module trncmp_env
+module config_entry_class
   !/ -------------------------------------------------------------------------------------
-  !! author: Stephen W. Soliday
-  !! date:   2017-03-30
+  !! author:  Stephen W. Soliday
+  !! date:    2017-03-13
   !! license: GPL
-  !! 
-  !!##Tran-Comp Environment
-  !! 
-  !! Collection of definitions for common developmental environment
-  ! 
+  !!
+  !! Provides a Configuration Database Entry.
+  !!
   !/ -------------------------------------------------------------------------------------
-  use constants_env
-  use math_aux
-  use copy_mod
-  use zero_mod
-  use summation_mod
-  use compare_types_mod
-  use poly_cast_mod
+  use trncmp_env
+  use tlogger
+  use string_tools
   implicit none
-
-
-  type, public :: object_pointer
-     class(*), pointer :: ptr
-  end type object_pointer
+  private
 
   
-  integer, public, parameter :: MAX_PATH = 128 !! Maximum charaters in file path
-
-    !/ -------------------------------------------------------------------------------------
-  interface leq
-     !/ ----------------------------------------------------------------------------------
-     module procedure :: lexical_equals
-  end interface leq
-
-  public :: leq
-
   !/ =====================================================================================
+  type :: config_entry
+     !/ ----------------------------------------------------------------------------------
+     character(len=:), allocatable :: key
+     character(len=:), allocatable :: val
+     character(len=:), allocatable :: com
+     
+   !contains
+
+    ! procedure, public :: delete   => entry_delete
+    ! procedure, public :: clear    => entry_clear
+    ! procedure, public :: set      => entry_set_kv, entry_set_kvc
+    ! procedure, public :: parse    => entry_parse
+    ! procedure, public :: toString => entry_to_string
+
+  end type config_entry
+  
+public :: config_entry
+
+
+
+
+!/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
 
-  !/ =====================================================================================
-  function lexical_equals( lhs, rhs ) result( cmp )
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    character(*), intent(in) :: lhs !! left  hand side string
-    character(*), intent(in) :: rhs !! right hand side string
-    logical                  :: cmp
-
-    cmp = .true.
-    if ( llt( lhs, rhs ) ) then
-       cmp = .false.
-    else
-       if ( lgt( lhs, rhs ) ) then
-          cmp = .false.
-       end if
-    end if
-
-  end function lexical_equals
+end module config_entry_class
 
 
-end module trncmp_env
 
-!/ =======================================================================================
-!/ **                                T R N C M P _ E N V                                **
-!/ =========================================================================== END FILE ==
+     

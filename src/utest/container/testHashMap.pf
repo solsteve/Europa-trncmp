@@ -1,0 +1,41 @@
+module testHashMap
+  use pfunit_mod
+  use hash_object_class
+  use poly_cast_mod
+  implicit none
+
+  integer, parameter :: SAMPLES = 100
+
+  
+contains
+
+
+  !/ -----------------------------------------------
+  @test
+  subroutine testInsert
+
+    type(HashMap) :: map
+
+    class(*), pointer :: test
+
+    call create( map, 8 )
+    @assertEqual( 0, map%size() )
+
+    call map%set( toObject('heather'),    toObject(1) )
+    call map%set( toObject('anthea'),     toObject(2) )
+    call map%set( toObject('cassiopeia'), toObject(3) )
+
+    @assertEqual( 3, map%size() )
+
+    @assertEqual( 1, castInteger( map%get( toObject('heather') ) ) )
+    @assertEqual( 2, castInteger( map%get( toObject('anthea') ) ) )
+    @assertEqual( 3, castInteger( map%get( toObject('cassiopeia') ) ) )
+    test => map%get( toObject('cynibar') )
+    @assertFalse( associated( test ) )
+    
+    @assertTrue( map%hasKey( toObject('heather') ) )
+    @assertFalse( map%hasKey( toObject('steve') ) )
+    
+  end subroutine testInsert
+
+end module testHashMap

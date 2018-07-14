@@ -35,10 +35,22 @@ module hash_object_class
   implicit none
   private
 
+  !/ =====================================================================================
   type, public :: HashChain
+     !/ ----------------------------------------------------------------------------------
      class(BTree), pointer :: ptr => null()
   end type HashChain
 
+  !/ =====================================================================================
+  type, public :: hashmap_node
+     !/ ----------------------------------------------------------------------------------
+     !! Hash Map Node.
+     !/ ----------------------------------------------------------------------------------
+
+     class(*), pointer :: key    => null() !! key object.
+     class(*), pointer :: object => null() !! storage object.
+
+  end type hashmap_node
 
   
   !/ =====================================================================================
@@ -46,17 +58,21 @@ module hash_object_class
      !/ ----------------------------------------------------------------------------------
 
      type(HashChain), allocatable, dimension(:) :: chain
-     integer                                    :: num_chain  = 0
-     integer                                    :: num_items  = 0
-     integer                                    :: item_count = 0
+     integer                                    :: num_chain   = 0
+     integer                                    :: num_items   = 0
+     integer                                    :: item_count  = 0
+     integer                                    :: chain_index = 0
 
    contains
 
-     procedure, public :: isEmpty => hashmap_is_empty
-     procedure, public :: size    => hashmap_size
-     procedure, public :: find    => hashmap_find
-     procedure, public :: set     => hashmap_set
-     procedure, public :: get     => hashmap_get
+     procedure :: hashmap_iterator_advance_chain
+
+     procedure, public  :: isEmpty => hashmap_is_empty
+     procedure, public  :: size    => hashmap_size
+     procedure, private :: find    => hashmap_find
+     procedure, public  :: hasKey  => hashmap_has_key
+     procedure, public  :: set     => hashmap_set
+     procedure, public  :: get     => hashmap_get
 
      ! built-in iterator
 
@@ -87,11 +103,15 @@ module hash_object_class
   
   public :: hash
   public :: create
+
+
+
   
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
 
+  
 
 
   !/ =====================================================================================
@@ -101,13 +121,19 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     type(HashMap),     intent(inout) :: H
     integer, optional, intent(in)    :: alloc
     !/ -----------------------------------------------------------------------------------
-
+    integer :: i
+    !/ -----------------------------------------------------------------------------------
+    
     H%num_chain = 16384
     if ( present( alloc ) ) then
        H%num_chain = alloc
     end if
 
     allocate( H%chain(H%num_chain) )
+
+    do i=1,H%num_chain
+       nullify( H%chain(i)%ptr )
+    end do
 
   end subroutine hashmap_create
 
@@ -255,7 +281,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   function hashmap_find( self, key, stat ) result( node )
     !/ -----------------------------------------------------------------------------------
-    !!
+    !! 
     !! |  stat  | errmsg         |
     !! | :----: | -------------- |
     !! |    0   | n/a            |
@@ -302,12 +328,39 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function hashmap_find
 
   
+  !/ =====================================================================================
+  function hashmap_has_key( self, key, stat ) result( res )
+    !/ -----------------------------------------------------------------------------------
+    !! test for an association between a key and an object.
+    !! |  stat  | errmsg         |
+    !! | :----: | -------------- |
+    !! |    0   | n/a            |
+    !! |    1   | key is NULL    |
+    !! |    2   | no chain found |
+    !! |    3   | no node found  |
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(HashMap),    intent(inout) :: self !! reference to this object
+    class(*), pointer, intent(in)    :: key  !! key to hash
+    integer, optional, intent(out)   :: stat !! optional return status
+    logical                          :: res  !! true if object is assoiated with key
+    !/ -----------------------------------------------------------------------------------
+    integer                    :: istat
+    class(btree_node), pointer :: node
+    !/ -----------------------------------------------------------------------------------
 
+    res = .false.
+    node => self%find( key, istat )
+    if ( 0.eq.istat ) res = .true.
+    
+    if ( present( stat ) ) stat = istat
+  end function hashmap_has_key
+    
 
   !/ =====================================================================================
   subroutine hashmap_set( self, key, obj, recover, stat )
     !/ -----------------------------------------------------------------------------------
-    !!
+    !! Create an association between a key and an object.
     !! |  stat  | errmsg      |
     !! | :----: | ----------- |
     !! |    0   | n/a         |
@@ -405,10 +458,30 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
 
+  !/ =====================================================================================
+  subroutine hashmap_iterator_advance_chain( self )
+    !/ -----------------------------------------------------------------------------------
+    !! Find the next non empty chain slot. Rewind the chain.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(Hashmap), intent(inout) :: self !! reference to this hashmap
+    !/ -----------------------------------------------------------------------------------
 
+    self%chain_index = self%chain_index + 1
 
+    if ( self%chain_index.lt.1 ) self%chain_index = 1
+    
+    sloop: do
+       if ( self%chain_index .gt. self%num_chain ) exit sloop
+       if ( associated( self%chain( self%chain_index )%ptr ) ) then
+          call self%chain( self%chain_index )%ptr%rewind
+          exit sloop
+       else
+          self%chain_index = self%chain_index + 1
+       end if
+    end do sloop
 
-
+  end subroutine hashmap_iterator_advance_chain
 
 
   !/ =====================================================================================
@@ -420,104 +493,110 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     class(Hashmap), intent(inout) :: self !! reference to this hashmap
     !/ -----------------------------------------------------------------------------------
 
-    self%chain_index = 1
-
+    self%chain_index = 0
+    call self%hashmap_iterator_advance_chain
+ 
   end subroutine hashmap_iter_rewind
 
 
   !/ =====================================================================================
-  function hashmap_iter_has_next( self, stat ) result( res )
+  function hashmap_iter_has_next( self ) result( res )
     !/ -----------------------------------------------------------------------------------
     !! Can this Hashmap's internal iterator return more nodes?
-    !!
-    !! |  stat  | errmsg                            |
-    !! | :----: | --------------------------------- |
-    !! |    0   | n/a                               |
-    !! |    1   | hashmap index needs to be rebuilt |
-    !! |    2   | no more nodes may be retrievied   |
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(Hashmap),    intent(in)  :: self  !! reference to this hashmap
-    integer, optional, intent(out) :: stat  !! optional retuen status
     logical                        :: res   !! true if there are more nodes to be returned
     !/ -----------------------------------------------------------------------------------
-    integer :: istat
-    !/ -----------------------------------------------------------------------------------
 
-
+    res = .false.
+    
+    if ( self%chain_index .le. self%num_chain ) then
+       if ( associated( self%chain( self%chain_index )%ptr ) ) then
+          res = self%chain( self%chain_index )%ptr%hasNext()
+       else
+          write(*,*) '*** Something broke with advance the chain ***'
+       end if
+    end if
+    
   end function hashmap_iter_has_next
 
 
 
   !/ =====================================================================================
-  function hashmap_iter_next_node( self, stat ) result( node )
+  subroutine hashmap_iter_next_node( self, node )
     !/ -----------------------------------------------------------------------------------
     !! Attempt to return a pointer to the next node in this Hashmap's internal iterattor.
-    !!
-    !! |  stat  | errmsg                            |
-    !! | :----: | --------------------------------- |
-    !! |    0   | n/a                               |
-    !! |    1   | hashmap index needs to be rebuilt |
-    !! |    2   | no more nodes may be retrievied   |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(Hashmap),    intent(inout) :: self  !! reference to this hashmap
-    integer, optional, intent(out)   :: stat  !! optional retuen status
-    class(btree_node), pointer       :: node  !! pointer to the next node
+    class(Hashmap),     intent(inout) :: self  !! reference to this hashmap
+    type(hashmap_node), intent(inout) :: node  !! pointer to the next node
     !/ -----------------------------------------------------------------------------------
-    integer :: istat
+    class(btree),      pointer :: tree
+    class(btree_node), pointer :: bnode
     !/ -----------------------------------------------------------------------------------
 
+    nullify( node%key )
+    nullify( node%object )
 
-  end function hashmap_iter_next_node
+    if ( self%chain_index .le. self%num_chain ) then
+       tree => self%chain( self%chain_index )%ptr
+       if ( associated( tree ) ) then
+          bnode => tree%nextNode()
+          if ( associated( bnode ) ) then
+             node%key    => bnode%key
+             node%object => bnode%object
+             if ( .not. tree%hasnext() ) then
+                call self%hashmap_iterator_advance_chain
+             end if
+          end if
+       else
+          write(*,*) '*** Something broke with advance the chain ***'
+       end if
+    end if
+
+  end subroutine hashmap_iter_next_node
 
 
   !/ =====================================================================================
-  function hashmap_iter_next( self, stat ) result( obj )
+  function hashmap_iter_next( self ) result( obj )
     !/ -----------------------------------------------------------------------------------
     !! Attempt to return a pointer to the next stored object in this Hashmap's
     !! internal iterattor.
-    !!
-    !! |  stat  | errmsg                            |
-    !! | :----: | --------------------------------- |
-    !! |    0   | n/a                               |
-    !! |    1   | hashmap index needs to be rebuilt |
-    !! |    2   | no more nodes may be retrievied   |
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(Hashmap),    intent(inout) :: self  !! reference to this hashmap
-    integer, optional, intent(out)   :: stat  !! optional retuen status
     class(*), pointer                :: obj   !! pointer to the object
     !/ -----------------------------------------------------------------------------------
-    integer :: istat
+    type(hashmap_node) :: hnode
     !/ -----------------------------------------------------------------------------------
 
+    call self%nextNode(hnode)
+    obj => hnode%object
 
   end function hashmap_iter_next
 
 
   !/ =====================================================================================
-  function hashmap_iter_next_key( self, stat ) result( obj )
+  function hashmap_iter_next_key( self ) result( obj )
     !/ -----------------------------------------------------------------------------------
-    !! Attempt to return a pointer to the next key in this Hashmap's
+    !! Attempt to return a pointer to the next stored object in this Hashmap's
     !! internal iterattor.
-    !!
-    !! |  stat  | errmsg                            |
-    !! | :----: | --------------------------------- |
-    !! |    0   | n/a                               |
-    !! |    1   | hashmap index needs to be rebuilt |
-    !! |    2   | no more nodes may be retrievied   |
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(Hashmap),    intent(inout) :: self  !! reference to this hashmap
-    integer, optional, intent(out)   :: stat  !! optional retuen status
-    class(*), pointer                :: obj   !! pointer to the key
+    class(*), pointer                :: obj   !! pointer to the object
     !/ -----------------------------------------------------------------------------------
-    integer :: istat
+    type(hashmap_node) :: hnode
     !/ -----------------------------------------------------------------------------------
 
+    call self%nextNode(hnode)
+    obj => hnode%key
 
   end function hashmap_iter_next_key
+
+
+
 
 
 

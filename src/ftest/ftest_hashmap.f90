@@ -67,13 +67,17 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     type(HashMap) :: map
     integer     :: i, a, b, x
     integer, allocatable, dimension(:) :: table
+    integer, allocatable, dimension(:) :: hist
+    type(hashmap_node) :: test
 
     call create( map, 8 )
 
     allocate( table( SAMPLES ) )
+    allocate( hist( SAMPLES ) )
 
     do i=1,SAMPLES
        table(i) = i
+       hist(i)  = 0
     end do
 
     call random_seed
@@ -95,6 +99,36 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     do i=1,SAMPLES
        write(*,*) i, castInteger( map%get( toObject( i ) ) )
     end do
+    
+    write(*,*)
+    write(*,*) '----- iterator test -',map%size(),'---------------'
+    write(*,*)
+
+    call map%rewind
+
+    testloop: do
+       if ( .not. map%hasNext() ) exit testloop
+
+       call map%nextNode( test )
+
+       a = castInteger( test%key )
+       b = castInteger( test%object )
+
+       write(*,*) a, b
+
+       hist(a) = hist(a) + 1
+
+    end do testloop
+
+    x = 0
+    do i=1,SAMPLES
+       if ( 0.eq.hist(i) ) write(*,*) 'empty    ',i
+       if ( 1.lt.hist(i) ) write(*,*) 'too many ',i,hist(i)
+       x = x + hist(i)
+    end do
+
+    write(*,*) 'totals',x,map%size()
+    
 
     deallocate( table )  
 

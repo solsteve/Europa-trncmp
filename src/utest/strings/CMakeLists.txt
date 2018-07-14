@@ -1,5 +1,5 @@
 #/ ====================================================================== BEGIN FILE =====
-#/ **                           Unit Test - C M A K E L I S T                           **
+#/ **                      pFUnit Subdirectory - C M A K E L I S T                      **
 #/ =======================================================================================
 #/ **                                                                                   **
 #/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
@@ -22,15 +22,10 @@
 #/ **                                                                                   **
 #/ =======================================================================================
 
-project ( tests Fortran )
+project(strings Fortran)
 
-add_subdirectory ( arrays )
-add_subdirectory ( container )
-add_subdirectory ( mathaux )
-add_subdirectory ( strings )
-
-set ( CMAKE_Fortran_MODULE_DIRECTORY "" )
+include( ../build_pfunit.cmake )
 
 #/ =======================================================================================
-#/ **                           Unit Test - C M A K E L I S T                           **
+#/ **                      pFUnit Subdirectory - C M A K E L I S T                      **
 #/ =========================================================================== end FILE ==

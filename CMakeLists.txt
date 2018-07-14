@@ -83,7 +83,7 @@ set ( CMAKE_Fortran_FLAGS_DEBUG   "-O1 -g -fbacktrace -Warray-temporaries -fchec
 
 
 #/ =======================================================================================
-
+#/ /usr/include/hdf5/serial
 
 set ( CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/europa/mods )
 
@@ -129,6 +129,9 @@ endif ( IS_DIRECTORY ${PFUNIT_DIR} )
 
 find_package ( BLAS )
 find_package ( LAPACK )
+find_package ( HDF5 COMPONENTS Fortran )
+
+
 
 add_subdirectory ( src )
 add_subdirectory ( tools )

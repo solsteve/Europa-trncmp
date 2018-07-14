@@ -1,8 +1,8 @@
 !/ ====================================================================== BEGIN FILE =====
-!/ **                                T R N C M P _ E N V                                **
+!/ **                                F T E S T _ H D F 5                                **
 !/ =======================================================================================
 !/ **                                                                                   **
-!/ **  Copyright (c) 2017, Stephen W. Soliday                                           **
+!/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
 !/ **                      stephen.soliday@trncmp.org                                   **
 !/ **                      http://research.trncmp.org                                   **
 !/ **                                                                                   **
@@ -21,68 +21,71 @@
 !/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 !/ **                                                                                   **
 !/ =======================================================================================
-module trncmp_env
+module ftest_hdf5
   !/ -------------------------------------------------------------------------------------
-  !! author: Stephen W. Soliday
-  !! date:   2017-03-30
+  !! author:  Stephen W. Soliday
+  !! date:    2018-07-01
   !! license: GPL
-  !! 
-  !!##Tran-Comp Environment
-  !! 
-  !! Collection of definitions for common developmental environment
-  ! 
+  !!
+  !!##Test of .
+  !
   !/ -------------------------------------------------------------------------------------
-  use constants_env
-  use math_aux
-  use copy_mod
-  use zero_mod
-  use summation_mod
-  use compare_types_mod
-  use poly_cast_mod
+  use trncmp_env
+  use hdf5
   implicit none
+  private
 
 
-  type, public :: object_pointer
-     class(*), pointer :: ptr
-  end type object_pointer
+  public :: h5test01
 
   
-  integer, public, parameter :: MAX_PATH = 128 !! Maximum charaters in file path
-
-    !/ -------------------------------------------------------------------------------------
-  interface leq
-     !/ ----------------------------------------------------------------------------------
-     module procedure :: lexical_equals
-  end interface leq
-
-  public :: leq
-
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
 
+
+
+
   !/ =====================================================================================
-  function lexical_equals( lhs, rhs ) result( cmp )
+  subroutine h5test01
     !/ -----------------------------------------------------------------------------------
+    use hdf5
     implicit none
-    character(*), intent(in) :: lhs !! left  hand side string
-    character(*), intent(in) :: rhs !! right hand side string
-    logical                  :: cmp
 
-    cmp = .true.
-    if ( llt( lhs, rhs ) ) then
-       cmp = .false.
-    else
-       if ( lgt( lhs, rhs ) ) then
-          cmp = .false.
-       end if
-    end if
-
-  end function lexical_equals
+    CHARACTER(LEN=8), PARAMETER :: filename = "file.h5" ! File name
+    INTEGER(HID_T)              :: file_id
+    INTEGER                     :: error
+    
+    CALL h5open_f(error)
+    CALL h5fcreate_f(filename, H5F_ACC_TRUNC_F, file_id, error)
+    CALL h5fclose_f(file_id, error)
+    CALL h5close_f(error)
 
 
-end module trncmp_env
+  end subroutine h5test01
+
+
+
+
+  
+
+end module ftest_hdf5
+
+
+
 
 !/ =======================================================================================
-!/ **                                T R N C M P _ E N V                                **
+program main
+  !/ -------------------------------------------------------------------------------------
+  use ftest_hdf5
+  implicit none
+
+
+  call h5test01
+
+    
+end program main
+
+!/ =======================================================================================
+!/ **                                F T E S T _ H D F 5                                **
 !/ =========================================================================== END FILE ==
