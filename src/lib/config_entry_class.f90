@@ -64,7 +64,3 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
 
 end module config_entry_class
-
-
-
-     

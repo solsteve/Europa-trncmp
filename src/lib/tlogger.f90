@@ -125,7 +125,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Register a new abort handler with the logging system. Set the new level for
     !! generating an abort.
     !/ -----------------------------------------------------------------------------------
-    procedure(), pointer,  intent(in) :: proc      !!  pointer to the abort handler class.
+    procedure(), pointer,  intent(in) :: proc      !! pointer to the abort handler class.
     integer,     optional, intent(in) :: new_level !! new minimum level to generate an abort.
     !!                                                (default: no change)
     !/ -----------------------------------------------------------------------------------

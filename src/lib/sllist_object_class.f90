@@ -47,7 +47,6 @@ module sllist_object_class
 
    contains
 
-
      procedure, public :: delete => sllist_node_delete
 
      final :: sllist_node_destroy
