@@ -100,7 +100,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine print_results( name, test, found, dist, visit, &
+  subroutine print_results( name, test, found, dist, visit, intree, &
        &                    true_idx, true_dist, true_found, fmt )
     !/ -----------------------------------------------------------------------------------
     !! Helper procedure to display results.
@@ -111,6 +111,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(dp), dimension(:), intent(in) :: found      !! Found point.
     real(dp),               intent(in) :: dist       !! Distance to the found point.
     integer,                intent(in) :: visit      !! Number of tree nodes visited.
+    integer,                intent(in) :: intree     !! Number of tree nodes inserted.
     integer,                intent(in) :: true_idx   !! True index.
     real(dp),               intent(in) :: true_dist  !! True distance.
     real(dp), dimension(:), intent(in) :: true_found !! True closest point.
@@ -120,7 +121,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     write(*,1000) name
     write(*,1010) ary_print( test, fmt )
     write(*,1020) ary_print( found, fmt ), dist
-    write(*,1030) visit
+    write(*,1030) visit, intree
     write(*,*)
     write(*,1040) true_idx, true_dist, ary_print( true_found, fmt )
 
@@ -130,7 +131,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 1000 format( '>> ',A )
 1010 format( 'searching for ',A )
 1020 format( 'found ',A,' dist ', F7.4 )
-1030 format( 'seen ',I0,' nodes' )
+1030 format( 'seen ',I0,' nodes out of ',I0 )
 1040 format( 'Exhaustive idx: ',I0,' dist: ', F7.4,' ', A )
 
   end subroutine print_results
@@ -149,16 +150,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer                             :: true_idx
     !/ -----------------------------------------------------------------------------------
 
-    kd_tree_visited = 0
-
     wiki = reshape( [ 2,3, 5,4, 9,6, 4,7, 8,1, 7,1 ], shape( wiki ) )
 
     tree => KDTree( list=wiki )
     call tree%search( found, test_point, dist=best_dist )
     true_idx = exhaustive_search( wiki, test_point, dist=true_dist )
 
-    call print_results( 'Wiki', test_point, found, best_dist, kd_tree_visited, &
-       &                    true_idx, true_dist, wiki(:,true_idx), 'F7.4' )
+    call print_results( 'Wiki', test_point, found, best_dist,                 &
+       &                tree%visited(), size( tree ),                         &
+       &                true_idx, true_dist, wiki(:,true_idx), 'F7.4' )
 
 
   end subroutine wiki_test
@@ -193,14 +193,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     !/ -----------------------------------------------------------------------------------
 
-    kd_tree_visited = 0
-
     tree => KDTree( list=million )
     call tree%search( found, test_point, dist=best_dist )
     true_idx = exhaustive_search( million, test_point, dist=true_dist )
 
-    call print_results( 'Million', test_point, found, best_dist, kd_tree_visited, &
-       &                    true_idx, true_dist, million(:,true_idx), 'F7.4' )
+    call print_results( 'Million', test_point, found, best_dist,                 &
+         &              tree%visited(), size( tree ),                            &
+         &              true_idx, true_dist, million(:,true_idx), 'F7.4' )
 
 
   end subroutine million_test

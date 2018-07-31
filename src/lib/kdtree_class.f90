@@ -34,7 +34,6 @@ module KDTree_class
   implicit none
   private
 
-  integer, public :: kd_tree_visited = 0
   
   !/ =====================================================================================
   type, public :: kd_node_t
@@ -50,12 +49,16 @@ module KDTree_class
   !/ =====================================================================================
   type, public :: kd_tree_t
      !/ ----------------------------------------------------------------------------------
-     class(kd_node_t), pointer :: root => null()
+     class(kd_node_t), pointer :: root          => null() !! root node
+     integer, public           :: nodes_visited = 0       !! visits in search (reset each time)
+     integer, public           :: nodes_in_tree = 0       !! nodes inserted in tree
 
    contains
 
-     procedure, public :: search => kdtree_nearest
-
+     procedure, public :: size    => kdtree_in_tree
+     procedure, public :: visited => kdtree_visited
+     procedure, public :: search  => kdtree_nearest
+     
      procedure :: kdtree_insert_point
      procedure :: kdtree_insert_list
      generic,   public :: insert => kdtree_insert_point, kdtree_insert_list
@@ -77,20 +80,54 @@ module KDTree_class
      module procedure :: kd_tree_alloc
   end interface KDTree
 
+  !/ -------------------------------------------------------------------------------------
+  interface size
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: kdtree_size_external
+  end interface size
 
+  
   public :: KDNode
   public :: KDTree
+  public :: size
   public :: exhaustive_search
-
-
 
 
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
 
+  !/ =====================================================================================
+  pure function kdtree_in_tree( self ) result( n )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(kd_tree_t), intent(in) :: self  !! Reference to this KDTree.
+    integer                      :: n     !! Return 
+    !/ -----------------------------------------------------------------------------------
+    n = self%nodes_in_tree
+  end function kdtree_in_tree
 
+  !/ =====================================================================================
+  pure function kdtree_visited( self ) result( n )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(kd_tree_t), intent(in) :: self  !! Reference to this KDTree.
+    integer                      :: n     !! Return 
+    !/ -----------------------------------------------------------------------------------
+    n = self%nodes_visited
+  end function kdtree_visited
+  
 
+  !/ =====================================================================================
+  pure function kdtree_size_external( tree ) result( n )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(kd_tree_t), intent(in) :: tree  !! Reference to a KDTree.
+    integer                     :: n     !! Return 
+    !/ -----------------------------------------------------------------------------------
+    n = tree%size()
+  end function kdtree_size_external
+  
 
   !/ =====================================================================================
   recursive subroutine insert_node( root, leaf, dim, max_dim )
@@ -161,6 +198,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     max_dim = size(point)
 
     node => KDNode( point )
+    self%nodes_in_tree = self%nodes_in_tree + 1
 
     if ( associated( self%root ) ) then
        call insert_node( self%root, node, 1, max_dim )
@@ -197,11 +235,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  recursive subroutine kdtree_search( root, nd, dim, max_dim, best, best_dist )
+  recursive subroutine kdtree_search( tree, root, nd, dim, max_dim, best, best_dist )
     !/ -----------------------------------------------------------------------------------
     !! Recursive search procedure.
     !/ -----------------------------------------------------------------------------------
     implicit none
+    class(kd_tree_t),          intent(inout) :: tree      !! Reference to this KDTree.
     type(kd_node_t), pointer,  intent(in)    :: root      !! Root node.
     type(kd_node_t),           intent(in)    :: nd        !! Test node.
     integer,                   intent(in)    :: dim       !! Dimension to test.
@@ -218,7 +257,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        dx  = root%x(dim) - nd%x(dim)
        dx2 = dx*dx
 
-       kd_tree_visited = kd_tree_visited + 1
+       tree%nodes_visited = tree%nodes_visited + 1
 
        if ( ( .not.associated(best) ).or.( d.lt.best_dist ) ) then
           best_dist =  d
@@ -230,16 +269,16 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
           if ( next_dim.gt.max_dim ) next_dim = 1
 
           if ( 0.0d0.lt.dx ) then
-             call kdtree_search( root%left,  nd, next_dim, max_dim, best, best_dist )
+             call kdtree_search( tree, root%left,  nd, next_dim, max_dim, best, best_dist )
           else
-             call kdtree_search( root%right, nd, next_dim, max_dim, best, best_dist )
+             call kdtree_search( tree, root%right, nd, next_dim, max_dim, best, best_dist )
           end if
 
           if ( dx2.le.best_dist) then
              if ( 0.0d0.lt.dx ) then
-                call kdtree_search( root%right, nd, next_dim, max_dim, best, best_dist )
+                call kdtree_search( tree, root%right, nd, next_dim, max_dim, best, best_dist )
              else
-                call kdtree_search( root%left,  nd, next_dim, max_dim, best, best_dist )
+                call kdtree_search( tree, root%left,  nd, next_dim, max_dim, best, best_dist )
              end if
           end if
 
@@ -269,8 +308,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     test => KDNode( point )
     kdim =  size(point)
 
-    min_dist = 1.0d20
-    call kdtree_search( self%root, test, 1, kdim, found, min_dist )
+    min_dist           = 1.0d20
+    self%nodes_visited = 0
+    
+    call kdtree_search( self, self%root, test, 1, kdim, found, min_dist )
 
     if ( associated(found) ) match = found%x
     if ( present( dist ) )   dist  = sqrt(min_dist)
