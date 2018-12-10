@@ -22,71 +22,80 @@
 #/ **                                                                                   **
 #/ ----- Modification History ------------------------------------------------------------
 #/
-#/ @brief   Controler.
+#/  @file Makefile
+#/   Provides build environment
 #/
-#/ @details Provides a wrapper for cmake.
-#/
-#/ @author  Stephen W. Soliday
-#/ @date    2018-04-21
+#/  @author Stephen W. Soliday
+#/  @date 2018-09-11
 #/
 #/ =======================================================================================
 
-.PHONY: all 
+TEX2DVI = latex
+DVI2PS  = dvips -D 600 -Z
+PS2PDF  = ps2pdf
+FIG2EPS = fig2dev -L eps
+BIBTEX  = bibtex
+TEX2RTF = latex2rtf -M12 -F
 
-all: debug
-
-COMPILERS=-DCMAKE_Fortran_COMPILER=gfortran
-XCOMPILERS=-DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_CXX_COMPILER=g++ -DCMAKE_CC_COMPILER=gcc
-
-#/ ---------------------------------------------------------------------------------------
-
-debug: DEBUG
-	make -C $<
-
-DEBUG:
-	mkdir -p $@
-	cd $@; cmake $(COMPILERS) -DCMAKE_BUILD_TYPE=$@ ..
-
-#/ ---------------------------------------------------------------------------------------
-
-release: RELEASE
-	make -C $<
-
-RELEASE:
-	mkdir -p $@
-	cd $@; cmake $(COMPILERS) -DCMAKE_BUILD_TYPE=$@ ..
-
-#/ ---------------------------------------------------------------------------------------
-
-install: release
-	make -C RELEASE install
-
-#/ ---------------------------------------------------------------------------------------
-
-check: DEBUG
-	make -C $< test
-
-#/ ---------------------------------------------------------------------------------------
-
-pages:
-	make -C docs
+RM      = rm -f
 
 #/ =======================================================================================
+
+PAPER  = DerivationBackprop
+
+%.dvi: %.tex
+	$(TEX2DVI) $<
+	$(BIBTEX)  $*
+	$(TEX2DVI) $<
+	$(TEX2DVI) $<
+
+%.rtf: %.tex
+	$(TEX2DVI) $<
+	$(BIBTEX)  $*
+	$(TEX2DVI) $<
+	$(TEX2DVI) $<
+	$(TEX2RTF) -o $@ $<
+
+%.pdf: %.ps
+	$(PS2PDF) $< $@
+
+%.ps: %.dvi
+	$(DVI2PS) -o $@ $<
+
+#  ==========================================================================
+
+all: $(PAPER).dvi
+	xdvi $<
+
+dvi: $(PAPER).dvi
+ps:  $(PAPER).ps
+pdf: $(PAPER).pdf
+rtf: $(PAPER).rtf
+
+FIGS:
+	make -C figures
+
+IMGS:
+	make -C images
 
 clean:
-	make -C docs $@
-
+	$(RM) *.aux *.dvi *.log *.bbl *.blg
+	$(RM) *.ps *.pdf *.rtf *.toc
+	make -C figures $@
+	make -C images  $@
 
 fullclean: clean
-	make -C docs $@
-	rm -rf RELEASE DEBUG
-	find . -name "*~" | xargs rm -f
-	make -C papers/bpnn $@
+	$(RM) *~
+	make -C figures $@
+	make -C images  $@
 
-
-distclean: fullclean
+$(PAPER).dvi: $(PAPER).tex $(BIBLIO) FIGS IMGS
+$(PAPER).rtf: $(PAPER).tex $(BIBLIO)
+$(PAPER).ps:  $(PAPER).dvi
+$(PAPER).pdf: $(PAPER).ps
 
 
 #/ =======================================================================================
 #/ **                                  M A K E F I L E                                  **
-#/ =========================================================================== END FILE ==
+#/ ======================================================================== END FILE =====
+

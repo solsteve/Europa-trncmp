@@ -163,8 +163,44 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end subroutine test02
 
 
+  !/ =====================================================================================
+  subroutine test03( line )
+    !/ -----------------------------------------------------------------------------------
+    use string_tools
+    !/ -----------------------------------------------------------------------------------
+    character(*), intent(in)  :: line
+    integer                   :: n
+    type(string_splitter)     :: SP
+    character(:), allocatable :: S1, key, val, com
 
+    write(*,*) 'line = ',line
 
+    call split( SP, line, ';', COUNT=n )
+    if ( 2.eq.n ) then
+       S1  = SP%get(1)
+       com = SP%get(2)
+       call split( SP, S1, '=', COUNT=n )
+       if ( 2.eq.n ) then
+          key = SP%get(1)
+          val = SP%get(2)          
+       else
+          write(*,*) 'parse error, comment + key without value'
+       end if
+    else
+       call split( SP, line, '=', COUNT=n )
+       if ( 2.eq.n ) then
+          key = SP%get(1)
+          val = SP%get(2)          
+       else
+          write(*,*) 'parse error, key without value'
+       end if
+    end if
+
+    if ( allocated( key ) ) write(*,*) '  key     = ',key
+    if ( allocated( val ) ) write(*,*) '  value   = ',val
+    if ( allocated( com ) ) write(*,*) '  comment = ',com
+
+  end subroutine test03
 
 end module ftest_hashmap
 
@@ -176,7 +212,7 @@ program main
   implicit none
   !/ -------------------------------------------------------------------------------------
   integer, parameter :: SAMPLES = 64
-
+  
   write (*,*)
   call test01( SAMPLES )
   write (*,*)

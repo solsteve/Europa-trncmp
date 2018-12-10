@@ -82,7 +82,6 @@ module hash_object_class
      procedure, public :: nextNode => hashmap_iter_next_node
      procedure, public :: nextKey  => hashmap_iter_next_key
 
-
      final :: hashmap_destroy
   end type HashMap
 
@@ -94,7 +93,6 @@ module hash_object_class
   end interface hash
 
   
-
   !/ -------------------------------------------------------------------------------------
   interface create
      !/ ----------------------------------------------------------------------------------
@@ -367,11 +365,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! |    1   | key is NULL |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(HashMap),              intent(inout) :: self     !! reference to this object
-    class(*), pointer,           intent(in)    :: key      !! key to hash
-    class(*), pointer,           intent(in)    :: obj      !! object to store
-    class(*), optional, pointer, intent(inout) :: recover  !! optional recovery
-    integer,  optional,          intent(out)   :: stat     !! optional return status
+    class(HashMap),              intent(inout) :: self    !! reference to this object
+    class(*), pointer,           intent(in)    :: key     !! key to hash
+    class(*), pointer,           intent(in)    :: obj     !! object to store
+    class(*), optional, pointer, intent(inout) :: recover !! optional recovery
+    integer,  optional,          intent(out)   :: stat    !! optional return status
     !/ -----------------------------------------------------------------------------------
     class(btree_node), pointer :: node
     class(*),          pointer :: old_data

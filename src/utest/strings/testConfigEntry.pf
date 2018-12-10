@@ -1,0 +1,62 @@
+module testConfigEntry
+
+
+contains
+
+
+
+  !! ------------------------------------------------------------------
+  @test
+  subroutine test_parse
+    use pfunit_mod
+    use config_entry_mod
+
+  character(*), parameter :: test1 = '  wife   '
+  character(*), parameter :: test3 = '   wife =  heather  '
+  character(*), parameter :: test4 = '  ;    lover '
+  character(*), parameter :: test5 = '   wife  ;    lover '
+  character(*), parameter :: test7 = '  wife = heather  ;  lover '
+
+  character(*), parameter :: expect1 = 'wife'
+  character(*), parameter :: expect3 = 'wife = heather'
+  character(*), parameter :: expect4 = '; lover'
+  character(*), parameter :: expect5 = 'wife ; lover'
+  character(*), parameter :: expect7 = 'wife = heather ; lover'
+
+  type(config_entry_t) :: CE
+  character(:), allocatable      :: res
+
+  call CE%set( LINE=test1 )
+  res = CE%toString()
+
+  @assertEqual( expect1, res )
+
+  call CE%clear
+  call CE%fromString( test3 )
+  res = CE%toString()
+
+  @assertEqual( expect3, res )
+
+  call CE%clear
+  call CE%fromString( test4 )
+  res = CE%toString()
+
+  @assertEqual( expect4, res )
+
+  call CE%clear
+  call CE%fromString( test5 )
+  res = CE%toString()
+
+  @assertEqual( expect5, res )
+
+  call CE%clear
+  call CE%fromString( test7 )
+  res = CE%toString()
+
+  @assertEqual( expect7, res )
+
+
+  end subroutine test_parse
+
+
+end module testConfigEntry

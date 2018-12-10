@@ -36,8 +36,9 @@ module compare_types_mod
   implicit none
   private
 
-  integer, private, parameter :: dp=kind(1.0d0)
-  integer, private, parameter :: sp=kind(1.0e0)
+  integer, parameter :: qp=REAL128
+  integer, parameter :: dp=REAL64
+  integer, parameter :: sp=REAL32
 
   interface compare
      module procedure :: compare_objects
@@ -206,10 +207,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end if
 
   end function is_equal_double
-
-
-
-
 
 
 

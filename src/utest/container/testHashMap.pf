@@ -27,14 +27,18 @@ contains
 
     @assertEqual( 3, map%size() )
 
-    @assertEqual( 1, castInteger( map%get( toObject('heather') ) ) )
-    @assertEqual( 2, castInteger( map%get( toObject('anthea') ) ) )
+    @assertEqual( 1, castInteger( map%get( toObject('heather')    ) ) )
+    @assertEqual( 2, castInteger( map%get( toObject('anthea')     ) ) )
     @assertEqual( 3, castInteger( map%get( toObject('cassiopeia') ) ) )
+    
     test => map%get( toObject('cynibar') )
     @assertFalse( associated( test ) )
     
-    @assertTrue( map%hasKey( toObject('heather') ) )
-    @assertFalse( map%hasKey( toObject('steve') ) )
+    test => map%get( toObject('anthea') )
+    @assertTrue( associated( test ) )
+    
+    @assertTrue(  map%hasKey( toObject('heather') ) )
+    @assertFalse( map%hasKey( toObject('steve')   ) )
     
   end subroutine testInsert
 

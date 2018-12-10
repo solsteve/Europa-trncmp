@@ -1,0 +1,451 @@
+%/ ====================================================================== BEGIN FILE =====
+%/ **                        D E R I V A T I O N B A C K P R O P                        **
+%/ =======================================================================================
+%/ **                                                                                   **
+%/ **  Copyright (c) 2018, L3 Technologies Advanced Programs                            **
+%/ **                      One Wall Street #1, Burlington, MA 01803                     **
+%/ **                                                                                   **
+%/ **  -------------------------------------------------------------------------------  **
+%/ **                                                                                   **
+%/ **  This file, and associated source code, is not free software; you may not         **
+%/ **  redistribute it and/or modify it. This file is part of a research project        **
+%/ **  that is in a development phase. No part of this research has been publicly       **
+%/ **  distributed. Research and development for this project has been at the sole      **
+%/ **  cost in both time and funding by L3 Technologies Advanced Programs.              **
+%/ **                                                                                   **
+%/ **  Any reproduction of computer software or portions thereof marked with this       **
+%/ **  legend must also reproduce the markings.  Any person who has been provided       **
+%/ **  access to such software must promptly notify L3 Technologies Advanced Programs.  **
+%/ **                                                                                   **
+%/ ----- Modification History ------------------------------------------------------------
+%/
+%/  @file Makefile
+%/   Provides build environment
+%/
+%/  @author Stephen W. Soliday
+%/  @date 2015-06-02 (final)
+%/  @date 2015-05-19 (draft)
+%/
+%/ =======================================================================================
+
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{trncmp}
+\usepackage{picinpar}
+\usepackage{asiwp}
+\usepackage{environ}
+
+%  =======================================================================================
+% Heading arguments are {volume}{year}{pages}{submitted}{published}{author-full-names}
+
+\jmlrheading{Program Whitepaper}{2018}{}{9/11}{-}{Stephen W.~Soliday}
+
+% Short headings should be running head and authors last names
+
+\ShortHeadings{Derivation of the Backpropagation Training}{Soliday}
+\firstpageno{1}
+%  =======================================================================================
+
+\newcommand{\VAR}[3]{#1^{(#2)}_{#3}}
+\newcommand{\efrac}[2]{\displaystyle\frac{#1}{#2}}
+\newcommand{\pfrac}[2]{\efrac{\partial#1}{\partial#2}}
+
+\NewEnviron{tcequation}{%
+\begin{equation}\scalebox{1.4}
+  {$\BODY$}
+\end{equation}
+}
+
+
+\newcommand{\SUM}[2]{\displaystyle\sum_{#1}{#2}}
+\newcommand{\SUMP}[2]{\displaystyle\sum_{#1}\GPP{#2}}
+\newcommand{\SUMB}[2]{\displaystyle\sum_{#1}\GPB{#2}}
+\newcommand{\SUMR}[2]{\displaystyle\sum_{#1}\GPR{#2}}
+\newcommand{\SUMN}[3]{\displaystyle\sum_{#1}^{#2}{#3}}
+\newcommand{\SUMNP}[3]{\displaystyle\sum_{#1}^{#2}\GPP{#3}}
+\newcommand{\SUMNB}[3]{\displaystyle\sum_{#1}^{#2}\GPB{#3}}
+\newcommand{\SUMNR}[3]{\displaystyle\sum_{#1}^{#2}\GPR{#3}}
+
+
+\begin{document}
+\title{Derivation of Backproagation for Multi-layer Neural Networks}
+\author{ \name Stephen W.~Soliday \email stephen.soliday@l3t.com \\
+  \addr L3 Sensor Systems \\
+  \addr Space and Sensors Sector \\
+\addr Advanced Programs Division\\
+}
+\date{22-October-2018}
+
+\maketitle
+
+\begin{abstract}%
+
+This article derives the back propagation training algorithm for fully
+connected feed forward neural networks.
+  
+\end{abstract}
+
+\vspace{12pt}
+\textbf{Keywords}: Neural network, Training, Einstein notation
+
+%/ =======================================================================================
+\section{Introduction\label{sec:intro}}
+%/ =======================================================================================
+
+\begin{enumerate}
+\item State that the fully connected feed forward network is the backbone of most neural
+      network research.
+\item Note that back propagation is still the most used training method for labeled data.
+\item This paper will derive back propagation in a way condusive to coding in any language.
+\end{enumerate}
+
+%/ =======================================================================================
+\section{Simple Three Layer Neural Network\label{sec:threelayer}}
+%/ =======================================================================================
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics[width=3in]{figures/threelayer.eps}
+    \caption{Three layer feed forward neural network}
+    \label{fig:threelayer}
+  \end{center}
+\end{figure}
+
+Figure\ref{fig:threelayer}, shows the schematic for a simple three
+layer neural network\footnote{Some texts only count weight matrices as
+  a layers. This text counts the input layer (x) and the two
+  processing layers. Think of $x_i$ as $a^{(0)}_i$}.
+
+%/ ---------------------------------------------------------------------------------------
+\subsection{Forward Propagation}
+%/ ---------------------------------------------------------------------------------------
+
+In the hidden layer each neuron $(k)$ performs a weighted sum across
+all of the inputs $x_i$ and then applies a bias.
+
+\begin{tcequation}
+  \VAR{z}{1}{k} =  \VAR{b}{1}{k} + \SUM{i}{\VAR{W}{1}{k,i} \cdot x_i}
+  \label{eq:sum1}
+\end{tcequation}
+
+This biased sum is then processed by an activation function to create
+the output of neuron $(k)$.
+
+\begin{tcequation}
+  \VAR{a}{1}{k} = \FU{\sigma}{\VAR{z}{1}{k}}
+  \label{eq:act1}
+\end{tcequation}
+
+In the output layer each neuron $(p)$ performs a weighted sum across
+all of the outputs $\VAR{a}{1}{i}$ from the hidden layer and then
+appose a bias.
+
+\begin{tcequation}
+  \VAR{z}{2}{p} = \VAR{b}{2}{p} + \SUM{i}{\VAR{W}{2}{p,i} \cdot \VAR{a}{1}{i}}
+  \label{eq:sum2}
+\end{tcequation}
+  
+This biased sum is then processed by an activation function to create
+the output of neuron $(p)$.
+
+\begin{tcequation}
+  \VAR{a}{2}{p} = \FU{\sigma}{\VAR{z}{2}{p}}
+  \label{eq:act2}
+\end{tcequation}
+
+The cost function used to evaluate the networks mapping sums the
+square of the differences between each actual network output
+$\VAR{a}{2}{i}$ and the desired output $y_i$. An arbitrary constant of
+$1/2$ is applied here so that it will vanish when the derivative is
+evaluated.
+
+\begin{tcequation}
+  C = \frac{1}{2} \SUM{i}{\GPP{\VAR{a}{2}{i} - y_i}^2}
+  \label{eq:cost}
+\end{tcequation}
+
+%/ ---------------------------------------------------------------------------------------
+\subsection{Back Propagation}
+\subsubsection{Output Layer}
+%/ ---------------------------------------------------------------------------------------
+
+Working this time from output to input, the derivative of the cost
+function in equation \ref{eq:cost} with respect to the output layer
+weights is:
+
+\begin{tcequation}
+  \Delta \VAR{W}{2}{p,q} = \pfrac{C}{\VAR{W}{2}{p,q}} =
+  \GPP{\pfrac{C}{\VAR{a}{2}{p}}
+  \pfrac{\VAR{a}{2}{p}}{\VAR{z}{2}{p}}}
+  \pfrac{\VAR{z}{2}{p}}{\VAR{W}{2}{p,q}}
+  \label{eq:dW2}
+\end{tcequation}
+
+and with respect to the output layer bias:
+
+\begin{tcequation}
+  \Delta \VAR{b}{2}{p} = \pfrac{C}{\VAR{b}{2}{p}} =
+  \GPP{\pfrac{C}{\VAR{a}{2}{p}}
+  \pfrac{\VAR{a}{2}{p}}{\VAR{z}{2}{p}}}
+  \pfrac{\VAR{z}{2}{p}}{\VAR{b}{2}{p}}
+  \label{eq:db2}
+\end{tcequation}
+
+Notice the common group in equations (\ref{eq:dW2} and \ref{eq:db2}).
+This will be the error seen by output neuron.
+
+\ %exta line
+
+From equation \ref{eq:cost}, the first term in the group is:
+
+\begin{tcequation}
+  \begin{array}{lcl}
+    \pfrac{C}{\VAR{a}{2}{p}} & = &
+    \frac{1}{2} \pfrac{}{\VAR{a}{2}{p}} \SUM{i}{\GPP{\VAR{a}{2}{i} - y_i}^2} \\ \\
+    & = & \GPP{\VAR{a}{2}{p} - y_p}
+  \end{array}
+  \label{eq:ft2}
+\end{tcequation}
+
+and from equation \ref{eq:act2}, the second term
+
+\begin{tcequation}
+  \begin{array}{lcl}
+    \pfrac{\VAR{a}{2}{p}}{\VAR{z}{2}{p}} & = &
+    \pfrac{}{\VAR{z}{2}{p}} \FU{\sigma}{\VAR{z}{2}{p}} \\ \\
+    & = & \FU{\sigma'}{\VAR{z}{2}{p}}
+  \end{array} 
+  \label{eq:st2}
+\end{tcequation}
+
+Combine equations (\ref{eq:ft2} and \ref{eq:st2}), the error term for
+an output neuron is:
+
+\begin{tcequation}
+  \VAR{E}{2}{p} = \GPP{\VAR{a}{2}{p} - y_p} \FU{\sigma'}{\VAR{z}{2}{p}}
+  \label{eq:eout}
+\end{tcequation}
+  
+Using equation \ref{eq:sum2}, evaluate the last term in equation \ref{eq:dW2}.
+
+\begin{tcequation}
+  \begin{array}{lcl}
+    \pfrac{\VAR{z}{2}{p}}{\VAR{W}{2}{p,q}} & = &
+    \pfrac{}{\VAR{W}{2}{p,q}} \GPB{ \VAR{b}{2}{p} + \SUM{i}{\VAR{W}{2}{p,i} \cdot \VAR{a}{1}{i}} }\\ \\
+    & = & \VAR{a}{2}{q}
+  \label{eq:eval:ft2}
+  \end{array}
+\end{tcequation}
+
+and in equation \ref{eq:db2}.
+
+\begin{tcequation}
+  \begin{array}{lcl}
+    \pfrac{\VAR{z}{2}{p}}{\VAR{b}{2}{p}} & = &
+    \pfrac{}{\VAR{b}{2}{p}} \GPB{ \VAR{b}{2}{p} + \SUM{i}{\VAR{W}{2}{p,i} \cdot \VAR{a}{1}{i}} } \\ \\
+    & = & 1
+  \label{eq:eval:st2}
+  \end{array}
+\end{tcequation}
+
+
+Finally, substitute equations (\ref{eq:eout}, \ref{eq:eval:ft2} and
+\ref{eq:eval:st2}) into equations (\ref{eq:dW2} and \ref{eq:db2}):
+
+\begin{tcequation}
+  \Delta \VAR{W}{2}{p,q} = \VAR{E}{2}{p} \VAR{a}{2}{q}
+  \label{eq:delW2}
+\end{tcequation}
+
+and,
+
+\begin{tcequation}
+  \Delta \VAR{b}{2}{p} = \VAR{E}{2}{p}
+  \label{eq:delb1}
+\end{tcequation}
+
+This completes the adjustment terms for the output layer weights and
+bias.  Next expand this process to examining the hidden layer.
+
+%/ ---------------------------------------------------------------------------------------
+\subsubsection{Hidden Layer}
+%/ ---------------------------------------------------------------------------------------
+
+The derivative of the cost function in equation\ref{eq:cost} with
+respect to the hidden layer weights is:
+
+\begin{tcequation}
+  \Delta \VAR{W}{1}{k,m} = \pfrac{C}{\VAR{W}{1}{k,m}} =
+  \GPB{
+  \pfrac{C}{\VAR{a}{2}{p}}
+    \pfrac{\VAR{a}{2}{p}}{\VAR{z}{2}{p}}}
+  \GPB{
+    \pfrac{\VAR{z}{2}{p}}{\VAR{a}{1}{k}}
+    \pfrac{\VAR{a}{1}{k}}{\VAR{z}{1}{k}}}
+  \pfrac{\VAR{z}{1}{k}}{\VAR{W}{1}{k,m}}
+  \label{eq:dW1}
+\end{tcequation}
+
+ and with respect to the hidden layer bias:
+
+\begin{tcequation}
+  \Delta \VAR{b}{1}{k} = \pfrac{C}{\VAR{b}{1}{k}} =
+  \GPB{
+  \pfrac{C}{\VAR{a}{2}{p}}
+    \pfrac{\VAR{a}{2}{p}}{\VAR{z}{2}{p}}}
+  \GPB{
+    \pfrac{\VAR{z}{2}{p}}{\VAR{a}{1}{k}}
+    \pfrac{\VAR{a}{1}{k}}{\VAR{z}{1}{k}}}
+    \pfrac{\VAR{z}{1}{k}}{\VAR{b}{1}{k}}
+  \label{eq:db1}
+\end{tcequation}
+
+Skip the first bracketed group for now, this is just equation
+\ref{eq:eout} for the $p^\text{th}$ output layer neuron.  Examine the
+second bracketed group. From equation \ref{eq:sum1} the first term is:
+
+\begin{tcequation}
+  \begin{array}{lcl}
+  \pfrac{\VAR{z}{2}{p}}{\VAR{a}{1}{k}} & = &
+  \pfrac{}{\VAR{a}{1}{k}} \GPB{\VAR{b}{2}{p} + \SUM{i}{\VAR{W}{2}{p,i} \cdot \VAR{a}{1}{i} } } \\ \\
+  & = & \VAR{W}{2}{p,k}
+  \end{array}
+  \label{eq:ft1}
+\end{tcequation}
+
+and from equation \ref{eq:act1}, the second term:
+
+\begin{tcequation}
+  \begin{array}{lcl}
+    \pfrac{\VAR{a}{1}{k}}{\VAR{z}{1}{k}} & = &
+    \pfrac{}{\VAR{z}{1}{k}} \FU{\sigma}{\VAR{z}{1}{k}} \\ \\
+    & = & \FU{\sigma'}{\VAR{z}{1}{k}}
+  \end{array} 
+  \label{eq:st1}
+\end{tcequation}
+
+This second grouped term, like equation \ref{eq:eout}, is common to
+both equations \ref{eq:dW1} and \ref{eq:db1}.  Combine equations
+(\ref{eq:ft1} and \ref{eq:st1}), the error seen by the $k^\text{th}$
+hidden neuron.
+
+\begin{tcequation}
+  \VAR{E}{1}{k} = \VAR{W}{2}{p,k} \FU{\sigma'}{\VAR{z}{1}{k}} 
+  \label{eq:ehid}
+\end{tcequation}
+
+Using equation \ref{eq:sum1}, evaluate the last term in
+equation \ref{eq:dW1}.
+
+\begin{tcequation}
+  \begin{array}{lcl}
+    \pfrac{\VAR{z}{1}{k}}{\VAR{W}{1}{k,m}} & = &
+    \pfrac{}{\VAR{W}{1}{k,m}} \GPB{ \VAR{b}{1}{k} + \SUM{i}{\VAR{W}{1}{k,i} \cdot x_i} }\\ \\
+    & = & x_m
+  \end{array}
+  \label{eq:eval:ft1}
+\end{tcequation}
+
+and in equation \ref{eq:db2}.
+
+\begin{tcequation}
+  \begin{array}{lcl}
+    \pfrac{\VAR{z}{1}{k}}{\VAR{b}{1}{k}} & = &
+    \pfrac{}{\VAR{b}{1}{k}} \GPB{ \VAR{b}{1}{k} + \SUM{i}{\VAR{W}{1}{k,i} \cdot x_i} } \\ \\
+    & = & 1
+  \end{array}
+  \label{eq:eval:st1}
+ \end{tcequation}
+
+Finally substitute equations (\ref{eq:eout}, \ref{eq:ehid},
+\ref{eq:eval:ft1} and \ref{eq:eval:st1}) into equations (\ref{eq:dW1}
+and \ref{eq:db1}) (notice the change in index for $E$ to reflect
+equations (\ref{eq:dW1} and \ref{eq:db1}):
+
+\begin{tcequation}
+  \Delta \VAR{W}{1}{k,m} = \VAR{E}{2}{p} \VAR{E}{1}{k} \VAR{a}{1}{m}
+  \label{eq:delW1}
+\end{tcequation}
+
+and,
+
+\begin{tcequation}
+  \Delta \VAR{b}{1}{k} = \VAR{E}{2}{p} \VAR{E}{1}{k}
+  \label{eq:delb1}
+\end{tcequation}
+
+This completes the adjustment terms for the hidden layer weights and
+bias.  Next a generalization of this process will be examined for the
+internal layer of a multi-layer neural network.
+
+%/ =======================================================================================
+\section{Generalize Back Propagation for more than Three Layers}
+%/ =======================================================================================
+
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+
+%/ =======================================================================================
+\section{Apply These Equations to Standard Coding}
+%/ =======================================================================================
+
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+
+
+
+%/ =======================================================================================
+\section{Adapt these Equations to form a Linear Algebra Approach}
+%/ =======================================================================================
+
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+
+
+
+\nocite{berns:91}
+\nocite{hecht:90}
+\nocite{kosko:92}
+
+
+%/ =======================================================================================
+\section*{References\label{sec:cites}}
+%/ =======================================================================================
+
+\bibliography{soliday}
+
+%/ =======================================================================================
+%\section{Appendices\label{sec:apendix}}
+%/ =======================================================================================
+
+
+
+%\begin{verbatim}
+%http://www2.fiu.edu/~sabar/enc1102/Research%20Paper%20Advice.htm
+%http://tychousa8.umuc.edu/WRTG999A/index.html
+%\end{verbatim}
+
+\end{document}
+
+%/ =======================================================================================
+%/ **                        D E R I V A T I O N B A C K P R O P                        **
+%  ======================================================================== END FILE =====

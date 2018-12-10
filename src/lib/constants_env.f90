@@ -47,8 +47,9 @@ module constants_env
   public :: OUTPUT_UNIT
   public :: ERROR_UNIT
 
-  integer, public, parameter :: dp=kind(1.0d0)
-  integer, public, parameter :: sp=kind(1.0e0)
+  integer, public, parameter :: qp=REAL128
+  integer, public, parameter :: dp=REAL64
+  integer, public, parameter :: sp=REAL32
 
   real(dp), public, parameter :: N_ZERO      = 0.0d0              !! 0
   real(dp), public, parameter :: N_HALF      = 5.0d-1             !! 1/2

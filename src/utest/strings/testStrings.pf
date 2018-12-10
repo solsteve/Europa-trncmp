@@ -70,7 +70,7 @@ contains
 
     test1 = 'heather'
 
-    i = count( test1, 'e' )
+    i = count_char( test1, 'e' )
 
     @assertEqual( 2, i )
 
@@ -142,25 +142,27 @@ contains
     use pfunit_mod
     use string_tools
     implicit none
+    integer :: n
     type(string_splitter) :: SP
 
     call split( SP, '  heather ,  anthea, cassiopeia ', ',' )
 
-    
-    @assertEqual( 3, SP%count() )
+    n = SP%count()
+
+    @assertEqual( 3, n )
     @assertEqual( 'heather',    SP%get(1) )
     @assertEqual( 'anthea',     SP%get(2) )
     @assertEqual( 'cassiopeia', SP%get(3) )
 
 
-    call split( SP, '  heather, stephen ', ',' )
+    call split( SP, '  heather1, stephen1 ', ',' )
     @assertEqual( 2, SP%count() )
-    @assertEqual( 'heather', SP%get(1) )
+    @assertEqual( 'heather1', SP%get(1) )
 
     
-    call split( SP, '  heather stephen ', ',' )
+    call split( SP, '  heather2 stephen2 ', ',' )
     @assertEqual( 1, SP%count() )
-    @assertEqual( 'heather stephen', SP%get(1) )
+    @assertEqual( 'heather2 stephen2', SP%get(1) )
 
 
   end subroutine test_split

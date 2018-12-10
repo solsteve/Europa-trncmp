@@ -83,7 +83,7 @@ module string_tools
   public :: strcmp
   public :: find_any
   public :: find_in
-  public :: count
+  public :: count_char
   public :: toUpper
   public :: toLower
   public :: containedBy
@@ -191,7 +191,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function count( str, test ) result( cnt )
+  function count_char( str, test ) result( cnt )
     !/ -----------------------------------------------------------------------------------
     !! Count the number of occurances
     !/ -----------------------------------------------------------------------------------
@@ -211,7 +211,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        end if
     end do
 
-  end function count
+  end function count_char
 
 
   !/ =====================================================================================
@@ -293,7 +293,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine strsplt_create( ss, src, delim )
+  subroutine strsplt_create( ss, src, delim, COUNT )
     !/ -----------------------------------------------------------------------------------
     !! Split a string along a delimeter
     !/ -----------------------------------------------------------------------------------
@@ -301,13 +301,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     type(string_splitter), intent(inout) :: ss    !! reference to a splitter.
     character(*),          intent(in)    :: src   !! source string.
     character(len=1),      intent(in)    :: delim !! delimeter character.
+    integer, optional,     intent(out)   :: COUNT !! optional number of tokens
     !/ -----------------------------------------------------------------------------------
     integer :: i, n, idx
     !/ -----------------------------------------------------------------------------------
 
     ss%work_string = trim(adjustl( src ) )
 
-    n = count( ss%work_string, delim ) + 1
+    n = count_char( ss%work_string, delim ) + 1
 
     if ( allocated( ss%cut ) ) deallocate( ss%cut )
     
@@ -326,6 +327,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     ss%cut(idx) = n+1
 
     ss%n_parts = idx
+
+    if ( present( COUNT ) ) COUNT = idx
 
   end subroutine strsplt_create
 

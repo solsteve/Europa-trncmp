@@ -34,11 +34,14 @@ module poly_cast_mod
   implicit none
   private
 
-  integer, private, parameter :: dp=kind(1.0d0)
-  integer, private, parameter :: sp=kind(1.0e0)
+  integer, parameter :: qp=REAL128
+  integer, parameter :: dp=REAL64
+  integer, parameter :: sp=REAL32
 
 
+  !/ -------------------------------------------------------------------------------------
   interface toObject
+     !/ ----------------------------------------------------------------------------------
      module procedure :: charater_to_object
      module procedure :: logical_to_object
      module procedure :: integer_to_object
@@ -48,32 +51,44 @@ module poly_cast_mod
   end interface toObject
 
 
+  !/ -------------------------------------------------------------------------------------
   interface castCharacter
+     !/ ----------------------------------------------------------------------------------
      module procedure :: object_to_character
   end interface castCharacter
 
   
+  !/ -------------------------------------------------------------------------------------
   interface castLogical
+     !/ ----------------------------------------------------------------------------------
      module procedure :: object_to_logical
   end interface castLogical
 
   
+  !/ -------------------------------------------------------------------------------------
   interface castInteger
+     !/ ----------------------------------------------------------------------------------
      module procedure :: object_to_integer
   end interface castInteger
 
   
+  !/ -------------------------------------------------------------------------------------
   interface castSingle
+     !/ ----------------------------------------------------------------------------------
      module procedure :: object_to_single
   end interface castSingle
 
   
+  !/ -------------------------------------------------------------------------------------
   interface castDouble
+     !/ ----------------------------------------------------------------------------------
      module procedure :: object_to_double
   end interface castDouble
 
   
+  !/ -------------------------------------------------------------------------------------
   interface castComplex
+     !/ ----------------------------------------------------------------------------------
      module procedure :: object_to_complex
   end interface castComplex
 

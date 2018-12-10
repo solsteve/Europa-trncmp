@@ -42,8 +42,10 @@ module trncmp_env
   implicit none
 
 
+  !/ =====================================================================================
   type, public :: object_pointer
-     class(*), pointer :: ptr
+     !/ ----------------------------------------------------------------------------------
+     class(*), pointer :: ptr => null()
   end type object_pointer
 
   
@@ -51,12 +53,12 @@ module trncmp_env
 
   
     !/ -------------------------------------------------------------------------------------
-  interface leq
+  interface LEQ
      !/ ----------------------------------------------------------------------------------
      module procedure :: lexical_equals
-  end interface leq
+  end interface LEQ
 
-  public :: leq
+  public :: LEQ
 
 
 

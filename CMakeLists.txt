@@ -53,6 +53,8 @@ set ( CMAKE_BUILD_TYPE "RELEASE" CACHE STRING "Select which configuration to bui
 #/ Check whether the user has selected a BUILD_TYPE
 #/ ---------------------------------------------------------------------------------------
 
+set ( CMAKE_CC_COMPILER  "gcc" )
+set ( CMAKE_CXX_COMPILER "g++" )
 
 if ( "${CMAKE_BUILD_TYPE}" STREQUAL "" )
 
@@ -130,8 +132,6 @@ endif ( IS_DIRECTORY ${PFUNIT_DIR} )
 find_package ( BLAS )
 find_package ( LAPACK )
 find_package ( HDF5 COMPONENTS Fortran )
-
-
 
 add_subdirectory ( src )
 add_subdirectory ( tools )
