@@ -81,7 +81,7 @@ set ( GFORM "-std=f2008ts -ffree-form -fall-intrinsics -frecursive" )
 
 
 set ( CMAKE_Fortran_FLAGS_RELEASE "-O3 ${GWARN} ${GARCH} ${GFORM}" )
-set ( CMAKE_Fortran_FLAGS_DEBUG   "-O1 -g -fbacktrace -Warray-temporaries -fcheck=all ${GWARN} ${GARCH} ${GFORM}" )
+set ( CMAKE_Fortran_FLAGS_DEBUG   "-O1 -g -fbacktrace -Warray-temporaries -fcheck=array-temps -fcheck=all ${GWARN} ${GARCH} ${GFORM}" )
 
 
 #/ =======================================================================================
@@ -135,6 +135,7 @@ find_package ( HDF5 COMPONENTS Fortran )
 
 add_subdirectory ( src )
 add_subdirectory ( tools )
+add_subdirectory ( apps )
 
 
 #/ =======================================================================================

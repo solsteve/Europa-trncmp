@@ -325,7 +325,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     loop: do i=1,n
        if ( self%section_records%isKVPair(i) ) then
-          call self%section_records%get(i,KEY=test)
+          test = self%section_records%getKey(i)
           if ( LEQ( key, test ) ) then
              index = i
              ier   = 0
@@ -340,7 +340,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine get_record_by_key( self, key, VAL, COM, LINE, ENTRY, STATUS )
+  subroutine get_record_by_key( self, key, VAL, COM, LINE, ENT, STATUS )
     !/ -----------------------------------------------------------------------------------
     !! Get record data that matches the key.
     !!
@@ -350,16 +350,17 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! |    1   |  no key found  |    
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(config_section_t),             intent(inout) :: self   !! reference to this section.
-    character(*),                        intent(in)    :: key    !! key string.
-    character(:), allocatable, optional, intent(out)   :: VAL    !! value string.
-    character(:), allocatable, optional, intent(out)   :: COM    !! comment string.
-    character(:), allocatable, optional, intent(out)   :: LINE   !! parsable line.
-    type(config_entry_t),      optional, intent(inout) :: ENTRY  !! reference to a config entry.
-    integer,                   optional, intent(out)   :: STATUS !! return condition
+    class(config_section_t),                 intent(inout) :: self   !! reference to this section.
+    character(*),                            intent(in)    :: key    !! key string.
+    character(:), allocatable,     optional, intent(out)   :: VAL    !! value string.
+    character(:), allocatable,     optional, intent(out)   :: COM    !! comment string.
+    character(:), allocatable,     optional, intent(out)   :: LINE   !! parsable line.
+    type(config_entry_t), pointer, optional, intent(inout) :: ENT    !! reference to a config entry.
+    integer,                       optional, intent(out)   :: STATUS !! return condition
     !/ -----------------------------------------------------------------------------------
-    integer :: ier, index
-    logical :: report
+    integer                        :: ier, index
+    logical                        :: report
+    class(config_entry_t), pointer :: temp
     !/ -----------------------------------------------------------------------------------
 
     ier = 0
@@ -370,7 +371,27 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     index = self%find( key, STATUS=ier )
 
     if ( 0.eq.ier ) then
-       call self%section_records%get( index, VAL=VAL, COM=COM, LINE=LINE, ENTRY=ENTRY )
+       
+       temp => self%section_records%get( index )
+
+       if ( present( VAL ) ) then
+         VAL = temp%getValue()
+       end if
+
+       if ( present( COM ) ) then
+         COM = temp%getComment()
+       end if
+
+       if ( present( LINE ) ) then
+          LINE = temp%toString()
+       end if
+
+       if ( present( ENT ) ) then
+          ent => temp
+       else
+          nullify( temp )
+       end if
+
     else
        if ( report ) then
           call log_error( 'Section%get: no such key', STR=key )
@@ -383,7 +404,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine set_record_by_key( self, KEY, VAL, COM, LINE, ENTRY, STATUS )
+  subroutine set_record_by_key( self, key, VAL, COM, LINE, ENT, STATUS )
     !/ -----------------------------------------------------------------------------------
     !! Set record data that matches the key.
     !!
@@ -395,41 +416,31 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(config_section_t),        intent(inout) :: self   !! reference to this section.
-    character(*),         optional, intent(in)    :: KEY    !! key string.
+    character(*),                   intent(in)    :: key    !! key string.
     character(*),         optional, intent(in)    :: VAL    !! value string.
     character(*),         optional, intent(in)    :: COM    !! comment string.
     character(*),         optional, intent(in)    :: LINE   !! parsable string.
-    type(config_entry_t), optional, intent(inout) :: ENTRY  !! reference to a config entry.
+    type(config_entry_t), optional, intent(inout) :: ENT    !! reference to a config entry.
     integer,              optional, intent(out)   :: STATUS !! return error code
     !/ -----------------------------------------------------------------------------------
-    type(config_entry_t)      :: temp
-    character(:), allocatable :: key_value
-    integer                   :: ier, index
-    logical                   :: report
+    type(config_entry_t) :: temp
+    integer              :: ier, index
+    logical              :: report
     !/ -----------------------------------------------------------------------------------
 
     ier    = 0
     report = .true.
     if ( present( STATUS ) ) report = .false.
 
-    call temp%set( KEY=key, VAL=VAL, COM=COM, LINE=LINE, ENTRY=ENTRY )
+    call temp%set( KEY=key, VAL=VAL, COM=COM, LINE=LINE, ENT=ENT )
 
-    if ( temp%isKVPair() ) then
-       call temp%get( KEY=key_value )
-    
-       index = self%find( key_value, STATUS=ier )
+    index = self%find( key, STATUS=ier )
 
-       if ( 0.eq.ier ) then
-          call self%section_records%set( index, KEY=key_value, ENTRY=temp )
-       else
-          call self%section_records%append( KEY=key_value, ENTRY=temp )
-          ier = -1
-       end if
-
+    if ( 0.eq.ier ) then
+       call self%section_records%set( index, temp )
     else
-       if ( report ) then
-          call log_error( 'Section%set: input does not have a key' )
-       end if
+       call self%section_records%append( temp )
+       ier = -1
     end if
 
     if ( present( STATUS ) ) STATUS = ier
@@ -438,7 +449,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine append_record( self, KEY, VAL, COM, LINE, ENTRY, STATUS )
+  subroutine append_record( self, KEY, VAL, COM, LINE, ENT, STATUS )
     !/ -----------------------------------------------------------------------------------
     !! Append a record to the list
     !!
@@ -454,7 +465,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     character(*),         optional, intent(in)    :: VAL    !! value string.
     character(*),         optional, intent(in)    :: COM    !! comment string.
     character(*),         optional, intent(in)    :: LINE   !! parsable line.
-    type(config_entry_t), optional, intent(inout) :: ENTRY  !! reference to a config entry.
+    type(config_entry_t), optional, intent(inout) :: ENT  !! reference to a config entry.
     integer,              optional, intent(out)   :: STATUS !! return error code
     !/ -----------------------------------------------------------------------------------
     type(config_entry_t)      :: temp
@@ -467,15 +478,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     report = .true.
     if ( present( STATUS ) ) report = .false.
 
-    call temp%set( KEY=key, VAL=VAL, COM=COM, LINE=LINE, ENTRY=ENTRY )
+    call temp%set( KEY=key, VAL=VAL, COM=COM, LINE=LINE, ENT=ENT )
     
     if ( temp%isComment() ) then
-       call temp%get( COM=comment )
+       comment = temp%getComment()
        call self%addComment( comment )
     else
        if ( temp%isKVPair() ) then
-          call temp%get( KEY=key_value )
-          call self%set( KEY=key_value, ENTRY=temp )
+          key_value = temp%getKey()
+          call self%set( key_value, ENT=temp )
        else
           call log_error( 'Section%append: neither Comment nor KV Pair' )
           ier = 1
@@ -521,7 +532,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        end if
        ier = 1
     else
-       call self%section_records%get( cidx(index), COM=comment )
+       comment = self%section_records%getComment( cidx(index) )
     end if
 
     if ( present( STATUS ) ) STATUS = ier
@@ -538,8 +549,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     class(config_section_t), intent(inout) :: self    !! reference to this section.
     character(*),            intent(in)    :: comment !! comment string
     !/ -----------------------------------------------------------------------------------
+    type(config_entry_t) :: temp
 
-    call self%section_records%append( COM=comment )
+    call temp%set( COM=comment )
+
+    call self%section_records%append( temp )
 
   end subroutine add_comment
 

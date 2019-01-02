@@ -620,9 +620,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        call subtract( E3, Y_DATA, A3, NOUT, NSAMP )
        call delta( d3, E3, A3, NOUT, NSAMP )
 
-       !if ( 0.eq.modulo(rep-1,10000) ) then
-       !   call display_error( rep, E3 )
-       !end if
+       if ( 0.eq.modulo(rep-1,1000) ) then
+          call display_error( rep, E3 )
+       end if
 
        call error_matrix_mul( E2, D3, W3, NH2, NOUT, NSAMP )
        call delta( d2, E2, A2, NH2, NSAMP )
@@ -649,7 +649,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call display_error( count, E3 )
 
     write(*,100) nt, elapsed / real( nt, dp )
-    write(ERROR_UNIT,*) elapsed / real( nt, dp )
 100 format( I0,' threads, ',F10.5,' seconds' )
 
     call WriteNet( '/tmp/net-last-fortran.cfg', W1, W2, W3, b1, b2, b3 )

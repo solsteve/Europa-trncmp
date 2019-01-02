@@ -1,5 +1,5 @@
 #/ ====================================================================== BEGIN FILE =====
-#/ **                                  M A K E F I L E                                  **
+#/ **                             Tools - C M A K E L I S T                             **
 #/ =======================================================================================
 #/ **                                                                                   **
 #/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
@@ -20,75 +20,14 @@
 #/ **  You should have received a copy of the GNU General Public License along with     **
 #/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 #/ **                                                                                   **
-#/ ----- Modification History ------------------------------------------------------------
-#/
-#/ @brief   Controler.
-#/
-#/ @details Provides a wrapper for cmake.
-#/
-#/ @author  Stephen W. Soliday
-#/ @date    2018-04-21
-#/
 #/ =======================================================================================
 
-.PHONY: all 
+project ( Tools Fortran )
 
-all: debug
+#/ One of these for each sub directory
 
-COMPILERS=-DCMAKE_Fortran_COMPILER=gfortran
-XCOMPILERS=-DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_CXX_COMPILER=g++ -DCMAKE_CC_COMPILER=gcc
-
-#/ ---------------------------------------------------------------------------------------
-
-debug: DEBUG
-	make -C $<
-
-DEBUG:
-	mkdir -p $@
-	cd $@; cmake $(COMPILERS) -DCMAKE_BUILD_TYPE=$@ ..
-
-#/ ---------------------------------------------------------------------------------------
-
-release: RELEASE
-	make -C $<
-
-RELEASE:
-	mkdir -p $@
-	cd $@; cmake $(COMPILERS) -DCMAKE_BUILD_TYPE=$@ ..
-
-#/ ---------------------------------------------------------------------------------------
-
-install: release
-	make -C RELEASE install
-
-#/ ---------------------------------------------------------------------------------------
-
-check: DEBUG
-	make -C $< test
-
-#/ ---------------------------------------------------------------------------------------
-
-pages:
-	make -C docs
+add_subdirectory ( ttt_matchbox )
 
 #/ =======================================================================================
-
-clean:
-	make -C docs $@
-
-
-fullclean: clean
-	make -C docs $@
-	rm -rf RELEASE DEBUG
-	find . -name "*~" | xargs rm -f
-	make -C papers/bpnn $@
-	make -C python $@
-
-
-distclean: fullclean
-	make -C python $@
-
-
-#/ =======================================================================================
-#/ **                                  M A K E F I L E                                  **
-#/ =========================================================================== END FILE ==
+#/ **                             Tools - C M A K E L I S T                             **
+#/ =========================================================================== end FILE ==

@@ -51,8 +51,11 @@ model.add(Dense(3, activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 # Training a model
-model.fit(train_x, encoding_train_y, epochs=300, batch_size=10)
+for i in range(100):
+    print("")
+    print("+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+")
+    print("")
+    model.fit(train_x, encoding_train_y, epochs=3, batch_size=10)
+    scores = model.evaluate(test_x, encoding_test_y)
+    print("\nAccuracy: %.2f%%" % (scores[1]*100))
 
-# evaluate the model
-scores = model.evaluate(test_x, encoding_test_y)
-print("\nAccuracy: %.2f%%" % (scores[1]*100))

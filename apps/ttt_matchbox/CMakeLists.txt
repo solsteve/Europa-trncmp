@@ -1,5 +1,5 @@
 #/ ====================================================================== BEGIN FILE =====
-#/ **                                  M A K E F I L E                                  **
+#/ **                      Tools Subdirectory - C M A K E L I S T                       **
 #/ =======================================================================================
 #/ **                                                                                   **
 #/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
@@ -20,75 +20,26 @@
 #/ **  You should have received a copy of the GNU General Public License along with     **
 #/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 #/ **                                                                                   **
-#/ ----- Modification History ------------------------------------------------------------
-#/
-#/ @brief   Controler.
-#/
-#/ @details Provides a wrapper for cmake.
-#/
-#/ @author  Stephen W. Soliday
-#/ @date    2018-04-21
-#/
 #/ =======================================================================================
 
-.PHONY: all 
+project ( ttt_matchbox Fortran )
 
-all: debug
+file ( GLOB ${PROJECT_NAME}_sources "*.f90" )
 
-COMPILERS=-DCMAKE_Fortran_COMPILER=gfortran
-XCOMPILERS=-DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_CXX_COMPILER=g++ -DCMAKE_CC_COMPILER=gcc
+message ( STATUS "Sources for Project ${PROJECT_NAME}: ${${PROJECT_NAME}_sources}" )
 
-#/ ---------------------------------------------------------------------------------------
+set ( CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/temp )
+add_executable ( ${PROJECT_NAME} ${${PROJECT_NAME}_sources} )
 
-debug: DEBUG
-	make -C $<
+target_link_libraries ( ${PROJECT_NAME} europa )
+target_link_libraries ( ${PROJECT_NAME} ${LAPACK_LIBRARIES} )
+target_link_libraries ( ${PROJECT_NAME} ${BLAS_LIBRARIES} )
 
-DEBUG:
-	mkdir -p $@
-	cd $@; cmake $(COMPILERS) -DCMAKE_BUILD_TYPE=$@ ..
-
-#/ ---------------------------------------------------------------------------------------
-
-release: RELEASE
-	make -C $<
-
-RELEASE:
-	mkdir -p $@
-	cd $@; cmake $(COMPILERS) -DCMAKE_BUILD_TYPE=$@ ..
-
-#/ ---------------------------------------------------------------------------------------
-
-install: release
-	make -C RELEASE install
-
-#/ ---------------------------------------------------------------------------------------
-
-check: DEBUG
-	make -C $< test
-
-#/ ---------------------------------------------------------------------------------------
-
-pages:
-	make -C docs
+install ( TARGETS ${PROJECT_NAME}
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib )
 
 #/ =======================================================================================
-
-clean:
-	make -C docs $@
-
-
-fullclean: clean
-	make -C docs $@
-	rm -rf RELEASE DEBUG
-	find . -name "*~" | xargs rm -f
-	make -C papers/bpnn $@
-	make -C python $@
-
-
-distclean: fullclean
-	make -C python $@
-
-
-#/ =======================================================================================
-#/ **                                  M A K E F I L E                                  **
-#/ =========================================================================== END FILE ==
+#/ **                      Tools Subdirectory - C M A K E L I S T                       **
+#/ =========================================================================== end FILE ==
