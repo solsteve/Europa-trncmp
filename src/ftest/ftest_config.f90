@@ -38,8 +38,17 @@ module ftest_config_test
   implicit none
 
 
+  !/ -------------------------------------------------------------------------------------
+  interface ExpectGot
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: eg_real
+     module procedure :: eg_integer
+     module procedure :: eg_string
+  end interface ExpectGot
 
 
+  
+   
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
@@ -84,10 +93,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end subroutine debug_entry
 
 
-
-
-
-
   !/ =====================================================================================
   subroutine dump_list( list )
     !/ -----------------------------------------------------------------------------------
@@ -129,23 +134,51 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end subroutine dump_list
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
   !/ =====================================================================================
-  subroutine ExpectGot( expect, got )
+  subroutine eg_real( expect, got )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: expect
+    real(dp), intent(in) :: got
+
+    if ( expect .lt. got ) then
+       write( *, 110 ) expect, got
+    else
+       if ( expect .gt. got ) then
+       write( *, 120 ) expect, got
+       else
+       write( *, 100 ) expect, got
+       end if
+    end if
+
+100 format( 'PASS: Expected [',G0,'] got [',G0,']' );
+110 format( 'FAIL: Expected [',G0,'] got [',G0,'] greater' );
+120 format( 'FAIL: Expected [',G0,'] got [',G0,'] less' );
+
+  end subroutine eg_real
+
+
+  !/ =====================================================================================
+  subroutine eg_integer( expect, got )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer, intent(in) :: expect
+    integer, intent(in) :: got
+
+    if ( expect .eq. got ) then
+       write( *, 100 ) expect, got
+    else
+       write( *, 110 ) expect, got
+    end if
+
+100 format( 'PASS: Expected [',I0,'] got [',I0,']' );
+110 format( 'FAIL: Expected [',I0,'] got [',I0,']' );
+
+  end subroutine eg_integer
+
+
+  !/ =====================================================================================
+  subroutine eg_string( expect, got )
     !/ -----------------------------------------------------------------------------------
     implicit none
     character(*), intent(in) :: expect
@@ -156,11 +189,69 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     else
        write( *, 110 ) expect, got
     end if
-    
-100 format( 'PASS: Expected [',A,'] got[',A,']' );
-110 format( 'FAIL: Expected [',A,'] got[',A,']' );
 
-  end subroutine ExpectGot
+100 format( 'PASS: Expected [',A,'] got [',A,']' );
+110 format( 'FAIL: Expected [',A,'] got [',A,']' );
+
+  end subroutine eg_string
+
+
+  !/ =====================================================================================
+  subroutine append_item( list, str )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(config_entry_list_t), intent(inout) :: list
+    character(*),              intent(in)    :: str
+    !/ -----------------------------------------------------------------------------------
+    type(config_entry_t) :: temp
+    call temp%set( LINE=str )
+    call list%append( temp )
+  end subroutine append_item
+
+
+  !/ =====================================================================================
+  subroutine set_item( list, idx, str )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(config_entry_list_t), intent(inout) :: list
+    integer,                   intent(in)    :: idx
+    character(*),              intent(in)    :: str
+    !/ -----------------------------------------------------------------------------------
+    type(config_entry_t) :: temp
+    call temp%set( LINE=str )
+    call list%set( idx, temp )
+  end subroutine set_item
+
+
+  !/ =====================================================================================
+  subroutine load_test_list( list )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(config_entry_list_t), intent(inout) :: list
+    !/ -----------------------------------------------------------------------------------
+
+    call append_item( list,     'alpha = car ; position 1' )
+    call append_item( list,     '; comment position 2' )
+    call append_item( list,     '; comment position 3' )
+    call append_item( list,     'bravo = horse ; position 4' )
+    call append_item( list,     'charlie = jeep ; position 5' )
+    call set_item(    list,  7, 'delta = truck ; position 7' )
+    call set_item(    list,  8, 'echo = oxcart ; position 8' )
+    call append_item( list,     '; comment position 9' )
+    call append_item( list,     'foxtrot = caison ; position 10' )
+    call append_item( list,     'golf = lorry ; position 11' )
+    call set_item(    list, 14, 'hotel = train ; position 14' )
+    call set_item(    list, 16, 'india = boat ; position 16' )
+    call append_item( list,     'julet = skiff ; position 17' )
+
+  end subroutine load_test_list
+
+
+
+
+
+
+
 
   !/ =====================================================================================
   subroutine test_config_entry
@@ -193,7 +284,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     !/ ----- isKVPair --------------------------------------------------------------------
 
-        write(*,*) ' -- test type -- KV pair'
+    write(*,*) ' -- test type -- KV pair'
     call CF%clear
     call CF%set( KEY='test', VAL='pos', COM='kv pair' )
     call debug_entry( CF )
@@ -295,7 +386,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call CE%fromString( 'key = value ; comment' )
     call ExpectGot( 'key = value ; comment',  CE%toString() )
 
-    
+
     write(*,*) ' -- fromString via set --'
 
     call CE%clear
@@ -321,68 +412,19 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end subroutine test_config_entry
 
 
-
-
-  !/ =====================================================================================
-  subroutine append_item( list, str )
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    type(config_entry_list_t), intent(inout) :: list
-    character(*),              intent(in)    :: str
-    !/ -----------------------------------------------------------------------------------
-    type(config_entry_t) :: temp
-    call temp%set( LINE=str )
-    call list%append( temp )
-  end subroutine append_item
-
-
-  !/ =====================================================================================
-  subroutine set_item( list, idx, str )
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    type(config_entry_list_t), intent(inout) :: list
-    integer,                   intent(in)    :: idx
-    character(*),              intent(in)    :: str
-    !/ -----------------------------------------------------------------------------------
-    type(config_entry_t) :: temp
-    call temp%set( LINE=str )
-    call list%set( idx, temp )
-  end subroutine set_item
-
-
-  !/ =====================================================================================
-  subroutine load_test_list( list )
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    type(config_entry_list_t), intent(inout) :: list
-    !/ -----------------------------------------------------------------------------------
-    
-    call append_item( list,     'alpha = car ; position 1' )
-    call append_item( list,     'bravo = horse ; position 2' )
-    call append_item( list,     'charlie = jeep ; position 3' )
-    call set_item(    list,  6, 'delta = truck ; position 6' )
-    call set_item(    list,  5, 'echo = oxcart ; position 5' )
-    call append_item( list,     'foxtrot = caison ; position 7' )
-    call append_item( list,     'golf = lorry ; position 8' )
-    call set_item(    list, 10, 'hotel = train ; position 10' )
-    call set_item(    list, 15, 'india = boat ; position 15' )
-    call append_item( list,     'julet = skiff ; position 16' )
-
-  end subroutine load_test_list
-  
-  
   !/ =====================================================================================
   subroutine test_config_entry_list
     !/ -----------------------------------------------------------------------------------
     use tlogger
     implicit none
 
-    type(config_entry_list_t) :: L1
-    type(config_entry_t), pointer      :: CE
-    
+    type(config_entry_list_t)     :: L1
+    type(config_entry_t), pointer :: CE
+    character(:), allocatable     :: text
+
     call tlogger_set( CONSOLE=tlogger_debug )
 
-!/ ----- clear/delete -------------------------------------
+    !/ ----- clear/delete -------------------------------------
 
     call load_test_list( L1 )
     call dump_list( L1 )
@@ -434,34 +476,248 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end if
     goto 100
 200 continue
-          
+
+    write(*,*)
+    write(*,*) ' -- selected --'
+    write(*,*)
+
+    text = L1%getKey(4)
+    call ExpectGot( 'bravo', text )
+    
+    text = L1%getKey(8)
+    call ExpectGot( 'echo', text )
+    
+    text = L1%getValue(14)
+    call ExpectGot( 'train', text )
+    
+    text = L1%getValue(5)
+    call ExpectGot( 'jeep', text )
+    
+    text = L1%getComment(3)
+    call ExpectGot( 'comment position 3', text )
+    
+    text = L1%getComment(9)
+    call ExpectGot( 'comment position 9', text )
 
   end subroutine test_config_entry_list
+
+
+  !/ =====================================================================================
+  subroutine test_config_section
+    !/ -----------------------------------------------------------------------------------
+    use tlogger
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+    character(:), allocatable :: name
+    character(:), allocatable :: text
+    integer                   :: idx, ier, itest, n
+    real(dp)                  :: rtest
+    
+    type(config_section_t) :: sec
+
+    write(*,*) ' -- set name --'
+    call sec%setName( "TEST" )
+    name = sec%getName()
+    call ExpectGot( 'TEST', name )
+    
+    call sec%addComment( 'First comment' )
+    call sec%addComment( 'Second line comment' )
+
+    call sec%append( KEY='ship', VAL='enterprise', COM='Constitution class' )
+    call sec%append( COM='Third line comment' )
+    call sec%append( KEY='reg', VAL='NCC-1701' )
+
+    call sec%append( LINE='class=heavy cruiser ; exploration and combat' )
+    call sec%append( LINE='; Fourth line comment' )
+    call sec%append( LINE='shuttles = 7' )
+
+    call sec%addComment( 'Fifth line comment' )
+    call sec%append( KEY='warp', VAL='9.8' )
+    call sec%append( KEY='comms', VAL='2.45' )
+    call sec%append( KEY='phasers', VAL='2' )
+
+    name = sec%getComment(2)
+    call ExpectGot( 'Second line comment', name )
+
+    name = sec%getComment(1)
+    call ExpectGot( 'First comment', name )
+
+    name = sec%getComment(3)
+    call ExpectGot( 'Third line comment', name )
+
+    name = sec%getComment(5)
+    call ExpectGot( 'Fifth line comment', name )
+
+    name = sec%getComment(4)
+    call ExpectGot( 'Fourth line comment', name )
+
+    idx = sec%find('ship')
+    call ExpectGot( 3, idx )
+
+    idx = sec%find('reg')
+    call ExpectGot( 5, idx )
+
+    idx = sec%find('class')
+    call ExpectGot( 6, idx )
+
+    idx = sec%find('shuttles')
+    call ExpectGot( 8, idx )
+
+    idx = sec%find('boat')
+    call ExpectGot( 0, idx )
+
+    call sec%get( 'ship', VAL=text )
+    call ExpectGot( 'enterprise', text )
+
+    write(*,*) ' -- get string --'    
+
+    text = sec%getString( 'class', STATUS=ier )
+    call ExpectGot( 0, ier )
+    call ExpectGot( 'heavy cruiser', text )
+
+    text = sec%getString( 'plane', STATUS=ier )
+    call ExpectGot( 1, ier )
+
+    write(*,*) ' -- get integer --'    
+
+    itest = sec%getInt32( 'shuttles', STATUS=ier )
+    call ExpectGot( 0, ier )
+    call ExpectGot( 7, itest )
+    
+    itest = sec%getInt32( 'farm', STATUS=ier )
+    call ExpectGot( 1, ier )
+    
+    itest = sec%getInt32( 'ship', STATUS=ier )
+    call ExpectGot( 2, ier )
+    
+    write(*,*) ' -- get real --'    
+
+    rtest = sec%getReal8( 'warp', STATUS=ier )
+    call ExpectGot( 0, ier )
+    call ExpectGot( 9.8_dp, rtest )
+    write(*,*) '     -- next two expected to fail --'    
+    call ExpectGot( 9.7_dp, rtest )
+    call ExpectGot( 9.9_dp, rtest )
+    
+    rtest = sec%getReal8( 'farm', STATUS=ier )
+    call ExpectGot( 1, ier )
+    
+    rtest = sec%getReal8( 'ship', STATUS=ier )
+    call ExpectGot( 2, ier )
+    
+    write(*,*) ' -- get w/messages (these are meant to produce error messages) --'
+
+    text  = sec%getString( 'plane' )
+    itest = sec%getInt32(  'plane' )
+    rtest = sec%getReal8(  'plane' )
+    itest = sec%getInt32(  'ship' )
+    rtest = sec%getReal8(  'ship' )
+
+    write(*,*) ' -- count --'
+    
+    n = size( sec, COUNT='NUMBER' )
+    call ExpectGot( 12, n )
+
+    n = size( sec, COUNT='COMMENT' )
+    call ExpectGot( 5, n )
+
+    n = size( sec, COUNT='KVPAIR' )
+    call ExpectGot( 7, n )
+
+  end subroutine test_config_section
+
+  
+  !/ =====================================================================================
+  subroutine test_config_db
+    !/ -----------------------------------------------------------------------------------
+    use configdb_mod
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+    type(configdb_t) :: cfg
+    type(config_section_t), pointer :: sec1
+    type(config_section_t), pointer :: sec2
+    type(config_section_t), pointer :: sec3
+    integer :: i, ns, nc
+    character(:), allocatable :: text
+    type(config_section_t), pointer :: SC
+    !/ -----------------------------------------------------------------------------------
+
+    allocate( sec1 )
+    allocate( sec2 )
+    allocate( sec3 )
+    
+    call sec1%setName( 'BRAVO' )
+    call sec2%setName( 'DELTA' )
+    call sec3%setName( 'ECHO' )
+
+    call cfg%addComment( 'First comment' )
+    call cfg%add( 'ALPHA' )
+    call cfg%add( sec1 )
+    call cfg%addComment( 'Second comment' )
+    call cfg%add( 'CHARLIE' )
+    call cfg%addComment( 'Third comment' )
+    call cfg%add( sec2 )
+    call cfg%add( sec3 )
+
+    ns = size( cfg, COUNT='Section' )
+    nc = size( cfg, COUNT='COMMENT' )
+    
+    do i=1,nc
+       text = cfg%getComment(i)
+       if ( 0.lt.LEN(text) ) then
+          write(*,100) i, text
+       end if
+    end do
+    
+    do i=1,ns
+       SC => cfg%get(i)
+       text = SC%getName()
+       if ( 0.lt.LEN(text) ) then
+          write(*,200) i, text
+       end if
+    end do
+    
+100 format( 'C',I0,' [',A,']' )
+200 format( 'S',I0,' [',A,']' )
+    
+  end subroutine test_config_db
 
   
 end module ftest_config_test
 
 
-  !/ =======================================================================================
-  program main
-    !/ -------------------------------------------------------------------------------------
-    use ftest_config_test
-    implicit none
-    !/ -------------------------------------------------------------------------------------
+!/ =======================================================================================
+program main
+  !/ -------------------------------------------------------------------------------------
+  use ftest_config_test
+  implicit none
+  !/ -------------------------------------------------------------------------------------
 
-    write (*,*) '===== CONFIG ENTRY ============================================='
-    write (*,*)
-    call test_config_entry
-    write (*,*)
-    write (*,*)
-    write (*,*) '===== CONFIG LIST =============================================='
-    write (*,*)
-    call test_config_entry_list
-    !call test02
-    write (*,*)
+  write (*,*) '===== CONFIG ENTRY ============================================='
+  write (*,*)
+  call test_config_entry
+  write (*,*)
+  
+  write (*,*)
+  write (*,*) '===== CONFIG LIST =============================================='
+  write (*,*)
+  call test_config_entry_list
+  write (*,*)
+  
+  write (*,*)
+  write (*,*) '===== CONFIG SECTION ==========================================='
+  write (*,*)
+  call test_config_section
+  write (*,*)
 
-  end program main
+  write (*,*)
+  write (*,*) '===== CONFIG DB ================================================'
+  write (*,*)
+  call test_config_db
+  write (*,*)
 
-  !/ =======================================================================================
-  !/ **                                 F T E S T _ V L A                                 **
-  !/ =========================================================================== END FILE ==
+end program main
+
+!/ =======================================================================================
+!/ **                                 F T E S T _ V L A                                 **
+!/ =========================================================================== END FILE ==

@@ -21,7 +21,7 @@
 !/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 !/ **                                                                                   **
 !/ ----- Modification History ------------------------------------------------------------
-!
+!https://www.youtube.com/watch?v=lfHX2hHRMVQ
 !> @brief   Teach matchboxes to play tic tac toe.
 !!
 !! @details Provides Console game play.
@@ -164,8 +164,8 @@ program main
   STALE = 0
 
   SHOW_BOARD = .false.
-  SHOW_FINAL = .true.
-  MB_DEBUG   = .true.
+  SHOW_FINAL = .false.
+  MB_DEBUG   = .false.
   
   call game%setOrder( GORD, PLAY1='O', PLAY2='X', BLANK='.' )
 

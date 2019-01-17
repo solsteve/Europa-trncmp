@@ -20,39 +20,37 @@
 !/ **  You should have received a copy of the GNU General Public License along with     **
 !/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 !/ **                                                                                   **
-!/ ----- Modification History ------------------------------------------------------------
-!
-!> @brief   File Tools.
-!!
-!! @details Collection of tools for manipulating files.
-!!
-!! @author  Stephen W. Soliday
-!! @date    2017-03-27
-!
 !/ =======================================================================================
 module file_tools
+  !/ -------------------------------------------------------------------------------------
+  !! author:  Stephen W. Soliday
+  !! date:    2017-03-27
+  !! license: GPL
+  !!
+  !! Provides a collection of tools for manipulating files.
+  !!
   !/ -------------------------------------------------------------------------------------
   use string_tools
   implicit none
   
   ! POSIX File Modes
 
-  integer, public, parameter :: S_IFMT   = 61440 !< (0x0170000) These bits determine file type.
+  integer, public, parameter :: S_IFMT   = 61440 !! (0x0170000) These bits determine file type.
 
-  integer, public, parameter :: S_IFDIR  = 16384 !< (0x0040000) Directory.
-  integer, public, parameter :: S_IFCHR  =  8192 !< (0x0020000) Character device.
-  integer, public, parameter :: S_IFBLK  = 24576 !< (0x0060000) Block device.
-  integer, public, parameter :: S_IFREG  = 32768 !< (0x0100000) Regular file.
-  integer, public, parameter :: S_IFIFO  =  4096 !< (0x0010000) FIFO.
-  integer, public, parameter :: S_IFLNK  = 40960 !< (0x0120000) Symbolic link.
-  integer, public, parameter :: S_IFSOCK = 49152 !< (0x0140000) Socket.
+  integer, public, parameter :: S_IFDIR  = 16384 !! (0x0040000) Directory.
+  integer, public, parameter :: S_IFCHR  =  8192 !! (0x0020000) Character device.
+  integer, public, parameter :: S_IFBLK  = 24576 !! (0x0060000) Block device.
+  integer, public, parameter :: S_IFREG  = 32768 !! (0x0100000) Regular file.
+  integer, public, parameter :: S_IFIFO  =  4096 !! (0x0010000) FIFO.
+  integer, public, parameter :: S_IFLNK  = 40960 !! (0x0120000) Symbolic link.
+  integer, public, parameter :: S_IFSOCK = 49152 !! (0x0140000) Socket.
 
-  integer, public, parameter :: S_ISUID  =  2048 !< (0x0004000) Set user ID on execution.
-  integer, public, parameter :: S_ISGID  =  1024 !< (0x0002000) Set group ID on execution.
-  integer, public, parameter :: S_ISVTX  =   512 !< (0x0001000) Save swapped text after use (sticky).
-  integer, public, parameter :: S_IREAD  =   256 !< (0x0000400) Read by owner.
-  integer, public, parameter :: S_IWRITE =   128 !< (0x0000200) Write by owner.
-  integer, public, parameter :: S_IEXEC  =    64 !< (0x0000100) Execute by owner.
+  integer, public, parameter :: S_ISUID  =  2048 !! (0x0004000) Set user  ID on execution.
+  integer, public, parameter :: S_ISGID  =  1024 !! (0x0002000) Set group ID on execution.
+  integer, public, parameter :: S_ISVTX  =   512 !! (0x0001000) Save swapped text after use (sticky).
+  integer, public, parameter :: S_IREAD  =   256 !! (0x0000400) Read by owner.
+  integer, public, parameter :: S_IWRITE =   128 !! (0x0000200) Write by owner.
+  integer, public, parameter :: S_IEXEC  =    64 !! (0x0000100) Execute by owner.
 
   private :: S_ISTYPE
 
@@ -84,17 +82,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Is Type.
-  !! @param[in] mode POSIX file mode.
-  !! @param[in] mask POSIX file mode mask
-  !! @return the file type portion of the bit mask
-  !/ -------------------------------------------------------------------------------------
   function S_ISTYPE( mode, mask ) result( chk )
     !/ -----------------------------------------------------------------------------------
+    !! Is Type.
+    !/ -----------------------------------------------------------------------------------
     implicit none
-    logical             :: chk
-    integer, intent(in) :: mode
-    integer, intent(in) :: mask
+    logical             :: chk  !! file type portion of the bit mask
+    integer, intent(in) :: mode !! POSIX file mode.
+    integer, intent(in) :: mask !! file mode mask
     !/ -----------------------------------------------------------------------------------
 
     chk = .false.
@@ -111,15 +106,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Is Directory.
-  !! @param[in] mode POSIX file mode.
-  !! @return true if this mode is a Directory.
-  !/ -------------------------------------------------------------------------------------
   function S_ISDIR( mode ) result( chk )
     !/ -----------------------------------------------------------------------------------
+    !! Is Directory.
+    !/ -----------------------------------------------------------------------------------
     implicit none
-    logical             :: chk
-    integer, intent(in) :: mode
+    logical             :: chk  !! true if this mode is a Directory.
+    integer, intent(in) :: mode !! POSIX file mode.
     !/ -----------------------------------------------------------------------------------
 
     !    write(*,FMT="('S_ISDIR: mode', T16, O19)") mode
@@ -138,8 +131,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   function S_ISCHR( mode ) result( chk )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    logical             :: chk
-    integer, intent(in) :: mode
+    logical             :: chk  !! true if this mode is a Character device.
+    integer, intent(in) :: mode !! POSIX file mode.
     !/ -----------------------------------------------------------------------------------
 
     chk = S_ISTYPE( mode, S_IFCHR )
@@ -155,8 +148,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   function S_ISBLK( mode ) result( chk )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    logical             :: chk
-    integer, intent(in) :: mode
+    logical             :: chk  !! true if this mode is a  Block device.
+    integer, intent(in) :: mode !! POSIX file mode.
     !/ -----------------------------------------------------------------------------------
 
     chk = S_ISTYPE( mode, S_IFBLK )
@@ -172,8 +165,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   function S_ISREG( mode ) result( chk )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    logical             :: chk
-    integer, intent(in) :: mode
+    logical             :: chk  !! true if this mode is a Regular file.
+    integer, intent(in) :: mode !! POSIX file mode.
     !/ -----------------------------------------------------------------------------------
 
     !    write(*,FMT="('S_ISREG: mode', T16, O19)") mode
@@ -192,8 +185,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   function S_ISFIFO( mode ) result( chk )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    logical             :: chk
-    integer, intent(in) :: mode
+    logical             :: chk  !! true if this mode is a FIFO.
+    integer, intent(in) :: mode !! POSIX file mode.
     !/ -----------------------------------------------------------------------------------
 
     chk = S_ISTYPE( mode, S_IFIFO )
@@ -209,8 +202,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   function S_ISLNK( mode ) result( chk )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    logical             :: chk
-    integer, intent(in) :: mode
+    logical             :: chk  !! true if this mode is a Symbolic link.
+    integer, intent(in) :: mode !! POSIX file mode.
     !/ -----------------------------------------------------------------------------------
 
     chk = S_ISTYPE( mode, S_IFLNK )
@@ -226,8 +219,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   function S_ISSOCK( mode ) result( chk )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    logical             :: chk
-    integer, intent(in) :: mode
+    logical             :: chk  !! true if this mode is a socket.
+    integer, intent(in) :: mode !! POSIX file mode.
     !/ -----------------------------------------------------------------------------------
 
     chk = S_ISTYPE( mode, S_IFSOCK )

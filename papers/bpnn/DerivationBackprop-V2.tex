@@ -65,8 +65,6 @@
   \end{equation}
 }
 
-\newcommand{\GPM}[1]{\left| {#1} \right|}
-
 
 \newcommand{\SUM}[2]{\displaystyle\sum_{#1}{#2}}
 \newcommand{\SUMP}[2]{\displaystyle\sum_{#1}\GPP{#2}}
@@ -76,7 +74,6 @@
 \newcommand{\SUMNP}[3]{\displaystyle\sum_{#1}^{#2}\GPP{#3}}
 \newcommand{\SUMNB}[3]{\displaystyle\sum_{#1}^{#2}\GPB{#3}}
 \newcommand{\SUMNR}[3]{\displaystyle\sum_{#1}^{#2}\GPR{#3}}
-\newcommand{\SUMNM}[3]{\displaystyle\sum_{#1}^{#2}\GPM{#3}}
 
 
 \begin{document}
@@ -608,197 +605,9 @@ Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
 
 
 
-
 \nocite{berns:91}
 \nocite{hecht:90}
 \nocite{kosko:92}
-
-\clearpage
-
-
-%/ =======================================================================================
-\section*{Appendix A: Components}
-%/ =======================================================================================
-
-Note that $\log$ is implied to be natural $\log_e$
-
-%/ =======================================================================================
-\subsection{Activation}
-%/ =======================================================================================
-
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-
-%/ =======================================================================================
-\subsection{COST}
-%/ =======================================================================================
-
-regression
-mean square error
-absolute error
-smooth absolute error
-
-classification
-binary cross entropy
-negative log likelyhood
-margin classifier
-soft margin classifier
-
-embeding loss functions
-L1 Hinge error
-Cosine Error
-
-
-In the following equations
-$a_i$ refers to the actual or target value that is desired from the network.
-$p_i$ refers to the predicted value that is output from the neural network.
-
-\subsubsection{Mean Absolute Error, L1 Loss}
-Measures the average magnitude of errors in a set of predictions, without considering their directions. May be more robust for outliers.
-
-\begin{tcequation}
-  C = \frac{1}{N} \SUMNM{i=1}{N}{a_i - p_i}
-\end{tcequation}
-
-and, Mean Absolute Percentage Error:
-
-\begin{tcequation}
-  C = \frac{100}{N} \SUMNM{i=1}{N}{\frac{a_i - p_i}{a_i}}
-\end{tcequation}
-
-\subsubsection{Mean Squared Error, L2 Loss}
-Finds the average squared difference between the predicted value and the true value.
-
-\begin{tcequation}
-  C = \frac{1}{N} \SUMNP{i=1}{N}{a_i - p_i}^2
-\end{tcequation}
-
-and, Root Mean Squared Error:
-
-\begin{tcequation}
-  C = \sqrt{\frac{1}{N} \SUMNP{i=1}{N}{a_i - p_i}^2}
-\end{tcequation}
-
-
-\subsubsection{Mean Squared Logarithmic Error}
-
-\begin{tcequation}
-  C = \FU{\log}{p_i + 1} - \FU{\log}{a_i + 1}
-\end{tcequation}
-
-and, Root Mean Squared Logarithmic Error:
-
-\begin{tcequation}
-  C = \sqrt{\FU{\log}{p_i + 1} - \FU{\log}{a_i + 1}}
-\end{tcequation}
-
-
-\subsubsection{Hinge}
-The hinge loss is used for ``maximum-margin'' classification,
-most notably for support vector machines (SVMs).
-
-\begin{tcequation}
-  C = \FU{\max}{0, 1 - a^T \cdot p}
-\end{tcequation}
-
-Cannot be used with gradient decent.
-
-
-\subsubsection{Squared Hinge}
-
-\begin{tcequation}
-  C = \FU{\max}{0, 1 - a^T \cdot p}^2
-\end{tcequation}
-
-
-\subsubsection{Categorical Hinge}
-
-\begin{tcequation}
-  C = a_i - p_i
-\end{tcequation}
-
-
-\subsubsection{Log Hyperbolic-cosine}
-
-\begin{tcequation}
-  C = \SUMN{i=1}{N}{\FU{\log}{\FU{\cosh}{p_i - a_i}}}
-\end{tcequation}
-
-
-\subsubsection{Crossentropy}
-Cross entropy quantifies the difference between two probability distribution.
-
-\begin{tcequation}
-  C = -\SUMN{i=1}{N}{a_i \FU{\log}{p_i}}
-\end{tcequation}
-
-
-\subsubsection{Categorical Crossentropy}
-
-\begin{tcequation}
-  C = a_i - p_i
-\end{tcequation}
-
-
-\subsubsection{Sparse Categorical Crossentropy}
-
-\begin{tcequation}
-  C = a_i - p_i
-\end{tcequation}
-
-
-\subsubsection{Binary Crossentropy}
-
-\begin{tcequation}
-  C = -\GPP{a_i \FU{\log}{p_i} + \GPP{1-a_i} \FU{\log}{1-p_i}}
-\end{tcequation}
-
-
-\subsubsection{Kullback Leibler Divergence}
-
-\begin{tcequation}
-  C = \frac{1}{N}\SUMNB{i=1}{N}{a_i \FU{\log}{\frac{a_i}{p_i}}}
-\end{tcequation}
-
-\begin{tcequation}
-  C = \underbrace{\frac{1}{N}\SUMNP{i=1}{N}{a_i \FU{\log}{a_i}}}_{\mbox{entropy}} -
-  \underbrace{\frac{1}{N}\SUMNP{i=1}{N}{a_i \FU{\log}{p_i}}}_{\mbox{cross-entropy}}
-\end{tcequation}
-
-
-\subsubsection{Poisson}
-
-\begin{tcequation}
-  C = \SUMNP{i=1}{N}{p_i - a_i \FU{\log}{p_i}}
-\end{tcequation}
-
-
-\subsubsection{Cosine Proximity}
-
-\begin{tcequation}
-  C = \GPM{\GPM{a_i}}_2 - p_i
-\end{tcequation}
-
-
-
-
-
-%/ =======================================================================================
-\subsection{Optimization}
-%/ =======================================================================================
-
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
 
 
 %/ =======================================================================================

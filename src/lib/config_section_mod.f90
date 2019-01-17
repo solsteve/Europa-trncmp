@@ -47,28 +47,36 @@ module config_section_mod
 
    contains
 
-     procedure :: count_comments
-     procedure :: count_KVC
+     procedure         :: count_comments
+     procedure         :: count_KVC
 
-     procedure :: make_comment_index
-     procedure :: make_KVC_index
+     procedure         :: make_comment_index
+     procedure         :: make_KVC_index
 
-     procedure :: clear_one_entry
-     procedure :: clear_all_entries
-     generic, public :: clear => clear_one_entry, clear_all_entries
+     procedure         :: clear_one_entry
+     procedure         :: clear_all_entries
+
+     generic,   public :: clear      => clear_one_entry, clear_all_entries
 
      procedure, public :: getName    => get_section_name
      procedure, public :: setName    => set_section_name
 
      procedure, public :: find       => find_index_by_key
-     
+
      procedure, public :: get        => get_record_by_key
      procedure, public :: set        => set_record_by_key
-     
+
      procedure, public :: append     => append_record
-     
+
      procedure, public :: getComment => get_comment_by_index
      procedure, public :: addComment => add_comment
+
+     !/ ----- fusion of ConfigSection and StringTools for convenience ----------
+     
+     procedure, public :: getString  => get_string_by_key
+     procedure, public :: getInt32   => get_integer_32_by_key
+     procedure, public :: getReal8   => get_real_8_by_key
+
 
      final :: destroy_section
 
@@ -155,7 +163,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   function get_number_of_records( sec, COUNT ) result( n )
     !/ -----------------------------------------------------------------------------------
-    !! Get then number of records. NUMBER=total number of records, COMMENT=number of
+    !! Get the number of records. NUMBER=total number of records, COMMENT=number of
     !! records that are comment only, KVPAIR=number of records vith valid Key=Value pairs
     !/ -----------------------------------------------------------------------------------
     implicit none
@@ -557,6 +565,148 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   end subroutine add_comment
 
+
+  !/ =====================================================================================
+  function get_string_by_key( self, key, STATUS ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Get value string associated with the key.
+    !!
+    !! |  stat  |  errmsg        |
+    !! | :----: | :------------: |
+    !! |    0   |  key found     |
+    !! |    1   |  no key found  |    
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    character(:), allocatable              :: str     !! return string
+    class(config_section_t), intent(inout) :: self    !! reference to this section.
+    character(*),            intent(in)    :: key     !! key string.
+    integer, optional,       intent(out)   :: STATUS  !! return error code.
+    !/ -----------------------------------------------------------------------------------
+    integer                   :: ier
+    logical                   :: report
+    character(:), allocatable :: temp
+    !/ -----------------------------------------------------------------------------------
+    
+    ier = 0
+    report = .true.
+
+    if ( present( STATUS ) ) report = .false.
+
+    call self%get( key, VAL=temp, STATUS=ier )
+
+    if ( 0.eq.ier ) then
+       str = temp
+    else
+       if ( report ) then
+          call log_error( 'Section%getString: no such key', STR=key )
+       end if
+    end if
+
+    if ( present( STATUS ) ) STATUS = ier
+
+  end function get_string_by_key
+
+
+  !/ =====================================================================================
+  function get_integer_32_by_key( self, key, STATUS ) result( val )
+    !/ -----------------------------------------------------------------------------------
+    !! Get value integer associated with the key.
+    !!
+    !! |  stat  |  errmsg         |
+    !! | :----: | :-------------: |
+    !! |    0   |  key found      |
+    !! |    1   |  no key found   |    
+    !! |    2   |  not an integer |    
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer                                :: val     !! return integer
+    class(config_section_t), intent(inout) :: self    !! reference to this section.
+    character(*),            intent(in)    :: key     !! key string.
+    integer, optional,       intent(out)   :: STATUS  !! return error code.
+    !/ -----------------------------------------------------------------------------------
+    integer                   :: ier, rstat
+    logical                   :: report
+    character(:), allocatable :: temp
+    !/ -----------------------------------------------------------------------------------
+
+    val = 0
+    ier = 0
+    report = .true.
+
+    if ( present( STATUS ) ) report = .false.
+
+    call self%get( key, VAL=temp, STATUS=ier )
+
+    if ( 0.eq.ier ) then
+       read(temp,*,iostat=rstat) val
+       if ( 0.ne.rstat ) then
+          ier = 2
+          if ( report ) then
+             call log_error( 'Section%getInteger: not an integer', STR=temp )
+          end if
+       end if
+    else
+       if ( report ) then
+          call log_error( 'Section%getInteger: no such key', STR=key )
+       end if
+    end if
+
+    if ( present( STATUS ) ) STATUS = ier
+
+  end function get_integer_32_by_key
+
+
+  
+  !/ =====================================================================================
+  function get_real_8_by_key( self, key, STATUS ) result( val )
+    !/ -----------------------------------------------------------------------------------
+    !! Get value integer associated with the key.
+    !!
+    !! |  stat  |  errmsg         |
+    !! | :----: | :-------------: |
+    !! |    0   |  key found      |
+    !! |    1   |  no key found   |    
+    !! |    2   |  not an integer |    
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp)                               :: val     !! return real
+    class(config_section_t), intent(inout) :: self    !! reference to this section.
+    character(*),            intent(in)    :: key     !! key string.
+    integer, optional,       intent(out)   :: STATUS  !! return error code.
+    !/ -----------------------------------------------------------------------------------
+    integer                   :: ier, rstat
+    logical                   :: report
+    character(:), allocatable :: temp
+    !/ -----------------------------------------------------------------------------------
+
+    val = 0
+    ier = 0
+    report = .true.
+
+    if ( present( STATUS ) ) report = .false.
+
+    call self%get( key, VAL=temp, STATUS=ier )
+
+    if ( 0.eq.ier ) then
+       read(temp,*,iostat=rstat) val
+       if ( 0.ne.rstat ) then
+          ier = 2
+          if ( report ) then
+             call log_error( 'Section%getReal: not an real', STR=temp )
+          end if
+       end if
+    else
+       if ( report ) then
+          call log_error( 'Section%getReal: no such key', STR=key )
+       end if
+    end if
+
+    if ( present( STATUS ) ) STATUS = ier
+
+  end function get_real_8_by_key
+
+
+  
 
 end module config_section_mod
 

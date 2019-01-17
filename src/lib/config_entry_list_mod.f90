@@ -142,8 +142,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer                                  :: n    !! number of entries stored.
     type(config_entry_list_t), intent(inout) :: list !! reference to an entry list.
     !/ -----------------------------------------------------------------------------------
-
-    n = list%current_index
+    integer :: i
+    !/ -----------------------------------------------------------------------------------
+    
+    n = 0
+    do i=1,list%current_index
+       if ( associated( list%entries(i)%ptr ) ) then
+          n = n + 1
+       end if
+    end do
 
   end function get_number_stored_entries
 
@@ -426,7 +433,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Get the key from the indexed entry.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    character, allocatable                    :: key
+    character(:), allocatable                    :: key
     class(config_entry_list_t), intent(inout) :: self   !! reference to this entry list.
     integer,                    intent(in)    :: index    
     !/ -----------------------------------------------------------------------------------
@@ -442,7 +449,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Get the value from the indexed entry.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    character, allocatable                    :: val
+    character(:), allocatable                    :: val
     class(config_entry_list_t), intent(inout) :: self   !! reference to this entry list.
     integer,                    intent(in)    :: index    
     !/ -----------------------------------------------------------------------------------
@@ -458,7 +465,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Get the comment from the indexed entry.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    character, allocatable                    :: com
+    character(:), allocatable                    :: com
     class(config_entry_list_t), intent(inout) :: self   !! reference to this entry list.
     integer,                    intent(in)    :: index    
     !/ -----------------------------------------------------------------------------------
