@@ -70,7 +70,7 @@ module file_tools
 
   public :: ReadUnit
   public :: WriteUnit
-
+  public :: LineCount
 
 
 
@@ -545,7 +545,51 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   end function WriteUnit
 
+  
+  !/ =====================================================================================
+  function LineCount( FILE, UNIT, IOSTAT ) result( N )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer                                 :: N
+    character(len=*), optional, intent(in)  :: FILE
+    integer,          optional, intent(in)  :: UNIT
+    integer,          optional, intent(out) :: IOSTAT
+    !/ -----------------------------------------------------------------------------------
+    integer :: inf, ios
+    character(128) :: buffer
+    logical :: report
+    !/ -----------------------------------------------------------------------------------
+    N      = 0
+    ios    = 0
+    report = .true.
+    if ( present( IOSTAT ) ) report = .false.
+    inf = ReadUnit( FILE=FILE, UNIT=UNIT, IOSTAT=ios )
+    if ( 0.eq.ios ) then
+100    continue
+       read(inf,*,END=120, ERR=110, IOSTAT=ios) buffer
+       if ( ios.ne.0 ) then
+          write (*,*) 'IOS=', ios
+          goto 120
+       end if
+       N = N + 1
+       goto 100
+110    continue
+       if ( report ) then
+          write (*,*) 'Read failed'
+       end if       
+120    continue
+       close(inf)
+    else
+       if ( report ) then
+          write (*,*) 'Open Failed'
+       end if
+    end if
+    
+    if ( present( IOSTAT ) ) IOSTAT=ios
 
+  end function LineCount
+
+  
 end module file_tools
 
 
