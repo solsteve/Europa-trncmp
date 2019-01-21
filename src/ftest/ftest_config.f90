@@ -634,6 +634,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     implicit none
     !/ -----------------------------------------------------------------------------------
     type(configdb_t) :: cfg
+    type(configdb_t) :: cfg2
     type(config_section_t), pointer :: sec1
     type(config_section_t), pointer :: sec2
     type(config_section_t), pointer :: sec3
@@ -649,6 +650,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call sec1%setName( 'BRAVO' )
     call sec2%setName( 'DELTA' )
     call sec3%setName( 'ECHO' )
+
+    call sec1%append( LINE='; section comment' )
+    call sec1%set( KEY='car', VAL='gti' )
+    call sec1%append( LINE='engine = F134 ; old school' )
+    
 
     call cfg%addComment( 'First comment' )
     call cfg%add( 'ALPHA' )
@@ -679,8 +685,42 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     
 100 format( 'C',I0,' [',A,']' )
 200 format( 'S',I0,' [',A,']' )
+
+    write (*,*)
+    write (*,*) '===== TEST WRITE ======================================================='
     
+    call cfg%writeINI( UNIT=OUTPUT_UNIT )
+    
+    write (*,*) '===== READ ============================================================='
+
+    call cfg2%readINI( FILE='../config_test.ini' )
+
+    write (*,*) '----- WRITE ------------------------------------------------------------'
+    
+    call cfg2%writeINI( UNIT=OUTPUT_UNIT )
+
+    write (*,*) '========================================================================'
+    write (*,*)
+
+    
+
   end subroutine test_config_db
+
+
+  subroutine test01
+   implicit none
+   character(*), parameter   :: test = '  [  section ]       '
+   character(:), allocatable :: buffer
+
+   buffer = TRIM( ADJUSTL( test ) )
+
+   write(*,100) buffer
+   write(*,100) TRIM(ADJUSTL(buffer(2:LEN_TRIM(buffer)-1)))
+
+   100 format( '>xx>',A,'<<' )
+
+  end subroutine test01
+
 
   
 end module ftest_config_test
@@ -715,6 +755,12 @@ program main
   write (*,*)
   call test_config_db
   write (*,*)
+
+
+  call test01
+
+
+  
 
 end program main
 

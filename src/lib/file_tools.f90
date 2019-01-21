@@ -1,38 +1,38 @@
 !/ ====================================================================== BEGIN FILE =====
 !/ **                                F I L E _ T O O L S                                **
-!/ =======================================================================================
-!/ **                                                                                   **
-!/ **  Copyright (c) 2017, Stephen W. Soliday                                           **
-!/ **                      stephen.soliday@trncmp.org                                   **
-!/ **                      http://research.trncmp.org                                   **
-!/ **                                                                                   **
-!/ **  -------------------------------------------------------------------------------  **
-!/ **                                                                                   **
-!/ **  This program is free software: you can redistribute it and/or modify it under    **
-!/ **  the terms of the GNU General Public License as published by the Free Software    **
-!/ **  Foundation, either version 3 of the License, or (at your option)                 **
-!/ **  any later version.                                                               **
-!/ **                                                                                   **
-!/ **  This program is distributed in the hope that it will be useful, but WITHOUT      **
-!/ **  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS    **
-!/ **  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.   **
-!/ **                                                                                   **
-!/ **  You should have received a copy of the GNU General Public License along with     **
-!/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
-!/ **                                                                                   **
-!/ =======================================================================================
+!! =======================================================================================
+!! **                                                                                   **
+!! **  Copyright (c) 2017, Stephen W. Soliday                                           **
+!! **                      stephen.soliday@trncmp.org                                   **
+!! **                      http://research.trncmp.org                                   **
+!! **                                                                                   **
+!! **  -------------------------------------------------------------------------------  **
+!! **                                                                                   **
+!! **  This program is free software: you can redistribute it and/or modify it under    **
+!! **  the terms of the GNU General Public License as published by the Free Software    **
+!! **  Foundation, either version 3 of the License, or (at your option)                 **
+!! **  any later version.                                                               **
+!! **                                                                                   **
+!! **  This program is distributed in the hope that it will be useful, but WITHOUT      **
+!! **  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS    **
+!! **  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.   **
+!! **                                                                                   **
+!! **  You should have received a copy of the GNU General Public License along with     **
+!! **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
+!! **                                                                                   **
+!! =======================================================================================
 module file_tools
-  !/ -------------------------------------------------------------------------------------
+  !! -------------------------------------------------------------------------------------
   !! author:  Stephen W. Soliday
   !! date:    2017-03-27
   !! license: GPL
   !!
   !! Provides a collection of tools for manipulating files.
   !!
-  !/ -------------------------------------------------------------------------------------
+  !! -------------------------------------------------------------------------------------
   use string_tools
   implicit none
-  
+
   ! POSIX File Modes
 
   integer, public, parameter :: S_IFMT   = 61440 !! (0x0170000) These bits determine file type.
@@ -74,29 +74,26 @@ module file_tools
 
 
 
-  !/ =====================================================================================
-contains !/**                   P R O C E D U R E   S E C T I O N                       **
-  !/ =====================================================================================
+
+  !! =====================================================================================
+contains !!**                   P R O C E D U R E   S E C T I O N                       **
+  !! =====================================================================================
 
 
 
 
-  !/ =====================================================================================
+  !! =====================================================================================
   function S_ISTYPE( mode, mask ) result( chk )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
     !! Is Type.
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
     implicit none
     logical             :: chk  !! file type portion of the bit mask
     integer, intent(in) :: mode !! POSIX file mode.
     integer, intent(in) :: mask !! file mode mask
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     chk = .false.
-
-    !    write(*,FMT="('S_ISTYPE: mode', T16, O19)") mode
-    !    write(*,FMT="('S_ISTYPE: mask', T16, O19)") S_IFMT
-    !    write(*,FMT="('S_ISTYPE: and',  T16, O19)") AND( mode, S_IFMT)
 
     if ( mask.eq.AND( mode, S_IFMT) ) then
        chk = .true.
@@ -105,144 +102,123 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function S_ISTYPE
 
 
-  !/ =====================================================================================
+  !! =====================================================================================
   function S_ISDIR( mode ) result( chk )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
     !! Is Directory.
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
     implicit none
     logical             :: chk  !! true if this mode is a Directory.
     integer, intent(in) :: mode !! POSIX file mode.
-    !/ -----------------------------------------------------------------------------------
-
-    !    write(*,FMT="('S_ISDIR: mode', T16, O19)") mode
-    !    write(*,FMT="('S_ISDIR: mask', T16, O19)") S_IFDIR
+    !! -----------------------------------------------------------------------------------
 
     chk = S_ISTYPE( mode, S_IFDIR )
 
   end function S_ISDIR
 
 
-  !/ =====================================================================================
-  !> @brief Is Character device.
-  !! @param[in] mode POSIX file mode.
-  !! @return true if this mode is a Character device.
-  !/ -------------------------------------------------------------------------------------
+  !! =====================================================================================
   function S_ISCHR( mode ) result( chk )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! Is Character device.
+    !! -----------------------------------------------------------------------------------
     implicit none
     logical             :: chk  !! true if this mode is a Character device.
     integer, intent(in) :: mode !! POSIX file mode.
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     chk = S_ISTYPE( mode, S_IFCHR )
 
   end function S_ISCHR
 
 
-  !/ =====================================================================================
-  !> @brief Is  Block device.
-  !! @param[in] mode POSIX file mode.
-  !! @return true if this mode is a  Block device.
-  !/ -------------------------------------------------------------------------------------
+  !! =====================================================================================
   function S_ISBLK( mode ) result( chk )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! Is Block device.
+    !! -----------------------------------------------------------------------------------
     implicit none
     logical             :: chk  !! true if this mode is a  Block device.
     integer, intent(in) :: mode !! POSIX file mode.
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     chk = S_ISTYPE( mode, S_IFBLK )
 
   end function S_ISBLK
 
 
-  !/ =====================================================================================
-  !> @brief Is Regular file.
-  !! @param[in] mode POSIX file mode.
-  !! @return true if this mode is a Regular file.
-  !/ -------------------------------------------------------------------------------------
+  !! =====================================================================================
   function S_ISREG( mode ) result( chk )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! Is Regular file.
+    !! -----------------------------------------------------------------------------------
     implicit none
     logical             :: chk  !! true if this mode is a Regular file.
     integer, intent(in) :: mode !! POSIX file mode.
-    !/ -----------------------------------------------------------------------------------
-
-    !    write(*,FMT="('S_ISREG: mode', T16, O19)") mode
-    !    write(*,FMT="('S_ISREG: mask', T16, O19)") S_IFDIR
+    !! -----------------------------------------------------------------------------------
 
     chk = S_ISTYPE( mode, S_IFREG )
 
   end function S_ISREG
 
 
-  !/ =====================================================================================
-  !> @brief Is FIFO .
-  !! @param[in] mode POSIX file mode.
-  !! @return true if this mode is a FIFO.
-  !/ -------------------------------------------------------------------------------------
+  !! =====================================================================================
   function S_ISFIFO( mode ) result( chk )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! Is FIFO.
+    !! -----------------------------------------------------------------------------------
     implicit none
     logical             :: chk  !! true if this mode is a FIFO.
     integer, intent(in) :: mode !! POSIX file mode.
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     chk = S_ISTYPE( mode, S_IFIFO )
 
   end function S_ISFIFO
 
 
-  !/ =====================================================================================
-  !> @brief Is Symbolic link.
-  !! @param[in] mode POSIX file mode.
-  !! @return true if this mode is a Symbolic link.
-  !/ -------------------------------------------------------------------------------------
+  !! =====================================================================================
   function S_ISLNK( mode ) result( chk )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! Is Symbolic link.
+    !! -----------------------------------------------------------------------------------
     implicit none
     logical             :: chk  !! true if this mode is a Symbolic link.
     integer, intent(in) :: mode !! POSIX file mode.
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     chk = S_ISTYPE( mode, S_IFLNK )
 
   end function S_ISLNK
 
 
-  !/ =====================================================================================
-  !> @brief Is Socket.
-  !! @param[in] mode POSIX file mode.
-  !! @return true if this mode is a .
-  !/ -------------------------------------------------------------------------------------
+  !! =====================================================================================
   function S_ISSOCK( mode ) result( chk )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! Is Socket.
+    !! -----------------------------------------------------------------------------------
     implicit none
     logical             :: chk  !! true if this mode is a socket.
     integer, intent(in) :: mode !! POSIX file mode.
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     chk = S_ISTYPE( mode, S_IFSOCK )
 
   end function S_ISSOCK
 
 
-  !/ =====================================================================================
-  !> @brief Get Environment Variable.
-  !! @param[in] key
-  !! @return value of the environment variable designated by key.
-  !!
-  !! If no key is availble return NULL
-  !/ -------------------------------------------------------------------------------------
+  !! =====================================================================================
   function getEnvironment( key ) result( val )
-    !/ -----------------------------------------------------------------------------------
-    character(len=:), allocatable :: val
-    character(len=*),  intent(in) :: key
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! Get Environment Variable.
+    !! If no key is availble return NULL
+    !! -----------------------------------------------------------------------------------
+    character(len=:), allocatable :: val !! environment variable designated by key.
+    character(len=*),  intent(in) :: key !! key
+    !! -----------------------------------------------------------------------------------
     character(len=256) :: work
     integer            :: ios
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     call get_environment_variable(trim(adjustl(key)), work, STATUS=ios, TRIM_NAME=.true.)
 
@@ -255,28 +231,26 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function getEnvironment
 
 
-  !/ =====================================================================================
-  !> @brief Fix Path
-  !! @param[in] fspc unmodified path
-  !! @return fixed path
-  !!
-  !! This routine replaces the leading tilda(~) with the value of the environment
-  !! variable HOME
-  !!
-  !! Example:   the environment HOME=/home/user5
-  !!            fspc = ~/test/file.dat
-  !!
-  !!            path = /home/user/test/file.dat
-  !/ -------------------------------------------------------------------------------------
+  !! =====================================================================================
   function fixPath( fspc ) result( path )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! Fix Path.
+    !!
+    !! This routine replaces the leading tilda(~) with the value of the environment
+    !! variable HOME
+    !!
+    !! Example:   the environment HOME=/home/user5
+    !!            fspc = ~/test/file.dat
+    !!
+    !!            path = /home/user/test/file.dat
+    !! -----------------------------------------------------------------------------------
     implicit none
-    character(len=:), allocatable :: path
-    character(len=*), intent(in)  :: fspc
-    !/ -----------------------------------------------------------------------------------
+    character(len=:), allocatable :: path !! fixed path
+    character(len=*), intent(in)  :: fspc !! unmodified path
+    !! -----------------------------------------------------------------------------------
     integer            :: ios
     character(len=255) :: home
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     path = trim(adjustl(fspc))
 
@@ -292,20 +266,18 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function fixPath
 
 
-  !/ =====================================================================================
-  !> @brief Directory Exists.
-  !! @param[in] fspc full path to the directory.
-  !! @return true if the directory exists.
-  !/ -------------------------------------------------------------------------------------
+  !! =====================================================================================
   function dirExists( fspc ) result( chk )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! Directory Exists.
+    !! -----------------------------------------------------------------------------------
     implicit none
-    logical                      :: chk
-    character(len=*), intent(in) :: fspc
-    !/ -----------------------------------------------------------------------------------
+    logical                      :: chk  !! true if the directory exists.
+    character(len=*), intent(in) :: fspc !! full path to the directory.
+    !! -----------------------------------------------------------------------------------
     integer, dimension(13) :: buff
     integer                :: status
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     chk = .false.
 
@@ -318,20 +290,18 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function dirExists
 
 
-  !/ =====================================================================================
-  !> @brief File Exists.
-  !! @param[in] fspc full path to the file.
-  !! @return true if the file exists.
-  !/ -------------------------------------------------------------------------------------
+  !! =====================================================================================
   function fileExists( fspc ) result( chk )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! File Exists.
+    !! -----------------------------------------------------------------------------------
     implicit none
-    logical                      :: chk
-    character(len=*), intent(in) :: fspc
-    !/ -----------------------------------------------------------------------------------
+    logical                      :: chk  !! true if the file exists.
+    character(len=*), intent(in) :: fspc !! full path to the file.
+    !! -----------------------------------------------------------------------------------
     integer, dimension(13) :: buff
     integer                :: status
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     chk = .false.
 
@@ -344,26 +314,23 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function fileExists
 
 
-  !/ =====================================================================================
-  !> @brief Path Search.
-  !! @param[in] name file name to search for.
-  !! @param[in] path ':' delimeted list of paths.
-  !! @return full path of the file if found, otherwise a NULL.
-  !/ -------------------------------------------------------------------------------------
+  !! =====================================================================================
   function findFile( name, path ) result( fspc )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! Path Search.
+    !! -----------------------------------------------------------------------------------
     implicit none
-    character(len=:), allocatable :: fspc
-    character(len=*),  intent(in) :: name
-    character(len=*),  intent(in) :: path
-    !/ -----------------------------------------------------------------------------------
+    character(len=:), allocatable :: fspc !! full path of the file if found, otherwise a NULL.
+    character(len=*),  intent(in) :: name !! file name to search for.
+    character(len=*),  intent(in) :: path !! ':' delimeted list of paths.
+    !! -----------------------------------------------------------------------------------
     integer                        :: i, n
     type(string_splitter)          :: plist
     character(len=:),  allocatable :: test
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     call split( plist, path, ':' )
-    
+
     n = plist%count()
 
     fspc = ''
@@ -379,25 +346,23 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function findFile
 
 
-  !/ =====================================================================================
-  !> @brief Timestamp.
-  !! @param[in] seconds flag to add seconds.
-  !! @return pointer to a character array containing the formated time stamp..
-  !!
-  !! Generate a formated time stamp. YYYYMMDD-hhmmss or YYYYMMDD-hhmm
-  !/ -------------------------------------------------------------------------------------
+  !! =====================================================================================
   function timeStamp( seconds ) result( ts )
-    !/ -----------------------------------------------------------------------------------
-    character(len=:), allocatable :: ts
-    logical, optional, intent(in) :: seconds
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! Timestamp.
+    !!
+    !! Generate a formated time stamp. YYYYMMDD-hhmmss or YYYYMMDD-hhmm
+    !! -----------------------------------------------------------------------------------
+    character(len=:), allocatable :: ts      !! pointer to a character array containing the formated time stamp.
+    logical, optional, intent(in) :: seconds !! flag to add seconds.
+    !! -----------------------------------------------------------------------------------
     character(len=8)  :: date
     character(len=10) :: time
     logical           :: us
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     us = .false.
-    
+
     if ( present( seconds ) ) then
        if ( seconds ) then
           us = .true.
@@ -415,30 +380,71 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function timeStamp
 
 
-  !/ =====================================================================================
-  !> @brief Read Unit.
-  !! @param[in]  file   optional path to an new or existing file.
-  !! @param[in]  unit   optional file unit for an open unit
-  !! @param[out] iostat optional error return.
-  !! @return file unit for an input device.
-  !!
-  !! Meant to pass optional dummy arguments FILE, UNIT, IOSTAT from a user procedure
-  !! and return a unit number of an input device. Use if present(UNIT) to determine
-  !! if the file unit should be closed.
-  !/ -------------------------------------------------------------------------------------
+
+
+  !! =====================================================================================
+  subroutine ReadLine( unit, line, IOSTAT )
+    !! -----------------------------------------------------------------------------------
+    !! 
+    !! -----------------------------------------------------------------------------------
+    use, INTRINSIC :: ISO_FORTRAN_ENV, only: IOSTAT_END    
+    use, INTRINSIC :: ISO_FORTRAN_ENV, only: IOSTAT_EOR    
+    implicit none
+    integer,                   intent(in)  :: unit   !! 
+    character(:), allocatable, intent(out) :: line   !! 
+    integer, optional,         intent(out) :: IOSTAT !! 
+    !! -------------------------------------------------------------------------------------
+    integer           :: nr, ios
+    character(len=32) :: buffer
+    !! -------------------------------------------------------------------------------------
+    line = ''
+    do
+       read (unit, '(A)', ADVANCE='NO', IOSTAT=ios, SIZE=nr ) buffer
+
+       if ( ios.eq.IOSTAT_END ) goto 999
+
+       if ( ios.gt.0 ) goto 999
+
+       line = line // buffer(:nr)
+
+       if ( ios.lt.0 ) then
+          if ( ios.eq.IOSTAT_EOR ) then
+             ios = 0
+             goto 999
+          end if
+       end if
+    end do
+
+999 continue
+
+    if ( present( IOSTAT ) ) IOSTAT = ios    
+
+  end subroutine ReadLine
+
+
+
+
+
+  !! =====================================================================================
   function ReadUnit( FILE, UNIT, IOSTAT ) result( newun )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! Read Unit.
+    !!
+    !! Meant to pass optional dummy arguments FILE, UNIT, IOSTAT from a user procedure
+    !! and return a unit number of an input device. Use if present(UNIT) to determine
+    !! if the file unit should be closed.
+    !! -----------------------------------------------------------------------------------
     use tlogger, only : log_error
     implicit none
-    integer                                 :: newun
-    character(len=*), optional, intent(in)  :: FILE
-    integer,          optional, intent(in)  :: UNIT
-    integer,          optional, intent(out) :: IOSTAT
-    !/ -----------------------------------------------------------------------------------
+    integer                                 :: newun  !! unit for an input device.
+    character(len=*), optional, intent(in)  :: FILE   !! path to an new or existing file.
+    integer,          optional, intent(in)  :: UNIT   !! unit for an open unit
+    integer,          optional, intent(out) :: IOSTAT !! error return.
+    !! -----------------------------------------------------------------------------------
     integer            :: ios, tp
     logical            :: report
     character(len=255) :: emsg
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     tp     = 0
     ios    = 0
@@ -482,28 +488,25 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function ReadUnit
 
 
-  !/ =====================================================================================
-  !> @brief Write Unit.
-  !! @param[in]  file   optional path to an new or existing file.
-  !! @param[in]  unit   optional file unit for an open unit
-  !! @param[out] iostat optional error return.
-  !!
-  !! Meant to pass optional dummy arguments FILE, UNIT, IOSTAT from a user procedure
-  !! and return a unit number of an input device. Use if present(UNIT) to determine
-  !! if the file unit should be closed.
-  !/ -------------------------------------------------------------------------------------
+  !! =====================================================================================
   function WriteUnit( FILE, UNIT, IOSTAT ) result( newun )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! Write Unit.
+    !!
+    !! Meant to pass optional dummy arguments FILE, UNIT, IOSTAT from a user procedure
+    !! and return a unit number of an input device. Use if present(UNIT) to determine
+    !! if the file unit should be closed.
+    !! -----------------------------------------------------------------------------------
     use tlogger, only : log_error
     implicit none
-    integer                                 :: newun
-    character(len=*), optional, intent(in)  :: FILE
-    integer,          optional, intent(in)  :: UNIT
-    integer,          optional, intent(out) :: IOSTAT
-    !/ -----------------------------------------------------------------------------------
+    integer                                 :: newun  !! 
+    character(len=*), optional, intent(in)  :: FILE   !! path to an new or existing file.
+    integer,          optional, intent(in)  :: UNIT   !! file unit for an open unit
+    integer,          optional, intent(out) :: IOSTAT !! error return.
+    !! -----------------------------------------------------------------------------------
     integer :: ios, tp
     logical :: report
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
 
     tp     = 0
     ios    = 0
@@ -545,20 +548,22 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   end function WriteUnit
 
-  
-  !/ =====================================================================================
+
+  !! =====================================================================================
   function LineCount( FILE, UNIT, IOSTAT ) result( N )
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
+    !! 
+    !! -----------------------------------------------------------------------------------
     implicit none
-    integer                                 :: N
-    character(len=*), optional, intent(in)  :: FILE
-    integer,          optional, intent(in)  :: UNIT
-    integer,          optional, intent(out) :: IOSTAT
-    !/ -----------------------------------------------------------------------------------
+    integer                                 :: N      !! 
+    character(len=*), optional, intent(in)  :: FILE   !! 
+    integer,          optional, intent(in)  :: UNIT   !! 
+    integer,          optional, intent(out) :: IOSTAT !! 
+    !! -----------------------------------------------------------------------------------
     integer :: inf, ios
     character(128) :: buffer
     logical :: report
-    !/ -----------------------------------------------------------------------------------
+    !! -----------------------------------------------------------------------------------
     N      = 0
     ios    = 0
     report = .true.
@@ -576,7 +581,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 110    continue
        if ( report ) then
           write (*,*) 'Read failed'
-       end if       
+       end if
 120    continue
        close(inf)
     else
@@ -584,15 +589,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
           write (*,*) 'Open Failed'
        end if
     end if
-    
+
     if ( present( IOSTAT ) ) IOSTAT=ios
 
   end function LineCount
 
-  
+
 end module file_tools
 
 
-!/ =======================================================================================
-!/ **                                F I L E _ T O O L S                                **
-!/ =========================================================================== END FILE ==
+!! =======================================================================================
+!! **                                F I L E _ T O O L S                                **
+!! =========================================================================== END FILE ==

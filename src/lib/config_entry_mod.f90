@@ -125,7 +125,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call self%clear
     
     if ( allocated(src%key_string) ) then
-       self%key_string = src%key_string
+       self%key_string = TRIM(ADJUSTL(src%key_string))
     end if
 
     if ( allocated(src%value_string) ) then
@@ -133,7 +133,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end if
 
     if ( allocated(src%comment_string ) ) then
-       self%comment_string = src%comment_string
+       self%comment_string = TRIM(ADJUSTL(src%comment_string))
     end if
 
   end subroutine copy_entry
@@ -191,7 +191,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     if ( allocated( self%key_string ) ) then
-       allocate( key, source=self%key_string )
+       allocate( key, source=TRIM(ADJUSTL(self%key_string)) )
     end if
 
   end function get_key
@@ -225,7 +225,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     if ( allocated( self%comment_string ) ) then
-       allocate( com, source=self%comment_string )
+       allocate( com, source=TRIM(ADJUSTL(self%comment_string)) )
     end if
 
   end function get_comment
@@ -256,7 +256,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     ! ----- the following allows you to overide parsed values -------------
 
     if ( present( KEY ) ) then
-       self%key_string = KEY
+       self%key_string = TRIM(ADJUSTL(KEY))
     end if
 
     if ( present( VAL ) ) then
@@ -264,7 +264,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end if
 
     if ( present( COM ) ) then
-       self%comment_string = COM
+       self%comment_string = TRIM(ADJUSTL(COM))
     end if
 
   end subroutine set_kvc
@@ -296,18 +296,18 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call split( SP, line, ';', COUNT=n )
     if ( 2.eq.n ) then ! ----- comment found ----------------------
        S1                  = SP%get(1)
-       self%comment_string = SP%get(2)
+       self%comment_string = TRIM(ADJUSTL(SP%get(2)))
        call split( SP, S1, '=', COUNT=n )
        k = len( SP%get(1) )
        if ( 0.lt.k ) then
-          self%key_string = SP%get(1)
+          self%key_string = TRIM(ADJUSTL(SP%get(1)))
        end if
        if ( 2.eq.n ) then
           self%value_string = SP%get(2)
        end if
     else ! ----- no comment found ---------------------------------
        call split( SP, line, '=', COUNT=n )
-       self%key_string   = SP%get(1)
+       self%key_string   = TRIM(ADJUSTL(SP%get(1)))
        if ( 2.eq.n ) then
           self%value_string = SP%get(2)
        end if

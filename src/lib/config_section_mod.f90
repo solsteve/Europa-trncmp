@@ -77,7 +77,8 @@ module config_section_mod
      procedure, public :: getInt32   => get_integer_32_by_key
      procedure, public :: getReal8   => get_real_8_by_key
 
-
+     procedure, public :: writeINI   => write_ini
+     
      final :: destroy_section
 
   end type config_section_t
@@ -302,7 +303,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     character(*),            intent(in)    :: name !! name for this section.
     !/ -----------------------------------------------------------------------------------
 
-    self%section_name = name
+    self%section_name = TRIM(ADJUSTL(name))
 
   end subroutine set_section_name
 
@@ -706,7 +707,67 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function get_real_8_by_key
 
 
+    !/ =====================================================================================
+  subroutine write_ini( self, FILE, UNIT, IOSTAT )
+    !/ -----------------------------------------------------------------------------------
+    !/ 
+    !/ -----------------------------------------------------------------------------------
+    use tlogger,    only : log_error
+    use file_tools, only : WriteUnit
+    implicit none
+    class(config_section_t),    intent(inout) :: self   !! reference to this section.
+    character(len=*), optional, intent(in)    :: FILE   !! 
+    integer,          optional, intent(in)    :: UNIT   !! 
+    integer,          optional, intent(out)   :: IOSTAT !! 
+    !/ -----------------------------------------------------------------------------------
+    integer :: ios, un
+    logical :: report
+    type(config_entry_t), pointer :: CE
+    !/ -----------------------------------------------------------------------------------
+
+    report = .true.
+    if ( present( IOSTAT ) ) report = .false.
+
+    un = WriteUnit( FILE, UNIT, ios )
+
+    if ( 0.ne.ios ) then
+       if ( report ) then
+          if ( present( FILE ) ) then
+             call log_error( 'Cannot open file:', STR=FILE )
+          else
+             if ( present( UNIT ) ) then
+                call log_error( 'Cannot access unit:', I4=UNIT )
+             else
+                call log_error( 'Access error:', I4=ios )
+             end if
+          end if
+       end if
+    else
+       !/ --------------------------------------------------------------------------------
+
+       call self%section_records%rewind
+100    continue
+       if ( self%section_records%hasNext() ) then
+          CE => self%section_records%next()
+          if ( associated( CE ) ) then
+             write(*,1000) CE%toString()
+          end if
+       else
+          goto 200
+       end if
+       goto 100
+200    continue
+
+       if ( present( FILE ) ) close( un )
+       !/ --------------------------------------------------------------------------------
+    end if
   
+    if ( present( IOSTAT ) ) iostat = ios
+
+1000 format( '  ',A )
+    
+  end subroutine write_ini
+
 
 end module config_section_mod
 

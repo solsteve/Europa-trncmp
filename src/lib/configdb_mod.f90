@@ -85,6 +85,9 @@ module configdb_mod
      procedure, public :: getComment    => get_comment_by_index
      procedure, public :: addComment    => add_comment_to_list
 
+     procedure, public :: readINI       => read_ini
+     procedure, public :: writeINI      => write_ini
+
      generic,   public :: get           => get_section_by_index, get_section_by_name
      generic,   public :: add           => add_section_to_list, add_new_section_to_list
 
@@ -464,8 +467,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     class(configdb_t), intent(inout) :: self    !! reference to this configdb.
     character(*),      intent(in)    :: comment !! file level comment
     !/ -----------------------------------------------------------------------------------
-    class(config_section_t), pointer :: new_sec
-    !/ -----------------------------------------------------------------------------------
 
     self%current_comment = self%current_comment + 1
 
@@ -662,6 +663,194 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function get_comment_by_index
 
 
+
+  !/ =====================================================================================
+  subroutine write_ini( self, FILE, UNIT, IOSTAT )
+    !/ -----------------------------------------------------------------------------------
+    !/ 
+    !/ -----------------------------------------------------------------------------------
+    use tlogger,    only : log_error
+    use file_tools, only : WriteUnit
+    implicit none
+    class(configdb_t),          intent(inout) :: self   !! reference to this configdb.
+    character(len=*), optional, intent(in)    :: FILE
+    integer,          optional, intent(in)    :: UNIT
+    integer,          optional, intent(out)   :: IOSTAT
+    !/ -----------------------------------------------------------------------------------
+    integer :: ios, un, i
+    logical :: report, sep_sec
+    !/ -----------------------------------------------------------------------------------
+
+    report = .true.
+    if ( present( IOSTAT ) ) report = .false.
+
+    un = WriteUnit( FILE=FILE, UNIT=UNIT, IOSTAT=ios )
+
+    if ( 0.ne.ios ) then
+       if ( report ) then
+          if ( present( FILE ) ) then
+             call log_error( 'Cannot open file:', STR=FILE )
+          else
+             if ( present( UNIT ) ) then
+                call log_error( 'Cannot access unit:', I4=UNIT )
+             else
+                call log_error( 'Access error:', I4=ios )
+             end if
+          end if
+       end if
+    else
+       !/ --------------------------------------------------------------------------------
+
+       sep_sec = .false.
+       
+       if ( associated( self%comments ) ) then
+          do i=1,self%current_comment
+             if ( allocated( self%comments(i)%str ) ) then
+                write(un,1000) self%comments(i)%str
+                sep_sec = .true.
+             end if
+          end do
+       end if
+       
+       if ( associated( self%sections ) ) then
+          do i=1,self%current_section
+             if ( associated( self%sections(i)%ptr ) ) then
+                if ( sep_sec ) then
+                   write(un,*)
+                else
+                   sep_sec = .true.
+                end if
+                write(un,1100) self%sections(i)%ptr%getName()
+                call self%sections(i)%ptr%writeINI( UNIT=un, IOSTAT=ios )
+                if ( 0.ne.ios ) then
+                   call log_error( 'Section write failed', I4=ios )
+                end if
+             end if
+          end do
+       end if
+       
+       !/ --------------------------------------------------------------------------------
+       if ( present( FILE ) ) close( un )
+    end if
+  
+    if ( present( IOSTAT ) ) iostat = ios
+
+1000 format( '; ',A )
+1100 format( '[',A,']' )
+    
+  end subroutine write_ini
+
+
+
+
+
+
+
+
+  !/ =====================================================================================
+  subroutine read_ini( self, FILE, UNIT, IOSTAT )
+    !/ -----------------------------------------------------------------------------------
+    !/ 
+    !/ -----------------------------------------------------------------------------------
+    use tlogger,    only : log_error
+    use file_tools, only : ReadUnit
+    use file_tools, only : ReadLine
+    implicit none
+    class(configdb_t),          intent(inout) :: self   !! reference to this configdb.
+    character(len=*), optional, intent(in)    :: FILE   !! 
+    integer,          optional, intent(in)    :: UNIT   !! 
+    integer,          optional, intent(out)   :: IOSTAT !! 
+    !/ -----------------------------------------------------------------------------------
+    integer                   :: ios, un
+    logical                   :: report
+    character(:), allocatable :: buffer
+    character(1)              :: ctest
+    class(config_section_t), pointer :: section => null()
+    !/ -----------------------------------------------------------------------------------
+
+    report = .true.
+    if ( present( IOSTAT ) ) report = .false.
+
+    un = ReadUnit( FILE=FILE, UNIT=UNIT, IOSTAT=ios )
+
+    if ( 0.ne.ios ) then
+       if ( report ) then
+          if ( present( FILE ) ) then
+             call log_error( 'Cannot open file:', STR=FILE )
+          else
+             if ( present( UNIT ) ) then
+                call log_error( 'Cannot access unit:', I4=UNIT )
+             else
+                call log_error( 'Access error:', I4=ios )
+             end if
+          end if
+       end if
+    else
+       !/ --------------------------------------------------------------------------------
+
+       section => null()
+       
+100    continue
+
+       call ReadLine( un, buffer, IOSTAT=ios)
+       if ( ios.eq.IOSTAT_END ) goto 120
+       if ( ios.ne.0 ) goto 110
+
+       if ( 0.lt.LEN(buffer) ) then
+
+          ctest = buffer
+
+          if ( ';'.eq.ctest ) then
+             !/ ----------------------------------------------------- line comment
+             if ( associated( section ) ) then
+                !/ --------------------------------- section level comment
+                call section%addComment( buffer )
+             else
+                !/ --------------------------------- file level comment
+                call self%addComment( buffer )
+             end if
+          else
+             if ( '['.eq.ctest ) then
+                !/ -------------------------------------------------- section label
+                if ( associated( section ) ) then
+                   !/ ------------------------------ save old section
+                   call self%add( section )
+                   section => null()
+                end if
+                !/ --------------------------------- create a section
+                allocate( section )
+                call section%setName( buffer(2:LEN_TRIM(buffer)-1) )
+             else
+                !/ -------------------------------------------------- other line
+                call section%append( LINE=buffer )
+             end if
+          end if
+
+       end if
+       !/ ------------------
+       goto 100
+110    continue
+       if ( report ) then
+          write (*,*) 'Read failed'
+       end if       
+120    continue
+       
+       !/ --------------------------------------------------------------------------------
+       if ( present( FILE ) ) close( un )
+    end if
+
+    if ( associated( section ) ) then
+       !/ ------------------------------ save last section
+       call self%add( section )
+       section => null()
+    end if
+  
+    if ( present( IOSTAT ) ) iostat = ios
+
+  end subroutine read_ini
+
+  
+  
 end module configdb_mod
 
 
