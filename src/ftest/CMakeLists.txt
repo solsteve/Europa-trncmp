@@ -30,6 +30,7 @@ foreach ( ft ${fsrc} )
   get_filename_component ( _exec ${ft} NAME_WE )
   
   set ( CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/temp )
+  set ( SDSPEC "-std=f2008ts -ffree-form" )
 
   add_executable ( ${_exec} ${ft} )
   

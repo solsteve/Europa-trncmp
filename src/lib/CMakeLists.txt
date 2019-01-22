@@ -25,9 +25,11 @@
 project ( europa Fortran )
 
 file ( GLOB lib_src "*.f90" )
-file ( GLOB la_src "linalg/*.f90" )
+file ( GLOB la_src  "linalg/*.f90" )
+file ( GLOB fft_src "dfftpack/*.f" )
 
-set ( ${PROJECT_NAME}_sources ${lib_src} ${la_src} )
+set ( ${PROJECT_NAME}_sources ${lib_src} ${la_src} ${fft_src} )
+set ( SDSPEC "-std=f2008ts -ffree-form" )
 
 message ( STATUS "Sources for project ${PROJECT_NAME}: ${${PROJECT_NAME}_sources}" )
 

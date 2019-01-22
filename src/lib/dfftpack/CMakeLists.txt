@@ -1,5 +1,5 @@
 #/ ====================================================================== BEGIN FILE =====
-#/ **                      Tools Subdirectory - C M A K E L I S T                       **
+#/ **                            Library - C M A K E L I S T                            **
 #/ =======================================================================================
 #/ **                                                                                   **
 #/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
@@ -22,25 +22,8 @@
 #/ **                                                                                   **
 #/ =======================================================================================
 
-project(tool_bb Fortran)
-
-file(GLOB ${PROJECT_NAME}_sources "*.f90")
-
-message(STATUS "Sources for Project ${PROJECT_NAME}: ${${PROJECT_NAME}_sources}")
-
-set(CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/temp)
-add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_sources})
-set ( SDSPEC "-std=f2008ts -ffree-form" )
-
-target_link_libraries(${PROJECT_NAME} europa)
-target_link_libraries(${PROJECT_NAME} ${LAPACK_LIBRARIES} )
-target_link_libraries(${PROJECT_NAME} ${BLAS_LIBRARIES} )
-
-install(TARGETS ${PROJECT_NAME}
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
+set ( SDSPEC "-ffixed-form" )
 
 #/ =======================================================================================
-#/ **                      Tools Subdirectory - C M A K E L I S T                       **
+#/ **                            Library - C M A K E L I S T                            **
 #/ =========================================================================== end FILE ==

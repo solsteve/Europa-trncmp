@@ -30,6 +30,7 @@ message ( STATUS "Sources for Project ${PROJECT_NAME}: ${${PROJECT_NAME}_sources
 
 set ( CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/temp )
 add_executable ( ${PROJECT_NAME} ${${PROJECT_NAME}_sources} )
+set ( SDSPEC "-std=f2008ts -ffree-form" )
 
 target_link_libraries ( ${PROJECT_NAME} europa )
 target_link_libraries ( ${PROJECT_NAME} ${LAPACK_LIBRARIES} )

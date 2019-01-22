@@ -48,11 +48,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine test03
     !/ -----------------------------------------------------------------------------------
+    use stopwatch_class
     implicit none
     integer                  :: i, N, inf, outf
     real(dp),    allocatable :: T(:)
     real(dp),    allocatable :: X(:)
     real(dp),    allocatable :: R(:)
+    type(stopwatch) :: SW
+    real(dp) :: et
     !/ -----------------------------------------------------------------------------------
     character(*), parameter :: FSPC = '/data/datasets/temp/big.dat'
     character(*), parameter :: FOUT = 'last.dat'
@@ -60,7 +63,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     N  = LineCount( FSPC )
 
-    write(*,*) 'Records=', N
+    write(*,1000) N
 
     allocate( T(N) )
     allocate( X(N) )
@@ -73,9 +76,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     close( inf )
 
     !/ -----------------------------------------------------------------------------------
-    
-    call auto_correlate( R, X )
 
+    call SW%reset()
+    call auto_correlate( R, X )
+    et = SW%check()
+
+    write(*,1100) N, et
+    
     outf = WriteUnit( FOUT )
     
     do i=1,N
@@ -84,6 +91,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     close(outf)
     
+1000 format( 'Read and formated ',I0,' records' )
+1100 format( 'Auto correlate ',I0,' records in ',F10.6,' seconds' )
   
   end subroutine test03
 
@@ -189,7 +198,95 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     
   end subroutine test01
+  
+  !/ =====================================================================================
+  subroutine test04
+    !/ -----------------------------------------------------------------------------------
+    use dfftpack
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+    real(dp) :: sqrt2, fn, tfn, arg1, arg2, cf, dcfb, dcfftb, dcfftf, dt
+    !real(dp), dimension(100)  ::
+    real(dp),    dimension(200)  :: X, Y, XH
+    real(dp),    dimension(2000) :: W
+    complex(dp), dimension(200)  :: cx, cy
+    integer  :: nns, nz, i, j, k, n, modn, np1, nm1
+    !/ -----------------------------------------------------------------------------------
+     integer, parameter :: ND(7) = (/ 120, 54, 49, 32, 4, 3, 2 /)
+   real(dp), parameter :: pi = 3.14159265358979d0
+     !/ -----------------------------------------------------------------------------------
+      SQRT2 = SQRT(2.0d0)
+      NNS = 7
+      L157: DO NZ=1,NNS
+         N    = ND(NZ)
+         MODN = MOD(N,2)
+         FN   = REAL(N,dp)
+         TFN  = FN + FN
+         NP1  = N + 1
+         NM1  = N - 1
+         L101: DO J=1,NP1
+            X(J)  = SIN(REAL(J,dp)*SQRT2)
+            Y(J)  = X(J)
+            XH(J) = X(J)
+         END DO L101
+         
+    !/ -----------------------------------------------------------------------------------
+         L149: DO I=1,N
+            CX(I) = CMPLX(COS(SQRT2*REAL(I,dp)),SIN(SQRT2*REAL(I*I,dp)), dp)
+         END DO L149
+         
+         DT = (PI+PI)/FN
+         L151: DO I=1,N
+            ARG1 = -REAL(I-1,dp)*DT
+            CY(I) = (0.,0.)
+            L150: DO K=1,N
+               ARG2 = REAL(K-1,dp)*ARG1
+               CY(I) = CY(I)+CMPLX(COS(ARG2),SIN(ARG2),dp)*CX(K)
+            END DO L150
+         END DO L151
+         
+         CALL TC_FFTI (N,W)
+         CALL TC_FFTF (N,CX,W)
+         
+         DCFFTF = 0.
+         L152: DO I=1,N
+            DCFFTF = MAX(DCFFTF,ABS(CX(I)-CY(I)))
+            CX(I) = CX(I)/FN
+         END DO L152
+            
+         DCFFTF = DCFFTF/FN
+         L154: DO I=1,N
+            ARG1 = REAL(I-1,dp)*DT
+            CY(I) = (0.,0.)
+            L153: DO K=1,N
+               ARG2 = REAL(K-1,dp)*ARG1
+               CY(I) = CY(I)+CMPLX(COS(ARG2),SIN(ARG2),dp)*CX(K)
+            END DO L153
+         END DO L154
+               
+         CALL TC_FFTB (N,CX,W)
+         
+         DCFFTB = 0.
+         L155: DO I=1,N
+            DCFFTB = MAX(DCFFTB,ABS(CX(I)-CY(I)))
+            CX(I) = CY(I)
+         END DO L155
+            
+         CF = 1./FN
+         CALL TC_FFTF (N,CX,W)
+         CALL TC_FFTB (N,CX,W)
+         
+         DCFB = 0.
+         L156: DO I=1,N
+            DCFB = MAX(DCFB,ABS(CF*CX(I)-CY(I)))
+         END DO L156
 
+    !/ -----------------------------------------------------------------------------------
+            WRITE(*,1001) DCFFTF,DCFFTB,DCFB
+1001        FORMAT( 'CFFTF: ', ES10.3, ' CFFTB: ', ES10.3, ' CFFTFB: ', ES10.3 )
+      END DO L157
+
+  end subroutine test04
 
 end module ftest_fft_test
 
@@ -201,7 +298,7 @@ program main
   implicit none
   !/ -------------------------------------------------------------------------------------
 
-  call test03
+  call test04
 
 
 

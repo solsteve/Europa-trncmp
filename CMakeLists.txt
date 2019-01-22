@@ -77,7 +77,7 @@ endif ( "${CMAKE_BUILD_TYPE}" STREQUAL "" )
 
 set ( GARCH "-fverbose-asm -march=corei7 -mtune=corei7 -ffast-math -ftree-vectorizer-verbose=0 -fopt-info-optimized -fopenmp -msse2 -mrdrnd" )
 set ( GWARN "-Wall -pedantic-errors -Wconversion -Wimplicit-interface -Wunused-parameter -Wcharacter-truncation -Wunderflow -Wno-surprising" )
-set ( GFORM "-std=f2008ts -ffree-form -fall-intrinsics -frecursive" )
+set ( GFORM "-fall-intrinsics -frecursive ${SDSPEC}" )
 
 
 set ( CMAKE_Fortran_FLAGS_RELEASE "-O3 ${GWARN} ${GARCH} ${GFORM}" )
