@@ -38,7 +38,7 @@ module summation_mod
   use constants_env
   implicit none
 
-  !/ -------------------------------------------------------------------------------------
+  public :: sumsq, wsum, dist2
 
 
   private :: sum_square_I4_1d
@@ -190,11 +190,6 @@ module summation_mod
      module procedure :: sum_square_difference_R8_0d
      module procedure :: sum_square_difference_R8_1d
   end interface dist2
-
-
-  public :: sumsq
-  public :: wsum
-  public :: dist2
 
 
 

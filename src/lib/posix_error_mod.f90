@@ -27,8 +27,10 @@ module posix_error_mod
   !! date:    2019-01-20
   !! license: GPL
   !!
-  !! Provides an POSIX error numbers and messages.
+  !!##POSIX Compatibility
   !!
+  !! Provides an POSIX error numbers and messages.
+  !
   !/ -------------------------------------------------------------------------------------
 
   integer, public, parameter :: P_EPERM           =   1  !! Operation not permitted

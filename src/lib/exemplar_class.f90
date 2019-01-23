@@ -21,14 +21,14 @@
 !/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 !/ **                                                                                   **
 !/ ----- Modification History ------------------------------------------------------------
-!
-!> @brief   Exemplar Data Object.
+!! author:  Stephen W. Soliday
+!! date:    2017-06-04
+!! license: GPL
 !!
-!! @details Provides the interface and procedures for readingand writing ASCII formated
-!!          exemplar data.
+!!##Exemplar Data Object.
 !!
-!! @author  Stephen W. Soliday
-!! @date    2017-06-04
+!! Provides the interface and procedures for readingand writing ASCII formated
+!! exemplar data.
 !
 !/ =======================================================================================
 module exemplar_class
@@ -37,9 +37,14 @@ module exemplar_class
   use tlogger
   use file_tools
   implicit none
+  private
 
+  public :: exemplar_meta_t, exemplar_pair_t, create, ExemplarMeta, ExemplarPair,  &
+       &    read_meta, write_meta, write, write_pair, read, read_pair, SingleTranspose
+
+  
   !/ =====================================================================================
-  type :: ExemplarMeta
+  type :: exemplar_meta_t
      !/ ----------------------------------------------------------------------------------
      integer :: n_sample  =  0
      integer :: n_x       =  0
@@ -51,10 +56,10 @@ module exemplar_class
 
      final :: emeta_destroy
 
-  end type ExemplarMeta
+  end type exemplar_meta_t
   
   !/ =====================================================================================
-  type :: ExemplarPair
+  type :: exemplar_pair_t
      !/ ----------------------------------------------------------------------------------
      real(dp), pointer :: X(:,:) => null()
      real(dp), pointer :: Y(:,:) => null()
@@ -70,7 +75,7 @@ module exemplar_class
 
      final :: epair_destroy
 
-  end type ExemplarPair
+  end type exemplar_pair_t
 
 !   private :: internal_read_single
 !   private :: internal_write_single
@@ -157,20 +162,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   
   !/ =====================================================================================
   !> @brief Constructor.
-  !! @param[in,out] mt reference to an ExemplarMeta object.
-  !! @param[in]     R  optional number of rows.
-  !! @param[in]     X  optional number of inputs.
-  !! @param[in]     Y  optional number of outputs.
-  !!
-  !! 
   !/ -------------------------------------------------------------------------------------
   subroutine emeta_create( mt, R, X, Y )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(ExemplarMeta), intent(inout) :: mt
-    integer, optional,  intent(in)    :: R
-    integer, optional,  intent(in)    :: X
-    integer, optional,  intent(in)    :: Y
+    type(exemplar_meta_t), intent(inout) :: mt !! reference to an exemplar_meta_t object.
+    integer, optional,     intent(in)    :: R  !! number of rows.
+    integer, optional,     intent(in)    :: X  !! number of inputs.
+    integer, optional,     intent(in)    :: Y  !! number of outputs.
     !/ -----------------------------------------------------------------------------------
 
     mt%n_sample = 0
@@ -185,18 +184,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   !/ =====================================================================================
   !> @brief Constructor.
-  !! @param[in]     R  optional number of rows.
-  !! @param[in]     X  optional number of inputs.
-  !! @param[in]     Y  optional number of outputs.
-  !! @return pointer to a new ExemplarMeta object.
   !/ -------------------------------------------------------------------------------------
   function emeta_allocate( R, X, Y ) result( mt )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(ExemplarMeta), pointer      :: mt
-    integer, optional,  intent(in)    :: R
-    integer, optional,  intent(in)    :: X
-    integer, optional,  intent(in)    :: Y
+    class(exemplar_meta_t), pointer      :: mt !! pointer to a new exemplar_meta_t object.
+    integer, optional,     intent(in)    :: R  !! number of rows.
+    integer, optional,     intent(in)    :: X  !! number of inputs.
+    integer, optional,     intent(in)    :: Y  !! number of outputs.
     !/ -----------------------------------------------------------------------------------
 
     allocate( mt )
@@ -207,12 +202,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   
   !/ =====================================================================================
   !> @brief Destructor.
-  !! @param[in,out] mt reference to an ExemplarMeta object.
   !/ -------------------------------------------------------------------------------------
   subroutine emeta_destroy( mt )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(ExemplarMeta), intent(inout) :: mt
+    type(exemplar_meta_t), intent(inout) :: mt !!  reference to an exemplar_meta_t object.
     !/ -----------------------------------------------------------------------------------
 
     mt%n_sample = 0
@@ -224,14 +218,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   !/ =====================================================================================
   !> @brief Destructor.
-  !! @param[in,out] self reference to this ExemplarMeta object.
-  !! @return string number of samples, inputs and outputs.
   !/ -------------------------------------------------------------------------------------
   function emeta_to_string( self ) result( str )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    character(len=:),    allocatable   :: str
-    class(ExemplarMeta), intent(inout) :: self
+    character(len=:),       allocatable   :: str  !! number of samples, inputs and outputs.
+    class(exemplar_meta_t), intent(inout) :: self !! reference to this exemplar_meta_t object.
     !/ -----------------------------------------------------------------------------------
     character(32) :: work
     !/ -----------------------------------------------------------------------------------
@@ -247,20 +239,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   
   !/ =====================================================================================
   !> @brief Constructor.
-  !! @param[in,out] ep reference to an ExemplarPair object.
-  !! @param[in]     XA  optional number of inputs.
-  !! @param[in]     YA  optional number of outputs.
-  !! @param[out]    ERR optional error return value.
-  !!
-  !! 
   !/ -------------------------------------------------------------------------------------
   subroutine epair_create( ep, XA, YA, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(ExemplarPair),         intent(inout) :: ep
-    real(dp), optional, target, intent(inout) :: XA(:,:)
-    real(dp), optional, target, intent(inout) :: YA(:,:)
-    integer,  optional,         intent(out)   :: ERR
+    type(exemplar_pair_t),         intent(inout) :: ep      !! reference to an exemplar_pair_t object.
+    real(dp), optional, target,    intent(inout) :: XA(:,:) !! number of inputs.
+    real(dp), optional, target,    intent(inout) :: YA(:,:) !! number of outputs.
+    integer,  optional,            intent(out)   :: ERR     !! error return value.
     !/ -----------------------------------------------------------------------------------
     logical :: report
     integer :: ier
@@ -298,18 +284,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   
   !/ =====================================================================================
   !> @brief Constructor.
-  !! @param[in]     XA  optional number of inputs.
-  !! @param[in]     YA  optional number of outputs.
-  !! @param[out]    ERR optional error return value.
-  !! @return pointer to a new ExemplarPair object.
   !/ -------------------------------------------------------------------------------------
   function epair_allocate( XA, YA, ERR ) result( ep )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(ExemplarPair), pointer              :: ep
-    real(dp), optional, target, intent(inout) :: XA(:,:)
-    real(dp), optional, target, intent(inout) :: YA(:,:)
-    integer,  optional,         intent(out)   :: ERR
+    class(exemplar_pair_t), pointer           :: ep      !! pointer to a new exemplar_pair_t object.
+    real(dp), optional, target, intent(inout) :: XA(:,:) !! number of inputs.
+    real(dp), optional, target, intent(inout) :: YA(:,:) !! number of outputs.
+    integer,  optional,         intent(out)   :: ERR     !! error return value.
     !/ -----------------------------------------------------------------------------------
 
     allocate( ep )
@@ -320,12 +302,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   
   !/ =====================================================================================
   !> @brief Destructor.
-  !! @param[in,out] ep reference to an ExemplarPair object.
   !/ -------------------------------------------------------------------------------------
   subroutine epair_destroy( ep )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(ExemplarPair), intent(inout) :: ep
+    type(exemplar_pair_t), intent(inout) :: ep !! reference to an exemplar_pair_t object.
     !/ -----------------------------------------------------------------------------------
 
     if ( associated( ep%X ) ) deallocate( ep%X )
@@ -339,15 +320,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   !/ =====================================================================================
   !< @brief Transpose
-  !! @param[in,out] T reference to the transposed output.
-  !! @param[in,out] S reference to a source matrix.
   !/ -------------------------------------------------------------------------------------
   subroutine single_transpose_noalloc( T, S, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp), intent(inout) :: T(:,:)
-    real(dp), intent(inout) :: S(:,:)
-    integer, optional, intent(out) :: ERR
+    real(dp),          intent(inout) :: T(:,:) !! reference to the transposed output.
+    real(dp),          intent(inout) :: S(:,:) !! reference to a source matrix.
+    integer, optional, intent(out)   :: ERR    !! error return value.
     !/ -----------------------------------------------------------------------------------
     integer :: ier, i, j, n, m
     logical :: report
@@ -401,20 +380,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   !/ =====================================================================================
   !> @brief Get Transpose.
-  !! @param[in,out] self reference to this ExemplarPair object.
-  !! @param[in,out] pX   pointer to first  part array.
-  !! @param[in,out] pY   pointer to second part array.
-  !! @param[out]    ERR  optional error reporting.
-  !!
   !! @note it is the user's responsibility to deallocate X and Y.
   !/ -------------------------------------------------------------------------------------
   subroutine expair_get_transpose_pointer( self, pX, pY, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(ExemplarPair), intent(inout) :: self
-    real(dp), pointer,   intent(inout) :: pX(:,:)
-    real(dp), pointer,   intent(inout) :: pY(:,:)
-    integer,  optional,  intent(out)   :: ERR
+    class(exemplar_pair_t), intent(inout) :: self    !! reference to this exemplar_pair_t object.
+    real(dp), pointer,      intent(inout) :: pX(:,:) !! pointer to first  part array.
+    real(dp), pointer,      intent(inout) :: pY(:,:) !! pointer to second part array.
+    integer,  optional,     intent(out)   :: ERR     !! error reporting.
     !/ -----------------------------------------------------------------------------------
     logical :: report
     integer :: ier !, i, j, ni, nj
@@ -497,20 +471,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   !/ =====================================================================================
   !> @brief Get Transpose.
-  !! @param[in,out] self reference to this ExemplarPair object.
-  !! @param[in,out] X    allocatable first  part array.
-  !! @param[in,out] Y    allocatable second part array.
-  !! @param[out]    ERR  optional error reporting.
-  !!
   !! @note it is the user's responsibility to deallocate X and Y.
   !/ -------------------------------------------------------------------------------------
   subroutine expair_get_transpose_alloc( self, X, Y, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(ExemplarPair),   intent(inout) :: self
-    real(dp), allocatable, intent(inout) :: X(:,:)
-    real(dp), allocatable, intent(inout) :: Y(:,:)
-    integer,  optional,     intent(out)   :: ERR
+    class(exemplar_pair_t), intent(inout) :: self   !! reference to this exemplar_pair_t object.
+    real(dp), allocatable,  intent(inout) :: X(:,:) !! allocatable first  part array.
+    real(dp), allocatable,  intent(inout) :: Y(:,:) !! allocatable second part array.
+    integer,  optional,     intent(out)   :: ERR    !! error reporting.
     !/ -----------------------------------------------------------------------------------
     logical :: report
     integer :: ier !, i, j, ni, nj
@@ -591,7 +560,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   !/ =====================================================================================
   !> @brief Set Transpose.
-  !! @param[in,out] self reference to this ExemplarPair object.
+  !! @param[in,out] self reference to this exemplar_pair_t object.
   !! @param[in,out] X    first  part array.
   !! @param[in,out] Y    second part array.
   !!
@@ -599,9 +568,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   subroutine expair_set_transpose( self, X, Y )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(ExemplarPair), intent(inout) :: self
-    real(dp),            intent(inout) :: X(:,:)
-    real(dp),            intent(inout) :: Y(:,:)
+    class(exemplar_pair_t), intent(inout) :: self   !! 
+    real(dp),               intent(inout) :: X(:,:) !! 
+    real(dp),               intent(inout) :: Y(:,:) !! 
     !/ -----------------------------------------------------------------------------------
     !integer :: i, j, ni, nj
     !/ -----------------------------------------------------------------------------------
@@ -670,9 +639,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   subroutine emeta_read( met, FILE, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(ExemplarMeta), intent(inout) :: met
-    character(*),       intent(in)    :: FILE
-    integer, optional,  intent(out)   :: ERR
+    type(exemplar_meta_t), intent(inout) :: met  !! 
+    character(*),          intent(in)    :: FILE !! 
+    integer, optional,     intent(out)   :: ERR  !! 
     !/ -----------------------------------------------------------------------------------
     logical :: report
     integer :: ier, inf, a, b, c
@@ -756,9 +725,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   subroutine emeta_write( met, FILE, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(ExemplarMeta), intent(inout) :: met
-    character(*),       intent(in)    :: FILE
-    integer, optional,  intent(out)   :: ERR
+    type(exemplar_meta_t), intent(inout) :: met  !! 
+    character(*),          intent(in)    :: FILE !! 
+    integer, optional,     intent(out)   :: ERR  !! 
     !/ -----------------------------------------------------------------------------------
     logical :: report
     integer :: ier, outf
@@ -831,11 +800,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   function internal_read_single( unit, NS, NF, ERR ) result( ary )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp),          pointer     :: ary(:,:)
-    integer,           intent(in)  :: unit
-    integer,           intent(in)  :: NS
-    integer,           intent(in)  :: NF
-    integer, optional, intent(out) :: ERR
+    real(dp),          pointer     :: ary(:,:) !! 
+    integer,           intent(in)  :: unit     !! 
+    integer,           intent(in)  :: NS       !! 
+    integer,           intent(in)  :: NF       !! 
+    integer, optional, intent(out) :: ERR      !! 
     !/ -----------------------------------------------------------------------------------
     logical :: report
     integer :: ier, f, s
@@ -875,10 +844,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   subroutine internal_write_single( ary, unit, FMT, ERR )  
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp),               intent(inout) :: ary(:,:)
-    integer,                intent(in)    :: unit
-    character(*), optional, intent(in)    :: FMT
-    integer,      optional, intent(out)   :: ERR
+    real(dp),               intent(inout) :: ary(:,:) !! 
+    integer,                intent(in)    :: unit     !! 
+    character(*), optional, intent(in)    :: FMT      !! 
+    integer,      optional, intent(out)   :: ERR      !! 
     !/ -----------------------------------------------------------------------------------
     logical                       :: report
     integer                       :: ier, f, s, ns, nf
@@ -921,7 +890,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   !/ =====================================================================================
   !> @brief Internal Read.
-  !! @param[in,out] pair reference to an ExemplarPair object.
+  !! @param[in,out] pair reference to an exemplar_pair_t object.
   !! @param[in]     unit file unit.
   !! @param[in]     NS   number of samples
   !! @param[in]     NX   number of columns in first  part to read.
@@ -933,12 +902,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   subroutine internal_read_pair( pair, unit, NS, NX, NY, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(ExemplarPair), intent(inout) :: pair
-    integer,            intent(in)    :: unit
-    integer,            intent(in)    :: NS
-    integer,            intent(in)    :: NX
-    integer,            intent(in)    :: NY
-    integer, optional,  intent(out)   :: ERR
+    type(exemplar_pair_t), intent(inout) :: pair !! 
+    integer,               intent(in)    :: unit !! 
+    integer,               intent(in)    :: NS   !! 
+    integer,               intent(in)    :: NX   !! 
+    integer,               intent(in)    :: NY   !! 
+    integer, optional,     intent(out)   :: ERR  !! 
     !/ -----------------------------------------------------------------------------------
     logical :: report
     integer :: ier, f1, f2, s, tt
@@ -996,12 +965,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   subroutine internal_write_pair( X, Y, unit, FMT, FMT2, ERR )  
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp),               intent(inout) :: X(:,:)
-    real(dp),               intent(inout) :: Y(:,:)
-    integer,                intent(in)    :: unit
-    character(*), optional, intent(in)    :: FMT
-    character(*), optional, intent(in)    :: FMT2
-    integer,      optional, intent(out)   :: ERR
+    real(dp),               intent(inout) :: X(:,:) !! 
+    real(dp),               intent(inout) :: Y(:,:) !! 
+    integer,                intent(in)    :: unit   !! 
+    character(*), optional, intent(in)    :: FMT    !! 
+    character(*), optional, intent(in)    :: FMT2   !! 
+    integer,      optional, intent(out)   :: ERR    !! 
     !/ -----------------------------------------------------------------------------------
     logical                       :: report
     integer                       :: ier, f1, f2, s, ns, n1, n2
@@ -1069,16 +1038,16 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   subroutine exemp_write_single( DATA, FILE, META, MODE, FMT, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp),               intent(inout) :: DATA(:,:)
-    character(*),           intent(in)    :: FILE
-    character(*), optional, intent(in)    :: META
-    character(1), optional, intent(in)    :: MODE
-    character(*), optional, intent(in)    :: FMT
-    integer,      optional, intent(out)   :: ERR
+    real(dp),               intent(inout) :: DATA(:,:) !! 
+    character(*),           intent(in)    :: FILE      !! 
+    character(*), optional, intent(in)    :: META      !! 
+    character(1), optional, intent(in)    :: MODE      !! 
+    character(*), optional, intent(in)    :: FMT       !! 
+    integer,      optional, intent(out)   :: ERR       !! 
     !/ -----------------------------------------------------------------------------------
     logical :: report
     integer :: ier, ns, nx, outf
-    type(ExemplarMeta) :: met
+    type(exemplar_meta_t) :: met
     !/ -----------------------------------------------------------------------------------
 
     ier    = 0
@@ -1170,18 +1139,18 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   subroutine exemp_write_pair( X, Y, FILE, META, MODE, FMT, FMT2, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp),               intent(inout) :: X(:,:)
-    real(dp),               intent(inout) :: Y(:,:)
-    character(*),           intent(in)    :: FILE
-    character(*), optional, intent(in)    :: META
-    character(1), optional, intent(in)    :: MODE
-    character(*), optional, intent(in)    :: FMT
-    character(*), optional, intent(in)    :: FMT2
-    integer,      optional, intent(out)   :: ERR
+    real(dp),               intent(inout) :: X(:,:) !! 
+    real(dp),               intent(inout) :: Y(:,:) !! 
+    character(*),           intent(in)    :: FILE   !! 
+    character(*), optional, intent(in)    :: META   !! 
+    character(1), optional, intent(in)    :: MODE   !! 
+    character(*), optional, intent(in)    :: FMT    !! 
+    character(*), optional, intent(in)    :: FMT2   !! 
+    integer,      optional, intent(out)   :: ERR    !! 
     !/ -----------------------------------------------------------------------------------
     logical            :: report
     integer            :: ier, ns, nx, ny, outf
-    type(ExemplarMeta) :: met
+    type(exemplar_meta_t) :: met
     !/ -----------------------------------------------------------------------------------
 
     ier    = 0
@@ -1281,16 +1250,16 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   function exemp_read_single( FILE, META, NS, NX, ERR ) result( X )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp),     pointer               :: X(:,:)
-    character(*),           intent(in)  :: FILE
-    character(*), optional, intent(in)  :: META
-    integer,      optional, intent(in)  :: NS
-    integer,      optional, intent(in)  :: NX
-    integer,      optional, intent(out) :: ERR
+    real(dp),     pointer               :: X(:,:) !! 
+    character(*),           intent(in)  :: FILE   !! 
+    character(*), optional, intent(in)  :: META   !! 
+    integer,      optional, intent(in)  :: NS     !! 
+    integer,      optional, intent(in)  :: NX     !! 
+    integer,      optional, intent(out) :: ERR    !! 
     !/ -----------------------------------------------------------------------------------
     logical            :: report
     integer            :: ier, n_sam, n_x, inf
-    type(ExemplarMeta) :: met
+    type(exemplar_meta_t) :: met
     !/ -----------------------------------------------------------------------------------
 
     ier    = 0
@@ -1364,7 +1333,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   !/ =====================================================================================
   !> @brief Write.
-  !! @param[in,out] PAIR reference to an ExemplarPair object.
+  !! @param[in,out] PAIR reference to an exemplar_pair_t object.
   !! @param[in]     FILE path to the data file.
   !! @param[in]     META optional path to a meta file.
   !! @param[in]     NS   optional number of samples.
@@ -1378,17 +1347,17 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   subroutine exemp_read_pair( PAIR, FILE, META, NS, NX, NY, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(ExemplarPair),     intent(inout) :: PAIR
-    character(*),           intent(in)    :: FILE
-    character(*), optional, intent(in)    :: META
-    integer,      optional, intent(in)    :: NS
-    integer,      optional, intent(in)    :: NX
-    integer,      optional, intent(in)    :: NY
-    integer,      optional, intent(out)   :: ERR
+    type(exemplar_pair_t),  intent(inout) :: PAIR !! 
+    character(*),           intent(in)    :: FILE !! 
+    character(*), optional, intent(in)    :: META !! 
+    integer,      optional, intent(in)    :: NS   !! 
+    integer,      optional, intent(in)    :: NX   !! 
+    integer,      optional, intent(in)    :: NY   !! 
+    integer,      optional, intent(out)   :: ERR  !! 
     !/ -----------------------------------------------------------------------------------
     logical            :: report
     integer            :: ier, n_sam, n_x, n_y, inf
-    type(ExemplarMeta) :: met
+    type(exemplar_meta_t) :: met
     character(128)     :: line_buffer
     !/ -----------------------------------------------------------------------------------
 

@@ -51,7 +51,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 subroutine MTest
   !/ -------------------------------------------------------------------------------------
   implicit none
-  type(ExemplarPair)  :: E
+  type(exemplar_pair_t)  :: E
   real(dp), parameter :: sig     = 0.36
   class(BPN2), pointer :: net, test_net
   integer             :: num_inp, num_out, num_hid
@@ -88,7 +88,7 @@ subroutine LTest
   integer,  parameter :: report  = 1000
   real(dp), parameter :: eta     = 0.5
   !/ -------------------------------------------------------------------------------------
-  type(ExemplarPair)  :: E
+  type(exemplar_pair_t)  :: E
   integer             :: m, g, i, j, k, outf
   class(BPN2), pointer :: net
   real(dp) :: cost, err
@@ -136,7 +136,7 @@ end subroutine LTest
 subroutine VTest
   !/ -------------------------------------------------------------------------------------
   implicit none
-  type(ExemplarPair)  :: E
+  type(exemplar_pair_t)  :: E
   integer             :: m, i,j
   class(BPN2), pointer :: net
   real(dp), allocatable :: T(:,:)

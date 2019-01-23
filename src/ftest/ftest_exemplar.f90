@@ -21,17 +21,18 @@
 !/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 !/ **                                                                                   **
 !/ ----- Modification History ------------------------------------------------------------
-!
-!> @brief   .
+!! author:  Stephen W. Soliday
+!! date:    2018-11-22
+!! license: GPL
 !!
-!! @details Provides the interface and procedures for .
+!!##Exemplar Test
 !!
-!! @author  Stephen W. Soliday
-!! @date    2018-NOV-22
+!! Provides the interface and procedures for .
 !
 !/ =======================================================================================
 module exptest
   !/ -------------------------------------------------------------------------------------
+  use trncmp_env
   use exemplar_class
   implicit none
 
@@ -171,7 +172,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     real(dp), pointer :: X0(:,:), Y0(:,:)
-    type(ExemplarPair) :: P1, P2, P3
+    type(exemplar_pair_t) :: P1, P2, P3
     integer :: rv
     !/ -----------------------------------------------------------------------------------
 

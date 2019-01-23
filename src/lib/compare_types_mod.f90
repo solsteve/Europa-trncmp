@@ -27,14 +27,16 @@ module compare_types_mod
   !! date:   2018-06-03
   !! license: GPL
   !! 
-  !!##Tran-Comp Environment
+  !!## Comparison.
   !! 
-  !! Compare unlimited polymorphic
+  !! IEEE-754 safe floating-point comparison, and unlimited polymorphic objects.
   ! 
   !/ -------------------------------------------------------------------------------------
   use iso_fortran_env
   implicit none
   private
+
+  public :: compare, isZero, isEqual
 
   integer, parameter :: qp=REAL128
   integer, parameter :: dp=REAL64
@@ -43,8 +45,6 @@ module compare_types_mod
   interface compare
      module procedure :: compare_objects
   end interface compare
-
-  public :: compare
 
   !/ -------------------------------------------------------------------------------------
   interface isZero
@@ -59,13 +59,10 @@ module compare_types_mod
      module procedure :: is_equal_single
      module procedure :: is_equal_double
   end interface isEqual
-     
-  public :: isZero
-  public :: isEqual
 
 
 
-  
+
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================

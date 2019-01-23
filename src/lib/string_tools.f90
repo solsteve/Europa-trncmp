@@ -34,9 +34,12 @@ module string_tools
   implicit none
   private
 
+  public :: string_splitter, split, toString, strcmp, find_any, find_in, count_char,    &
+       &    toUpper, toLower, containedBy, asInteger,  asReal4, asReal8, asIntegerList, &
+       &    asReal4List, asReal8List
 
   !/ -------------------------------------------------------------------------------------
-  type, public :: string_splitter
+  type :: string_splitter
      !/ ----------------------------------------------------------------------------------
 
      character(len=:), allocatable :: work_string
@@ -61,12 +64,6 @@ module string_tools
   end interface split
 
   !/ -------------------------------------------------------------------------------------
-  interface strcmp
-     !/ ----------------------------------------------------------------------------------
-     module procedure :: string_compare
-  end interface strcmp
-
-  !/ -------------------------------------------------------------------------------------
   interface toString
      !/ ----------------------------------------------------------------------------------
      procedure :: to_string_integer
@@ -76,25 +73,6 @@ module string_tools
      procedure :: to_string_real4_vec
      procedure :: to_string_real8_vec
   end interface toString
-
-  public :: split
-  public :: toString
-
-  public :: strcmp
-  public :: find_any
-  public :: find_in
-  public :: count_char
-  public :: toUpper
-  public :: toLower
-  public :: containedBy
-
-  public :: asInteger
-  public :: asReal4
-  public :: asReal8
-
-  public :: asIntegerList
-  public :: asReal4List
-  public :: asReal8List
 
 
 
@@ -106,34 +84,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   
-  !/ =====================================================================================
-  function string_compare( lhs, rhs ) result( cmp )
-    !/ -----------------------------------------------------------------------------------
-    !! Compare two strings
-    !!
-    !! |  cmp   | condition    |
-    !! | :----: | ------------ |
-    !! |   -1   | lhs .lt. rhs |
-    !! |    0   | lhs .eq. rhs |
-    !! |   +1   | lhs .gt. rhs |
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    character(*), intent(in) :: lhs !! left  hand side string
-    character(*), intent(in) :: rhs !! right hand side string
-    integer                  :: cmp !! result
-    !/ -----------------------------------------------------------------------------------
-    cmp = 0
-    if ( llt( lhs, rhs ) ) then
-       cmp = -1
-    else
-       if ( lgt( lhs, rhs ) ) then
-          cmp = 1
-       end if
-    end if
-
-  end function string_compare
-
-
   !/ =====================================================================================
   function find_any( src, test, pos ) result( idx )
     !/ -----------------------------------------------------------------------------------
@@ -445,8 +395,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function asReal8
 
 
-
-
   !/ =====================================================================================
   function asIntegerList( str ) result( ary )
     !/ -----------------------------------------------------------------------------------
@@ -531,8 +479,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function asReal8List
 
 
-
-
   !/ =====================================================================================
   function to_string_integer( num, fmt ) result( str )
     !/ -----------------------------------------------------------------------------------
@@ -600,14 +546,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     str = trim(work)
     
   end function to_string_real8
-
-
-
-
-
-
-
-
 
 
   !/ =====================================================================================
@@ -705,14 +643,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   end function to_string_real8_vec
 
-  
-
-
-
-
-
-
-  
 
 end module string_tools
 

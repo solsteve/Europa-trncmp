@@ -23,13 +23,12 @@
 !/ =======================================================================================
 module fft_mod
   !/ -------------------------------------------------------------------------------------
-  !! author:  Stephen W. Soliday
-  !! date:    2018-11-23
-  !! license: GPL
-  !!
   !! Provides an implementation of the Cooley-Tukey Fast Fouier Transform, and
   !! auto correlation.
   !!
+  !! author:  Stephen W. Soliday
+  !! date:    2018-11-23
+  !! license: GPL
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
 

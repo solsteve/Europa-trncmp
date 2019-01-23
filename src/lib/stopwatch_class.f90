@@ -27,40 +27,41 @@ module stopwatch_class
   !! date:    2018-06-23
   !! license: GPL
   !!
-  !! Provides a class for performing high resolution timing.
+  !!##Stop Watch
   !!
+  !! Provides a class for performing high resolution timing.
+  !
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
   implicit none
   private
 
+  public :: stopwatch
 
   !/ =====================================================================================
   type :: stopwatch
-  !/ ----------------------------------------------------------------------------------
-  real(dp) :: start_time = 0.0d0
+     !/ ----------------------------------------------------------------------------------
+     real(dp) :: start_time = 0.0d0
 
-contains
+   contains
 
-  procedure :: sw_reset_internals
+     procedure :: sw_reset_internals
 
-  procedure, public :: reset => sw_reset_internals
-  procedure, public :: check => sw_get_diff_time
+     procedure, public :: reset => sw_reset_internals
+     procedure, public :: check => sw_get_diff_time
 
-end type stopwatch
+  end type stopwatch
 
-!/ -------------------------------------------------------------------------------------
-interface stopwatch
-   !/ -----------------------------------------------------------------------------------
-  module procedure sw_create
-end interface stopwatch
-
-public :: stopwatch
+  !/ -------------------------------------------------------------------------------------
+  interface stopwatch
+     !/ -----------------------------------------------------------------------------------
+     module procedure sw_create
+  end interface stopwatch
 
 
 
 
-!/ =====================================================================================
+  !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
 
@@ -74,12 +75,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     !/ -----------------------------------------------------------------------------------
-    
+
     call sw_create%sw_reset_internals()
-    
+
   end function sw_create
 
-  
+
   !/ =====================================================================================
   subroutine sw_reset_internals( self )
     !/ -----------------------------------------------------------------------------------
@@ -89,11 +90,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     class(stopwatch) :: self  !! reference to this stop watch.
     !/ -----------------------------------------------------------------------------------
-    
+
     call cpu_time( self%start_time )
-    
+
   end subroutine sw_reset_internals
-  
+
 
   !/ =====================================================================================
   function sw_get_diff_time( self ) result( diff )
@@ -107,10 +108,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     real(dp) :: t
     !/ -----------------------------------------------------------------------------------
-    
+
     call cpu_time( t )
     diff = t - self%start_time
-    
+
   end function sw_get_diff_time
 
 

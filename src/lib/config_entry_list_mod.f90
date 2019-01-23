@@ -27,6 +27,8 @@ module config_entry_list_mod
   !! date:    2018-12-07
   !! license: GPL
   !!
+  !!## List of Config Entries
+  !!
   !! Provides a simple dynamic array of configuration file section entries.
   !!
   !/ -------------------------------------------------------------------------------------

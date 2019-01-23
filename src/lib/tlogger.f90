@@ -27,12 +27,19 @@ module tlogger
   !! date:    2015-12-04
   !! license: GPL
   !!
+  !!##TRAN-COMP Logging
+  !!
   !! Provides console and file logging system with custom abort.
   !
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
   implicit none
   private
+
+  public ::  tlogger_abort_handler, tlogger_ah_ptr, tlogger_set, tlogger_set_abort_handler, &
+       &     tlogger_enable, tlogger_disable, tlogger_enable_file, tlogger_disable_file,    &
+       &     tlogger_enable_console, tlogger_disable_console, log_critical, log_error,      &
+       &     log_warn, log_info, log_debug, log_timestamp
 
   integer, public,  parameter :: tlogger_unset    = 0 !! level not set
   integer, public,  parameter :: tlogger_critical = 1 !! level set for only critical
@@ -75,25 +82,6 @@ module tlogger
   end interface
 
   procedure(tlogger_abort_handler), pointer :: tlogger_ah_ptr => tlogger_default_abort_handler
-
-
-  public :: tlogger_abort_handler
-  public :: tlogger_ah_ptr
-
-  public :: tlogger_set
-  public :: tlogger_set_abort_handler
-  public :: tlogger_enable
-  public :: tlogger_disable
-  public :: tlogger_enable_file
-  public :: tlogger_disable_file
-  public :: tlogger_enable_console
-  public :: tlogger_disable_console
-  public :: log_critical
-  public :: log_error
-  public :: log_warn
-  public :: log_info
-  public :: log_debug
-  public :: log_timestamp
 
 
 

@@ -27,12 +27,17 @@ module poly_cast_mod
   !! date:    2018-05-06
   !! license: GPL
   !!
+  !!##Cast Polymorphic.
+  !!
   !! Provides a double linked list of integers by wrapping the procedures from the
   !! object_deque_class module.
+  !
   !/ -------------------------------------------------------------------------------------
   use iso_fortran_env
   implicit none
   private
+
+  public :: toObject, castCharacter, castLogical, castInteger, castSingle, castDouble, castComplex
 
   integer, parameter :: qp=REAL128
   integer, parameter :: dp=REAL64
@@ -91,15 +96,6 @@ module poly_cast_mod
      !/ ----------------------------------------------------------------------------------
      module procedure :: object_to_complex
   end interface castComplex
-
-
-  public :: toObject
-  public :: castCharacter
-  public :: castLogical
-  public :: castInteger
-  public :: castSingle
-  public :: castDouble
-  public :: castComplex
 
 
   

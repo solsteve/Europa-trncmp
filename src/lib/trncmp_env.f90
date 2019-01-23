@@ -23,14 +23,14 @@
 !/ =======================================================================================
 module trncmp_env
   !/ -------------------------------------------------------------------------------------
-  !! author: Stephen W. Soliday
-  !! date:   2017-03-30
+  !! author:  Stephen W. Soliday
+  !! date:    2017-03-30
   !! license: GPL
-  !! 
-  !!##Tran-Comp Environment
-  !! 
+  !!
+  !!## Tran-Comp Environment.
+  !!
   !! Collection of definitions for common developmental environment
-  ! 
+  !
   !/ -------------------------------------------------------------------------------------
   use constants_env
   use math_aux
@@ -51,14 +51,17 @@ module trncmp_env
   
   integer, public, parameter :: MAX_PATH = 128 !! Maximum charaters in file path
 
-  
     !/ -------------------------------------------------------------------------------------
   interface LEQ
      !/ ----------------------------------------------------------------------------------
      module procedure :: lexical_equals
   end interface LEQ
 
-  public :: LEQ
+  !/ -------------------------------------------------------------------------------------
+  interface strcmp
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: string_compare
+  end interface strcmp
 
 
 
@@ -72,6 +75,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   
   !/ =====================================================================================
   function lexical_equals( lhs, rhs ) result( cmp )
+    !/ -----------------------------------------------------------------------------------
+    !! Lexical equal to.
+    !!
+    !! Determines whether one string is lexically equal to another string, where the two
+    !! strings are interpreted as containing ASCII character codes. 
     !/ -----------------------------------------------------------------------------------
     implicit none
     character(*), intent(in) :: lhs !! left  hand side string
@@ -88,6 +96,34 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end if
 
   end function lexical_equals
+
+  
+  !/ =====================================================================================
+  function string_compare( lhs, rhs ) result( cmp )
+    !/ -----------------------------------------------------------------------------------
+    !! Compare two strings
+    !!
+    !! | cmp  | condition  |
+    !! |:----:|------------|
+    !! |  -1  |lhs .lt. rhs|
+    !! |   0  |lhs .eq. rhs|
+    !! |  +1  |lhs .gt. rhs|
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    character(*), intent(in) :: lhs !! left  hand side string
+    character(*), intent(in) :: rhs !! right hand side string
+    integer                  :: cmp !! result
+    !/ -----------------------------------------------------------------------------------
+    cmp = 0
+    if ( llt( lhs, rhs ) ) then
+       cmp = -1
+    else
+       if ( lgt( lhs, rhs ) ) then
+          cmp = 1
+       end if
+    end if
+
+  end function string_compare
 
 
 end module trncmp_env

@@ -37,7 +37,7 @@ module constants_env
   !!   * PI is derived from the intrinsic function ACOS(-1.0D0) and
   !!   * Napier's constant E is derived from EXP(1.0D0)
   !!
-  !!@note This provides better accuracy when using the built-in intrinsic
+  !! note: This provides better accuracy when using the built-in intrinsic
   !! trigonometry and logarithmic functions.
   !
   !/ -------------------------------------------------------------------------------------
@@ -47,9 +47,9 @@ module constants_env
   public :: OUTPUT_UNIT
   public :: ERROR_UNIT
 
-  integer, public, parameter :: qp=REAL128
-  integer, public, parameter :: dp=REAL64
-  integer, public, parameter :: sp=REAL32
+  integer, public, parameter :: qp=REAL128   !! 16 byte floating point
+  integer, public, parameter :: dp=REAL64    !! 8  byte floating point
+  integer, public, parameter :: sp=REAL32    !! 4  byte floating point
 
   real(dp), public, parameter :: N_ZERO      = 0.0d0              !! 0
   real(dp), public, parameter :: N_HALF      = 5.0d-1             !! 1/2
@@ -121,7 +121,7 @@ module constants_env
 
   real(dp), public, parameter :: N_EULER     = 5.7721566490153286554942724D-01 !! Euler constant
 
-  real(dp), public, parameter :: N_EPSILON   =  epsilon(1.0_dp)
+  real(dp), public, parameter :: N_EPSILON   =  epsilon(1.0_dp) !! smallest number
   real(dp), public, parameter :: N_MAX_POS   =  huge(0.0d0)     !! Use this to init min_value
   real(dp), public, parameter :: N_MAX_NEG   = -huge(0.0d0)     !! Use this to init max_value
 

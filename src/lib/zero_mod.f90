@@ -37,6 +37,8 @@ module zero_mod
 
   !/ -------------------------------------------------------------------------------------
 
+  public :: zero
+  
   private :: zero_char_1d
   
   private :: zero_I4_1d
@@ -97,9 +99,6 @@ module zero_mod
      module procedure :: zero_C16_4d
 
   end interface zero
-
-
-  public :: zero
 
 
 

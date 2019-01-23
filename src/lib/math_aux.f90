@@ -27,19 +27,29 @@ module math_aux
   !! date:   2015-10-23
   !! license: GPL
   !!
-  !!##Auxillary Mathematical Functions
+  !!## Auxillary Mathematical Procedures
   !!
+  !! Provides a set of additional math procedures.
+  !!
+  !! todo: add a four quadrant arctangent procedure.
+  !
   !/ -------------------------------------------------------------------------------------
   use constants_env
   implicit none
 
-  private :: sum_one_to_n
+  public :: nsum, n2sum
 
+  private :: sum_one_to_n, sumsq_one_to_n
+
+  !/ -------------------------------------------------------------------------------------
   interface nsum
+     !/ ----------------------------------------------------------------------------------
      module procedure :: sum_one_to_n
   end interface nsum
 
+  !/ -------------------------------------------------------------------------------------
   interface n2sum
+     !/ ----------------------------------------------------------------------------------
      module procedure :: sumsq_one_to_n
   end interface n2sum
 
@@ -64,6 +74,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     s = n*(n + 1)/2
   end function sum_one_to_n
 
+  
    !/ =====================================================================================
   pure function sumsq_one_to_n( n ) result( s )
     !/ -----------------------------------------------------------------------------------
@@ -75,9 +86,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     s = n*(n + 1)*(2*n + 1)/6
     !s = n*n*n/3 + n*n/2 + n/6
   end function sumsq_one_to_n
+
   
   end module math_aux
 
+  
   !/ =======================================================================================
   !/ **                                  M A T H _ A U X                                  **
   !/ =========================================================================== END FILE ==

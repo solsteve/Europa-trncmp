@@ -27,6 +27,8 @@ module btree_object_class
   !! date:    2018-06-04
   !! license: GPL
   !!
+  !!## Binary Tree
+  !!
   !! Provides a binary search tree of unlimited polymorphic objects.
   !!
   !/ -------------------------------------------------------------------------------------

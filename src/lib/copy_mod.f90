@@ -27,7 +27,7 @@ module copy_mod
   !! date:   2015-10-23
   !! license: GPL
   !!
-  !!##Copy procedures.
+  !!##Copy Procedures
   !!
   !! Copies arrays of multiple dimensions and types.
   !

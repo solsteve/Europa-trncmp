@@ -23,12 +23,11 @@
 !! =======================================================================================
 module file_tools
   !! -------------------------------------------------------------------------------------
+  !! Provides a collection of tools for manipulating files.
+  !!
   !! author:  Stephen W. Soliday
   !! date:    2017-03-27
   !! license: GPL
-  !!
-  !! Provides a collection of tools for manipulating files.
-  !!
   !! -------------------------------------------------------------------------------------
   use string_tools
   implicit none
