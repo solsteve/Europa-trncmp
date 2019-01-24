@@ -153,6 +153,8 @@ module exemplar_class
   end interface SingleTranspose
 
 
+
+  
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
@@ -161,7 +163,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   
   !/ =====================================================================================
-  !> @brief Constructor.
+  !! Constructor.
   !/ -------------------------------------------------------------------------------------
   subroutine emeta_create( mt, R, X, Y )
     !/ -----------------------------------------------------------------------------------
@@ -183,7 +185,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end subroutine emeta_create
 
   !/ =====================================================================================
-  !> @brief Constructor.
+  !! Constructor.
   !/ -------------------------------------------------------------------------------------
   function emeta_allocate( R, X, Y ) result( mt )
     !/ -----------------------------------------------------------------------------------
@@ -201,7 +203,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   
   !/ =====================================================================================
-  !> @brief Destructor.
+  !! Destructor.
   !/ -------------------------------------------------------------------------------------
   subroutine emeta_destroy( mt )
     !/ -----------------------------------------------------------------------------------
@@ -217,7 +219,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Destructor.
+  !! Destructor.
   !/ -------------------------------------------------------------------------------------
   function emeta_to_string( self ) result( str )
     !/ -----------------------------------------------------------------------------------
@@ -238,7 +240,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   
   !/ =====================================================================================
-  !> @brief Constructor.
+  !! Constructor.
   !/ -------------------------------------------------------------------------------------
   subroutine epair_create( ep, XA, YA, ERR )
     !/ -----------------------------------------------------------------------------------
@@ -283,7 +285,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   
   !/ =====================================================================================
-  !> @brief Constructor.
+  !! Constructor.
   !/ -------------------------------------------------------------------------------------
   function epair_allocate( XA, YA, ERR ) result( ep )
     !/ -----------------------------------------------------------------------------------
@@ -301,7 +303,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   
   !/ =====================================================================================
-  !> @brief Destructor.
+  !! Destructor.
   !/ -------------------------------------------------------------------------------------
   subroutine epair_destroy( ep )
     !/ -----------------------------------------------------------------------------------
@@ -379,8 +381,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   
 
   !/ =====================================================================================
-  !> @brief Get Transpose.
-  !! @note it is the user's responsibility to deallocate X and Y.
+  !! Get Transpose.
+  !! note: it is the user's responsibility to deallocate X and Y.
   !/ -------------------------------------------------------------------------------------
   subroutine expair_get_transpose_pointer( self, pX, pY, ERR )
     !/ -----------------------------------------------------------------------------------
@@ -470,8 +472,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   
 
   !/ =====================================================================================
-  !> @brief Get Transpose.
-  !! @note it is the user's responsibility to deallocate X and Y.
+  !! Get Transpose.
+  !! note: it is the user's responsibility to deallocate X and Y.
   !/ -------------------------------------------------------------------------------------
   subroutine expair_get_transpose_alloc( self, X, Y, ERR )
     !/ -----------------------------------------------------------------------------------
@@ -559,18 +561,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Set Transpose.
-  !! @param[in,out] self reference to this exemplar_pair_t object.
-  !! @param[in,out] X    first  part array.
-  !! @param[in,out] Y    second part array.
-  !!
+  !! Set Transpose.
   !/ -------------------------------------------------------------------------------------
   subroutine expair_set_transpose( self, X, Y )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(exemplar_pair_t), intent(inout) :: self   !! 
-    real(dp),               intent(inout) :: X(:,:) !! 
-    real(dp),               intent(inout) :: Y(:,:) !! 
+    class(exemplar_pair_t), intent(inout) :: self   !! reference to this exemplar_pair_t object.
+    real(dp),               intent(inout) :: X(:,:) !! first  part array.
+    real(dp),               intent(inout) :: Y(:,:) !! second part array.
     !/ -----------------------------------------------------------------------------------
     !integer :: i, j, ni, nj
     !/ -----------------------------------------------------------------------------------
@@ -629,19 +627,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Read.
-  !! @param[in,out] met  reference to the meta data
-  !! @param[in]     FILE path to the metat data file.
-  !! @param[in]     ERR  optional error return.
-  !!
+  !! Read.
   !! Read the single line meta data from a file: either (nr nx ny) or (nr nx)
   !/ -------------------------------------------------------------------------------------
   subroutine emeta_read( met, FILE, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(exemplar_meta_t), intent(inout) :: met  !! 
-    character(*),          intent(in)    :: FILE !! 
-    integer, optional,     intent(out)   :: ERR  !! 
+    type(exemplar_meta_t), intent(inout) :: met  !! reference to the meta data.
+    character(*),          intent(in)    :: FILE !! path to the metat data file.
+    integer, optional,     intent(out)   :: ERR  !! error return.
     !/ -----------------------------------------------------------------------------------
     logical :: report
     integer :: ier, inf, a, b, c
@@ -715,19 +709,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Read.
-  !! @param[in,out] met  reference to the meta data
-  !! @param[in]     FILE path to the metat data file.
-  !! @param[in]     ERR  optional error return.
-  !!
+  !! Read.
   !! Read the single line meta data from a file: either (nr nx ny) or (nr nx)
   !/ -------------------------------------------------------------------------------------
   subroutine emeta_write( met, FILE, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(exemplar_meta_t), intent(inout) :: met  !! 
-    character(*),          intent(in)    :: FILE !! 
-    integer, optional,     intent(out)   :: ERR  !! 
+    type(exemplar_meta_t), intent(inout) :: met  !! reference to the meta data.
+    character(*),          intent(in)    :: FILE !! path to the metat data file.
+    integer, optional,     intent(out)   :: ERR  !! error return.
     !/ -----------------------------------------------------------------------------------
     logical :: report
     integer :: ier, outf
@@ -788,23 +778,17 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Internal Read.
-  !! @param[in] unit file unit.
-  !! @param[in] NS   number of samples.
-  !! @param[in] NF   number of fields.
-  !! @param[in] ERR  optional error return.
-  !! @return pointer to a new array.
-  !!
-  !! @note the row/first index is the field, col/second index is the sample.
+  !! Internal Read.
+  !! note: the row/first index is the field, col/second index is the sample.
   !/ -------------------------------------------------------------------------------------
   function internal_read_single( unit, NS, NF, ERR ) result( ary )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp),          pointer     :: ary(:,:) !! 
-    integer,           intent(in)  :: unit     !! 
-    integer,           intent(in)  :: NS       !! 
-    integer,           intent(in)  :: NF       !! 
-    integer, optional, intent(out) :: ERR      !! 
+    real(dp),          pointer     :: ary(:,:) !! pointer to a new array.
+    integer,           intent(in)  :: unit     !! file unit.
+    integer,           intent(in)  :: NS       !! number of samples.
+    integer,           intent(in)  :: NF       !! number of fields.
+    integer, optional, intent(out) :: ERR      !! error return.
     !/ -----------------------------------------------------------------------------------
     logical :: report
     integer :: ier, f, s
@@ -833,21 +817,16 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function internal_read_single
 
   !/ =====================================================================================
-  !> @brief Internal Write.
-  !! @param[in,out] ary  data array.
-  !! @param[in]     unit file unit.
-  !! @param[in]     FMT  optional edit descriptor.
-  !! @param[in]     ERR  optional error return.
-  !!
-  !! @note the row/first index is the field, col/second index is the sample.
+  !! Internal Write.
+  !! note: the row/first index is the field, col/second index is the sample.
   !/ -------------------------------------------------------------------------------------
   subroutine internal_write_single( ary, unit, FMT, ERR )  
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp),               intent(inout) :: ary(:,:) !! 
-    integer,                intent(in)    :: unit     !! 
-    character(*), optional, intent(in)    :: FMT      !! 
-    integer,      optional, intent(out)   :: ERR      !! 
+    real(dp),               intent(inout) :: ary(:,:) !! data array.
+    integer,                intent(in)    :: unit     !! file unit.
+    character(*), optional, intent(in)    :: FMT      !! edit descriptor.
+    integer,      optional, intent(out)   :: ERR      !! error return.
     !/ -----------------------------------------------------------------------------------
     logical                       :: report
     integer                       :: ier, f, s, ns, nf
@@ -889,25 +868,18 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Internal Read.
-  !! @param[in,out] pair reference to an exemplar_pair_t object.
-  !! @param[in]     unit file unit.
-  !! @param[in]     NS   number of samples
-  !! @param[in]     NX   number of columns in first  part to read.
-  !! @param[in]     NY   number of columns in second part to read.
-  !! @param[in]     ERR  optional error return.
-  !!
-  !! @note the row/first index is the field, col/second index is the sample.
+  !! Internal Read.
+  !! note: the row/first index is the field, col/second index is the sample.
   !/ -------------------------------------------------------------------------------------
   subroutine internal_read_pair( pair, unit, NS, NX, NY, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(exemplar_pair_t), intent(inout) :: pair !! 
-    integer,               intent(in)    :: unit !! 
-    integer,               intent(in)    :: NS   !! 
-    integer,               intent(in)    :: NX   !! 
-    integer,               intent(in)    :: NY   !! 
-    integer, optional,     intent(out)   :: ERR  !! 
+    type(exemplar_pair_t), intent(inout) :: pair !! reference to an exemplar_pair_t object.
+    integer,               intent(in)    :: unit !! file unit.
+    integer,               intent(in)    :: NS   !! number of samples.
+    integer,               intent(in)    :: NX   !! number of columns in first  part to read.
+    integer,               intent(in)    :: NY   !! number of columns in second part to read.
+    integer, optional,     intent(out)   :: ERR  !! error return.
     !/ -----------------------------------------------------------------------------------
     logical :: report
     integer :: ier, f1, f2, s, tt
@@ -952,25 +924,18 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Internal Write.
-  !! @param[in,out] X    data array containing the first  part data to be written.
-  !! @param[in,out] Y    data array containing the second part data to be written.
-  !! @param[in]     unit file unit.
-  !! @param[in]     FMT  optional edit descriptor.
-  !! @param[in]     FMT2 optional second part edit descriptor.
-  !! @param[in]     ERR  optional error return.
-  !!
-  !! @note the row/first index is the field, col/second index is the sample.
+  !! Internal Write.
+  !! note: the row/first index is the field, col/second index is the sample.
   !/ -------------------------------------------------------------------------------------
   subroutine internal_write_pair( X, Y, unit, FMT, FMT2, ERR )  
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp),               intent(inout) :: X(:,:) !! 
-    real(dp),               intent(inout) :: Y(:,:) !! 
-    integer,                intent(in)    :: unit   !! 
-    character(*), optional, intent(in)    :: FMT    !! 
-    character(*), optional, intent(in)    :: FMT2   !! 
-    integer,      optional, intent(out)   :: ERR    !! 
+    real(dp),               intent(inout) :: X(:,:) !! data array containing the first  part data to be written.
+    real(dp),               intent(inout) :: Y(:,:) !! data array containing the second part data to be written.
+    integer,                intent(in)    :: unit   !! file unit.
+    character(*), optional, intent(in)    :: FMT    !! edit descriptor.
+    character(*), optional, intent(in)    :: FMT2   !! optional second part edit descriptor.
+    integer,      optional, intent(out)   :: ERR    !! error return.
     !/ -----------------------------------------------------------------------------------
     logical                       :: report
     integer                       :: ier, f1, f2, s, ns, n1, n2
@@ -1025,25 +990,18 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Write.
-  !! @param[in,out] DATA single data array.
-  !! @param[in]     FILE path to the data file.
-  !! @param[in]     META optional path to a meta file.
-  !! @param[in]     MODE optional mode 'H' - header, 'N' - no header.
-  !! @param[in]     FMT  optional edit descriptor.
-  !! @param[in]     ERR  optional error return.
-  !!
-  !! @note the row/first index is the field, col/second index is the sample.
+  !! Write.
+  !! note: the row/first index is the field, col/second index is the sample.
   !/ -------------------------------------------------------------------------------------
   subroutine exemp_write_single( DATA, FILE, META, MODE, FMT, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp),               intent(inout) :: DATA(:,:) !! 
-    character(*),           intent(in)    :: FILE      !! 
-    character(*), optional, intent(in)    :: META      !! 
-    character(1), optional, intent(in)    :: MODE      !! 
-    character(*), optional, intent(in)    :: FMT       !! 
-    integer,      optional, intent(out)   :: ERR       !! 
+    real(dp),               intent(inout) :: DATA(:,:) !! single data array.
+    character(*),           intent(in)    :: FILE      !! path to the data file.
+    character(*), optional, intent(in)    :: META      !! path to a meta file.
+    character(1), optional, intent(in)    :: MODE      !! mode 'H' - header, 'N' - no header.
+    character(*), optional, intent(in)    :: FMT       !! edit descriptor.
+    integer,      optional, intent(out)   :: ERR       !! error return.
     !/ -----------------------------------------------------------------------------------
     logical :: report
     integer :: ier, ns, nx, outf
@@ -1124,29 +1082,20 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   
   !/ =====================================================================================
-  !> @brief Write.
-  !! @param[in,out] X    reference to part 1 data
-  !! @param[in,out] Y    reference to part 2 data
-  !! @param[in]     FILE path to the data file.
-  !! @param[in]     META optional path to a meta file.
-  !! @param[in]     MODE optional mode 'H' - header, 'N' - no header.
-  !! @param[in]     FMT  optional edit descriptor.
-  !! @param[in]     FMT2 optional second part edit descriptor.
-  !! @param[in]     ERR  optional error return.
-  !!
-  !! @note the row/first index is the field, col/second index is the sample.
+  !! Write.
+  !! note: the row/first index is the field, col/second index is the sample.
   !/ -------------------------------------------------------------------------------------
   subroutine exemp_write_pair( X, Y, FILE, META, MODE, FMT, FMT2, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp),               intent(inout) :: X(:,:) !! 
-    real(dp),               intent(inout) :: Y(:,:) !! 
-    character(*),           intent(in)    :: FILE   !! 
-    character(*), optional, intent(in)    :: META   !! 
-    character(1), optional, intent(in)    :: MODE   !! 
-    character(*), optional, intent(in)    :: FMT    !! 
-    character(*), optional, intent(in)    :: FMT2   !! 
-    integer,      optional, intent(out)   :: ERR    !! 
+    real(dp),               intent(inout) :: X(:,:) !! reference to part 1 data
+    real(dp),               intent(inout) :: Y(:,:) !! reference to part 2 data
+    character(*),           intent(in)    :: FILE   !! path to the data file.
+    character(*), optional, intent(in)    :: META   !! path to a meta file.
+    character(1), optional, intent(in)    :: MODE   !! mode 'H' - header, 'N' - no header.
+    character(*), optional, intent(in)    :: FMT    !! optional edit descriptor.
+    character(*), optional, intent(in)    :: FMT2   !! optional second part edit descriptor.
+    integer,      optional, intent(out)   :: ERR    !! error return.
     !/ -----------------------------------------------------------------------------------
     logical            :: report
     integer            :: ier, ns, nx, ny, outf
@@ -1237,25 +1186,18 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Write.
-  !! @param[in]     FILE path to the data file.
-  !! @param[in]     META optional path to a meta file.
-  !! @param[in]     NS   optional number of samples.
-  !! @param[in]     NX   optional numper of columns.
-  !! @param[in]     ERR  optional error return.
-  !! @return a pointer to a new single data array.
-  !!
-  !! @note the row/first index is the field, col/second index is the sample.
+  !! Write.
+  !! note: the row/first index is the field, col/second index is the sample.
   !/ -------------------------------------------------------------------------------------
   function exemp_read_single( FILE, META, NS, NX, ERR ) result( X )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    real(dp),     pointer               :: X(:,:) !! 
-    character(*),           intent(in)  :: FILE   !! 
-    character(*), optional, intent(in)  :: META   !! 
-    integer,      optional, intent(in)  :: NS     !! 
-    integer,      optional, intent(in)  :: NX     !! 
-    integer,      optional, intent(out) :: ERR    !! 
+    real(dp),     pointer               :: X(:,:) !! pointer to a new single data array.
+    character(*),           intent(in)  :: FILE   !! path to the data file.
+    character(*), optional, intent(in)  :: META   !! path to a meta file.
+    integer,      optional, intent(in)  :: NS     !! number of samples.
+    integer,      optional, intent(in)  :: NX     !! numper of columns.
+    integer,      optional, intent(out) :: ERR    !! error return.
     !/ -----------------------------------------------------------------------------------
     logical            :: report
     integer            :: ier, n_sam, n_x, inf
@@ -1332,28 +1274,19 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Write.
-  !! @param[in,out] PAIR reference to an exemplar_pair_t object.
-  !! @param[in]     FILE path to the data file.
-  !! @param[in]     META optional path to a meta file.
-  !! @param[in]     NS   optional number of samples.
-  !! @param[in]     NX   optional number of columns in first part.
-  !! @param[in]     NY   optional number of columns in second part.
-  !! @param[in]     ERR  optional error return.
-  !! @return a pointer to a new single data array.
-  !!
-  !! @note the row/first index is the field, col/second index is the sample.
+  !! Write.
+  !! note: the row/first index is the field, col/second index is the sample.
   !/ -------------------------------------------------------------------------------------
   subroutine exemp_read_pair( PAIR, FILE, META, NS, NX, NY, ERR )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(exemplar_pair_t),  intent(inout) :: PAIR !! 
-    character(*),           intent(in)    :: FILE !! 
-    character(*), optional, intent(in)    :: META !! 
-    integer,      optional, intent(in)    :: NS   !! 
-    integer,      optional, intent(in)    :: NX   !! 
-    integer,      optional, intent(in)    :: NY   !! 
-    integer,      optional, intent(out)   :: ERR  !! 
+    type(exemplar_pair_t),  intent(inout) :: PAIR !! reference to an exemplar_pair_t object.
+    character(*),           intent(in)    :: FILE !! path to the data file.
+    character(*), optional, intent(in)    :: META !! path to a meta file.
+    integer,      optional, intent(in)    :: NS   !! number of samples.
+    integer,      optional, intent(in)    :: NX   !! number of columns in first part.
+    integer,      optional, intent(in)    :: NY   !! number of columns in second part.
+    integer,      optional, intent(out)   :: ERR  !! error return.
     !/ -----------------------------------------------------------------------------------
     logical            :: report
     integer            :: ier, n_sam, n_x, n_y, inf
