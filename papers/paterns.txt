@@ -1,0 +1,28 @@
+This pattern is used when returning an error value is optional
+
+If no return code is requested then the procedure will display error
+messages on the ERROR_UNIT
+If the a return is requested the error is returned and internal
+messages are supressed.
+
+
+subroutine proc_name( STATUS )
+    implicit none
+    integer, optional, intent(out) :: STATUS
+    integer :: ierr
+    logical :: report
+
+    ierr   =  0
+    report = .true.
+    if ( present( STATUS ) ) report = .false.
+
+    call some_procedure( ERR=ierr )
+    if ( 0.ne.ierr ) then
+       if ( report ) then
+          write ( ERROR_UNIT, * ) 'Some error message'
+       end if
+    end if
+    
+    if ( present( STATUS ) ) STATUS = ierr
+    
+  end subroutine proc_name
