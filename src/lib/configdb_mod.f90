@@ -58,11 +58,14 @@ module configdb_mod
      class(section_pointer), private, pointer :: sections(:) => null()
      class(comment_pointer), private, pointer :: comments(:) => null()
 
-     integer, private :: max_section     = 0
-     integer, private :: max_comment     = 0
+     integer, private :: max_section     = 0 !! maximum slots for sections
+     integer, private :: max_comment     = 0 !! maximum slots for comments
 
      integer, private :: current_section = 0 !! last added section
      integer, private :: current_comment = 0 !! last added comment
+
+     integer, private :: sindex = 1 !! section iterator
+     integer, private :: cindex = 1 !! comment iterator
 
    contains
 
@@ -79,17 +82,27 @@ module configdb_mod
 
      !/ public bound procedures
 
-     procedure, public :: delete        => delete_sections
-     procedure, public :: deleteComment => delete_comments
-     procedure, public :: find          => find_index_by_name
-     procedure, public :: getComment    => get_comment_by_index
-     procedure, public :: addComment    => add_comment_to_list
+     procedure, public :: delete         => delete_sections
+     procedure, public :: deleteComment  => delete_comments
+     procedure, public :: find           => find_index_by_name
+     procedure, public :: getComment     => get_comment_by_index
+     procedure, public :: addComment     => add_comment_to_list
 
-     procedure, public :: readINI       => read_ini
-     procedure, public :: writeINI      => write_ini
+     procedure, public :: readINI        => read_ini
+     procedure, public :: writeINI       => write_ini
 
-     generic,   public :: get           => get_section_by_index, get_section_by_name
-     generic,   public :: add           => add_section_to_list, add_new_section_to_list
+     procedure, public :: rewind         => rewind_section
+     procedure, public :: hasNext        => has_next_section
+     procedure, public :: next           => get_next_section
+
+     procedure, public :: merge          => merge_configdb
+     
+     procedure, public :: rewindComment  => rewind_comment
+     procedure, public :: hasNextComment => has_next_comment
+     procedure, public :: nextComment    => get_next_comment
+     
+     generic,   public :: get            => get_section_by_index, get_section_by_name
+     generic,   public :: add            => add_section_to_list, add_new_section_to_list
 
      final :: destroy_section_list
 
@@ -427,14 +440,40 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     class(configdb_t),              intent(inout) :: self !! reference to this configdb.
     type(config_section_t), target, intent(inout) :: sec
     !/ -----------------------------------------------------------------------------------
+    class(config_section_t), pointer :: temp
+    integer                          :: index
+    character(:), allocatable        :: sname
+    !/ -----------------------------------------------------------------------------------
 
-    self%current_section = self%current_section + 1
+    sname = sec%getName()
 
-    if ( self%current_section.ge.self%max_section ) then
-       call self%grow_section_list( self%max_section*2 )
+    index = self%find( sname )
+
+    if ( 0.eq.index ) then
+
+       self%current_section = self%current_section + 1
+       if ( self%current_section.ge.self%max_section ) then
+          call self%grow_section_list( self%max_section*2 )
+       end if
+
+       if ( associated( self%sections(self%current_section)%ptr ) ) then
+          deallocate( self%sections(self%current_section)%ptr )
+          nullify( self%sections(self%current_section)%ptr )
+       end if
+
+       allocate( self%sections(self%current_section)%ptr )
+       call self%sections(self%current_section)%ptr%setName( sname )
+       temp => self%sections(self%current_section)%ptr
+    
+    else
+
+       temp => self%sections(index)%ptr
+
     end if
 
-    self%sections(self%current_section)%ptr => sec
+    call temp%merge( sec )
+
+    temp => null()
 
   end subroutine add_section_to_list
 
@@ -442,11 +481,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine add_new_section_to_list( self, sname )
     !/ -----------------------------------------------------------------------------------
-    !! Append a section.
+    !! Add a new section to the list
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(configdb_t),      intent(inout) :: self    !! reference to this configdb.
-    character(*), optional, intent(in)    :: sname   !! name of a new section
+    class(configdb_t), intent(inout) :: self  !! this configdb.
+    character(*),      intent(in)    :: sname !! name of a new section
     !/ -----------------------------------------------------------------------------------
     class(config_section_t), pointer :: new_sec
     !/ -----------------------------------------------------------------------------------
@@ -454,7 +493,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     allocate( new_sec )
     call new_sec%setName( sname )
     call self%add_section_to_list( new_sec )
-    
+
   end subroutine add_new_section_to_list
 
 
@@ -663,19 +702,189 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function get_comment_by_index
 
 
+  !/ =====================================================================================
+  subroutine rewind_section( self )
+    !/ -----------------------------------------------------------------------------------
+    !!
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(configdb_t), intent(inout) :: self !! reference to this configdb.
+    !/ -----------------------------------------------------------------------------------
+
+    self%sindex = 1
+
+  end subroutine rewind_section
+
+  
+  !/ =====================================================================================
+  subroutine rewind_comment( self )
+    !/ -----------------------------------------------------------------------------------
+    !!
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(configdb_t), intent(inout) :: self !! reference to this configdb.
+    !/ -----------------------------------------------------------------------------------
+
+    self%cindex = 1
+
+  end subroutine rewind_comment
+
+  
+  !/ =====================================================================================
+  function has_next_section( self ) result( flag )    
+    !/ -----------------------------------------------------------------------------------
+    !!
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    logical                          :: flag
+    class(configdb_t), intent(inout) :: self !! reference to this configdb.
+    !/ -----------------------------------------------------------------------------------
+
+    if ( self%sindex.gt.self%current_section ) then
+       flag = .false.
+    else
+       flag = .true.
+    end if
+    
+  end function has_next_section
+
+  
+  !/ =====================================================================================
+  function has_next_comment( self ) result( flag )    
+    !/ -----------------------------------------------------------------------------------
+    !!
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    logical                          :: flag
+    class(configdb_t), intent(inout) :: self !! reference to this configdb.
+    !/ -----------------------------------------------------------------------------------
+
+    if ( self%cindex.gt.self%current_comment ) then
+       flag = .false.
+    else
+       flag = .true.
+    end if
+    
+  end function has_next_comment
+
+  
+  !/ =====================================================================================
+  function get_next_section( self, STATUS ) result( sec )
+    !/ -----------------------------------------------------------------------------------
+    !! Get the next available entry.
+    !!
+    !! |  stat  |  errmsg   |
+    !! | :----: | :-------: |
+    !! |    0   |  n/a      |
+    !! |    1   |  no more  |
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(config_section_t), pointer :: sec    !! pointer to a section
+    class(configdb_t), intent(inout) :: self   !! reference to this configdb.
+    integer, optional, intent(out)   :: STATUS !! return error code
+    !/ -----------------------------------------------------------------------------------
+    logical :: report
+    integer :: ier
+    !/ -----------------------------------------------------------------------------------
+
+    ier    = 0
+    report = .true.
+    sec => null()
+
+    if ( present( STATUS ) ) report = .false.
+
+100 continue
+
+    if ( self%sindex.le.self%current_section ) then
+       sec => self%get( self%sindex ) ! this is a deep copy see below
+       self%sindex = self%sindex + 1
+       if ( associated( sec ) ) goto 200
+       goto 100
+    else
+       if ( report ) then
+          call log_warn( 'ConfigDB%next: read past end' )
+       end if
+       ier = 1
+    end if
+
+200 continue
+    
+    if ( present( STATUS ) ) STATUS = ier
+
+  end function get_next_section
+
+  
+  !/ =====================================================================================
+  function get_next_comment( self, STATUS ) result( com )
+    !/ -----------------------------------------------------------------------------------
+    !! Get the next available entry.
+    !!
+    !! |  stat  |  errmsg   |
+    !! | :----: | :-------: |
+    !! |    0   |  n/a      |
+    !! |    1   |  no more  |
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    character(:), allocatable        :: com    !! a comment.
+    class(configdb_t), intent(inout) :: self   !! reference to this configdb.
+    integer, optional, intent(out)   :: STATUS !! return error code
+    !/ -----------------------------------------------------------------------------------
+    logical :: report
+    integer :: ier
+    !/ -----------------------------------------------------------------------------------
+
+    ier    = 0
+    report = .true.
+    com = ''
+
+    if ( present( STATUS ) ) report = .false.
+
+100 continue
+
+    if ( self%cindex.le.self%current_comment ) then
+       com = self%getComment( self%cindex ) ! this is a deep copy see below
+       self%cindex = self%cindex + 1
+       if ( 0.lt.LEN_TRIM(com) ) goto 200
+       goto 100
+    else
+       if ( report ) then
+          call log_warn( 'ConfigDB%nextComment: read past end' )
+       end if
+       ier = 1
+    end if
+
+200 continue
+    
+    if ( present( STATUS ) ) STATUS = ier
+
+  end function get_next_comment
+
+  
+         
+ 
+
+
+
+
+
+
+
+
+
+  
 
   !/ =====================================================================================
   subroutine write_ini( self, FILE, UNIT, IOSTAT )
     !/ -----------------------------------------------------------------------------------
-    !/ 
+    !/ Write INI file
     !/ -----------------------------------------------------------------------------------
     use tlogger,    only : log_error
     use file_tools, only : WriteUnit
     implicit none
     class(configdb_t),          intent(inout) :: self   !! reference to this configdb.
-    character(len=*), optional, intent(in)    :: FILE
-    integer,          optional, intent(in)    :: UNIT
-    integer,          optional, intent(out)   :: IOSTAT
+    character(len=*), optional, intent(in)    :: FILE   !! path to an new or existing file.
+    integer,          optional, intent(in)    :: UNIT   !! unit for an open unit
+    integer,          optional, intent(out)   :: IOSTAT !! error return.
     !/ -----------------------------------------------------------------------------------
     integer :: ios, un, i
     logical :: report, sep_sec
@@ -741,25 +950,19 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end subroutine write_ini
 
 
-
-
-
-
-
-
   !/ =====================================================================================
   subroutine read_ini( self, FILE, UNIT, IOSTAT )
     !/ -----------------------------------------------------------------------------------
-    !/ 
+    !/ Read and parse INI file
     !/ -----------------------------------------------------------------------------------
     use tlogger,    only : log_error
     use file_tools, only : ReadUnit
     use file_tools, only : ReadLine
     implicit none
     class(configdb_t),          intent(inout) :: self   !! reference to this configdb.
-    character(len=*), optional, intent(in)    :: FILE   !! 
-    integer,          optional, intent(in)    :: UNIT   !! 
-    integer,          optional, intent(out)   :: IOSTAT !! 
+    character(len=*), optional, intent(in)    :: FILE   !! path to an new or existing file.
+    integer,          optional, intent(in)    :: UNIT   !! unit for an open unit
+    integer,          optional, intent(out)   :: IOSTAT !! error return.
     !/ -----------------------------------------------------------------------------------
     integer                   :: ios, un
     logical                   :: report
@@ -849,6 +1052,60 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   end subroutine read_ini
 
+
+
+
+  !/ =====================================================================================
+  subroutine merge_configdb( self, src )
+    !/ -----------------------------------------------------------------------------------
+    !/ Merge a ConfigDB into this ConfigDB
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(configdb_t), intent(inout) :: self !! reference to this configdb.
+    type(configdb_t),  intent(inout) :: src  !! reference to another configdb.
+    !/ -----------------------------------------------------------------------------------
+    class(config_section_t), pointer :: this_sec, src_sec
+    character(:), allocatable        :: com, sname
+    integer                          :: icheck, ifnd
+    !/ -----------------------------------------------------------------------------------
+    
+    call src%rewindComment
+
+100 continue
+    if ( src%hasNextComment() ) then
+       com = src%nextComment( STATUS=icheck )
+       if ( 0.eq.icheck ) then
+          call self%addComment( com )
+          goto 100
+       else
+          call log_error('hasNext=.true. but null was returned by nextComment()')
+          goto 300
+       end if
+    end if
+
+200 continue
+    if ( src%hasNext() ) then
+       src_sec => src%next( STATUS=icheck )
+       if ( 0.eq.icheck ) then
+          sname = src_sec%getName()
+          this_sec => self%get( sname, STATUS=ifnd )
+          if ( 0.eq.ifnd ) then
+             call this_sec%merge( src_sec )
+          else
+             call self%add( src_sec )
+          end if
+          this_sec => null()
+          goto 200
+       else
+          call log_error('hasNext=.true. but null was returned by next()')
+          goto 300
+       end if
+       src_sec => null()
+    end if
+
+300 continue
+
+  end subroutine merge_configdb
   
   
 end module configdb_mod

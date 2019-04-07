@@ -71,6 +71,14 @@ module config_section_mod
      procedure, public :: getComment => get_comment_by_index
      procedure, public :: addComment => add_comment
 
+     procedure, public :: rewind     => rewind_iterator
+     procedure, public :: hasNext    => has_next_entry
+     procedure, public :: next       => get_next_entry
+
+     procedure, public :: merge      => merge_sections
+
+     procedure, public :: fromCommandLine => create_from_command_line
+
      !/ ----- fusion of ConfigSection and StringTools for convenience ----------
      
      procedure, public :: getString  => get_string_by_key
@@ -359,17 +367,17 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! |    1   |  no key found  |    
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(config_section_t),                 intent(inout) :: self   !! reference to this section.
-    character(*),                            intent(in)    :: key    !! key string.
-    character(:), allocatable,     optional, intent(out)   :: VAL    !! value string.
-    character(:), allocatable,     optional, intent(out)   :: COM    !! comment string.
-    character(:), allocatable,     optional, intent(out)   :: LINE   !! parsable line.
-    type(config_entry_t), pointer, optional, intent(inout) :: ENT    !! reference to a config entry.
-    integer,                       optional, intent(out)   :: STATUS !! return condition
+    class(config_section_t),             intent(inout) :: self   !! reference to this section.
+    character(*),                        intent(in)    :: key    !! key string.
+    character(:), allocatable, optional, intent(out)   :: VAL    !! value string.
+    character(:), allocatable, optional, intent(out)   :: COM    !! comment string.
+    character(:), allocatable, optional, intent(out)   :: LINE   !! parsable line.
+    type(config_entry_t),      optional, intent(inout) :: ENT    !! reference to a config entry.
+    integer,                   optional, intent(out)   :: STATUS !! return condition
     !/ -----------------------------------------------------------------------------------
-    integer                        :: ier, index
-    logical                        :: report
-    class(config_entry_t), pointer :: temp
+    integer              :: ier, index
+    logical              :: report
+    type(config_entry_t) :: temp
     !/ -----------------------------------------------------------------------------------
 
     ier = 0
@@ -381,7 +389,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     if ( 0.eq.ier ) then
        
-       temp => self%section_records%get( index )
+       call self%section_records%get( temp, index )
 
        if ( present( VAL ) ) then
          VAL = temp%getValue()
@@ -396,10 +404,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        end if
 
        if ( present( ENT ) ) then
-          ent => temp
-       else
-          nullify( temp )
+          call ENT%copy( temp )
        end if
+
+       call temp%clear
 
     else
        if ( report ) then
@@ -707,7 +715,58 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function get_real_8_by_key
 
 
-    !/ =====================================================================================
+
+  !/ =====================================================================================
+  subroutine rewind_iterator( self )
+    !/ -----------------------------------------------------------------------------------
+    !! Rewind the internal iterator.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(config_section_t), intent(inout) :: self !! reference to this section.
+    !/ -----------------------------------------------------------------------------------
+
+    call self%section_records%rewind
+    
+  end subroutine rewind_iterator
+  
+  
+  !/ =====================================================================================
+  function has_next_entry( self ) result( res )
+    !/ -----------------------------------------------------------------------------------
+    !! Check if the is an available next record.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    logical                                :: res
+    class(config_section_t), intent(inout) :: self !! reference to this section.
+    !/ -----------------------------------------------------------------------------------
+
+    res = self%section_records%hasNext()
+    
+  end function has_next_entry
+  
+  
+  !/ =====================================================================================
+  subroutine get_next_entry( self, ent, STATUS )
+    !/ -----------------------------------------------------------------------------------
+    !! Get the next available entry.
+    !!
+    !! |  stat  |  errmsg   |
+    !! | :----: | :-------: |
+    !! |    0   |  n/a      |
+    !! |    1   |  no more  |
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(config_section_t), intent(inout) :: self   !! reference to this section.
+    type(config_entry_t),    intent(inout) :: ent    !! config entry.
+    integer, optional,       intent(out)   :: STATUS !! 
+    !/ -----------------------------------------------------------------------------------
+
+    call self%section_records%next(ent, STATUS=STATUS)
+    
+  end subroutine get_next_entry
+
+
+!/ =====================================================================================
   subroutine write_ini( self, FILE, UNIT, IOSTAT )
     !/ -----------------------------------------------------------------------------------
     !/ 
@@ -720,9 +779,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer,          optional, intent(in)    :: UNIT   !! 
     integer,          optional, intent(out)   :: IOSTAT !! 
     !/ -----------------------------------------------------------------------------------
-    integer :: ios, un
+    integer :: ios, un, is
     logical :: report
-    type(config_entry_t), pointer :: CE
+    type(config_entry_t) :: CE
     !/ -----------------------------------------------------------------------------------
 
     report = .true.
@@ -748,8 +807,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        call self%section_records%rewind
 100    continue
        if ( self%section_records%hasNext() ) then
-          CE => self%section_records%next()
-          if ( associated( CE ) ) then
+          call self%section_records%next(CE,STATUS=is)
+          if ( 0.eq.is ) then
              write(*,1000) CE%toString()
           end if
        else
@@ -768,7 +827,108 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     
   end subroutine write_ini
 
+  !/ =====================================================================================
+  subroutine create_from_command_line( self, SNAME, PNAME, CLEAR, FILE_PREFIX )
+    !/ -----------------------------------------------------------------------------------
+    !! Build a section from the command line
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(config_section_t), intent(inout) :: self        !! reference to this section.
+    character(*), optional,  intent(in)    :: SNAME       !! name of this section
+    character(*), optional,  intent(in)    :: PNAME       !! program name
+    logical,      optional,  intent(in)    :: CLEAR       !! clear section first
+    character(*), optional,  intent(in)    :: FILE_PREFIX !! prefix for file
+    !/ -----------------------------------------------------------------------------------
+    type(config_entry_t)      :: entry
+    character(:), allocatable :: prog_key, prefix, key, val
+    character(256)            :: temp_arg
+    character(64)             :: temp_key
+    integer                   :: i, arg_len, count, file_index
+    !/ -----------------------------------------------------------------------------------
 
+    if ( present( CLEAR ) ) then
+       if ( CLEAR ) then
+          call self%clear
+       end if
+    end if
+
+    if ( present( SNAME ) ) then
+       call self%setname( SNAME )
+    end if
+
+    if ( present( PNAME ) ) then
+       allocate( prog_key, source=PNAME )
+    else
+       prog_key = 'progname'
+    end if
+
+    if ( present( FILE_PREFIX ) ) then
+       allocate( prefix, source=FILE_PREFIX )
+    else
+       prefix = 'file'
+    end if
+
+    !/ -----------------------------------------------------------------------------------
+
+    count = COMMAND_ARGUMENT_COUNT()
+
+    call GET_COMMAND_ARGUMENT( NUMBER=0, VALUE=temp_arg, LENGTH=arg_len )
+
+    call self%set( KEY=prog_key, VAL=temp_arg )
+
+    file_index = 1
+    do i=1,count
+       call GET_COMMAND_ARGUMENT( NUMBER=i, VALUE=temp_arg, LENGTH=arg_len )
+       call entry%clear
+       call entry%fromString( temp_arg )
+       if ( entry%isKVPair() ) then
+          key = entry%getKey()
+          val = entry%getValue()
+       else
+          write(temp_key,100) prefix, file_index
+          key = TRIM( ADJUSTL( temp_key ) )
+          val = TRIM( ADJUSTL( temp_arg ) )
+          file_index = file_index + 1
+       end if
+       call self%set( KEY=key, VAL=val )
+    end do
+
+100 format( A,I0 )
+    
+  end subroutine create_from_command_line
+
+
+  !/ =====================================================================================
+  subroutine merge_sections( self, src )
+    !/ -----------------------------------------------------------------------------------
+    !/ merge the KV pairs from a source section into this one
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(config_section_t), intent(inout) :: self !! reference to this section.
+    type(config_section_t),  intent(inout) :: src  !! reference to another section.
+    !/ -----------------------------------------------------------------------------------
+    type(config_entry_t)      :: src_entry
+    integer                   :: icheck
+    character(:), allocatable :: src_key
+    !/ -----------------------------------------------------------------------------------
+    
+    call src%rewind
+    
+100 continue
+    if ( src%hasNext() ) then
+       call src%next(src_entry, STATUS=icheck)
+       if ( 0.eq.icheck ) then
+          src_key = src_entry%getKey()
+          call self%set( KEY=src_key, ENT=src_entry ) 
+          goto 100
+       else
+          call log_error('hasNext=.true. but null was returned by next()')
+       end if
+    end if
+
+  end subroutine merge_sections
+
+  
 end module config_section_mod
 
 

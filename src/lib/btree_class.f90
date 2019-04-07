@@ -248,8 +248,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Internal procedure to recursivly insert nodes.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(btree_node),          intent(inout) :: root !! insert new node here.
-    type(btree_node), pointer, intent(in)    :: node !! new node.
+    type(btree_node),           intent(inout) :: root !! insert new node here.
+    class(btree_node), pointer, intent(in)    :: node !! new node.
     !/ -----------------------------------------------------------------------------------
 
     if ( 0 .gt. compare( node%key, root%key ) ) then
@@ -311,7 +311,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     class(btree_node), pointer, intent(in)  :: root !! search new node here.
     class(*),          pointer, intent(in)  :: key  !! btree key.
     integer,                    intent(out) :: stat !! return status
-    type(btree_node),  pointer              :: node !! start execution here.
+    class(btree_node), pointer              :: node !! start execution here.
     !/ -----------------------------------------------------------------------------------
     integer :: c
 
@@ -382,10 +382,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! |    2   | key is NULL   |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(BTree),               intent(inout) :: self !! reference to this btree class.
-    class(*),         pointer,  intent(in)    :: key  !! btree key.
-    integer,          optional, intent(out)   :: stat !! optional return status
-    type(btree_node), pointer                 :: node !! start execution here.
+    class(BTree),                intent(inout) :: self !! reference to this btree class.
+    class(*),          pointer,  intent(in)    :: key  !! btree key.
+    integer,           optional, intent(out)   :: stat !! optional return status
+    class(btree_node), pointer                 :: node !! start execution here.
     !/ -----------------------------------------------------------------------------------
     integer :: istat
     istat = 0
@@ -404,7 +404,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! This is a recursive private internal function.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(btree_node),                pointer, intent(in) :: node !! start execution here.
+    class(btree_node),               pointer, intent(in) :: node !! start execution here.
     procedure(btree_node_procedure), pointer, intent(in) :: proc !! pointer to procedure.
     !/ -----------------------------------------------------------------------------------
 
@@ -447,8 +447,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! This is a recursive private internal function.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(BTree),              intent(inout) :: self !! reference to this btree class.
-    type(btree_node), pointer, intent(in)    :: node
+    class(BTree),               intent(inout) :: self !! reference to this btree class.
+    class(btree_node), pointer, intent(in)    :: node
     !/ -----------------------------------------------------------------------------------
 
     if ( associated( node ) ) then
@@ -645,7 +645,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer, optional, intent(out)   :: stat  !! optional retuen status
     class(*), pointer                :: obj   !! pointer to the object
     !/ -----------------------------------------------------------------------------------
-    type(btree_node), pointer :: bnode
+    class(btree_node), pointer :: bnode
     !/ -----------------------------------------------------------------------------------
 
     nullify( obj )
@@ -672,7 +672,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer, optional, intent(out)   :: stat  !! optional retuen status
     class(*), pointer                :: obj   !! pointer to the key
     !/ -----------------------------------------------------------------------------------
-    type(btree_node), pointer :: bnode
+    class(btree_node), pointer :: bnode
     !/ -----------------------------------------------------------------------------------
 
     nullify( obj )

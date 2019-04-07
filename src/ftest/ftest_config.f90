@@ -99,16 +99,16 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     implicit none
     type(config_entry_list_t), intent(inout) :: list
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
-    class(config_entry_t), pointer :: CE
+    integer :: i, n, st
+    type(config_entry_t) :: CE
     character(:), allocatable :: rep
     !/ -----------------------------------------------------------------------------------
 
     n = size( list )
 
     do i=1,n
-       CE => list%get( i )
-       if ( associated( CE ) ) then
+       call list%get( CE, i, STATUS=st )
+       if ( 0.eq.st ) then
           if ( CE%isComment() ) then
              rep = CE%getComment() 
              write (*,100) i, rep
@@ -120,7 +120,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
                 write (*,120) i,rep
              end if
           end if
-          nullify( CE )
        else
           write (*,130) i
        end if
@@ -418,9 +417,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     use tlogger
     implicit none
 
-    type(config_entry_list_t)     :: L1
-    type(config_entry_t), pointer :: CE
-    character(:), allocatable     :: text
+    type(config_entry_list_t) :: L1
+    type(config_entry_t)      :: CE
+    character(:), allocatable :: text
+    integer                   :: st
 
     call tlogger_set( CONSOLE=tlogger_debug )
 
@@ -433,10 +433,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call L1%clear(7)
     call dump_list( L1 )
 
-    write(*,*) ' -- delete 10 --'
-    call L1%delete(10)
-    call dump_list( L1 )
-
     write(*,*) ' -- clear all --'
     call L1%clear
     call dump_list( L1 )
@@ -451,10 +447,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     write(*,*) ' -- rebuild --'
     call load_test_list( L1 )
-    call dump_list( L1 )
-
-    write(*,*) ' -- delete all --'
-    call L1%delete
     call dump_list( L1 )
 
     !/ ----- rewind/hasNext/next --------------------------
@@ -467,8 +459,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 100 continue
     if ( L1%hasNext() ) then
-       CE => L1%next()
-       if ( associated( CE ) ) then
+       call L1%next(CE,STATUS=st)
+       if ( 0.eq.st ) then
           write(*,*) CE%toString()
        end if
     else
@@ -624,6 +616,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     n = size( sec, COUNT='KVPAIR' )
     call ExpectGot( 7, n )
 
+    
   end subroutine test_config_section
 
   
@@ -641,6 +634,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer :: i, ns, nc
     character(:), allocatable :: text
     type(config_section_t), pointer :: SC
+    type(config_section_t)          :: csec
     !/ -----------------------------------------------------------------------------------
 
     allocate( sec1 )
@@ -702,8 +696,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     write (*,*) '========================================================================'
     write (*,*)
 
-    
+    call csec%clear
 
+    call csec%setName( 'Alice' )
+    call csec%set( KEY='girl', VAL='heather', COM='first and only' )
+    
+    call csec%fromCommandLine(PNAME='cli', FILE_PREFIX='comp', CLEAR=.false.)
+    write(OUTPUT_UNIT,111) csec%getName()
+    call csec%writeINI(UNIT=OUTPUT_UNIT)
+111 format( '[',A,']' )
   end subroutine test_config_db
 
 
@@ -721,6 +722,83 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   end subroutine test01
 
+  
+  !/ =====================================================================================
+  subroutine test_section_merge
+    !/ -----------------------------------------------------------------------------------
+    use configdb_mod
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+    type(config_section_t) :: sec1, sec2
+
+    call sec1%append( LINE='; Section one' )
+    call sec1%append( LINE='alpha = chevy ; my first car' )
+    call sec1%append( LINE='beta = jeep' )
+    call sec1%append( LINE='; another comment' )
+    call sec1%append( LINE='delta = pontiac' )
+
+    call sec2%append( LINE='; Section two' )
+    call sec2%append( LINE='alpha = vw ; her first car' )
+    call sec2%append( LINE='gamma = saturn' )
+    call sec2%append( LINE='epsilon = GTI' )
+    call sec2%append( LINE='; a last comment' )
+
+    write(OUTPUT_UNIT,*) '===== merge test =================='
+    call sec1%writeINI( UNIT=OUTPUT_UNIT )
+    write(OUTPUT_UNIT,*) '-----------------------------------'
+    call sec2%writeINI( UNIT=OUTPUT_UNIT )
+    write(OUTPUT_UNIT,*) '==================================='
+    call sec1%merge( sec2 )
+    call sec1%writeINI( UNIT=OUTPUT_UNIT )
+    write(OUTPUT_UNIT,*) '==================================='
+
+  end subroutine test_section_merge
+
+    
+  !/ =====================================================================================
+  subroutine test_config_merge
+    !/ -----------------------------------------------------------------------------------
+    use configdb_mod
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+
+    type(configdb_t) :: db1, db2
+
+    call db1%readINI( FILE='../config_test_1.ini' )
+    call db2%readINI( FILE='../config_test_2.ini' )
+
+    write(OUTPUT_UNIT,*) '===== merge test =================='
+    call db1%writeINI( UNIT=OUTPUT_UNIT )
+    write(OUTPUT_UNIT,*) '-----------------------------------'
+    call db2%writeINI( UNIT=OUTPUT_UNIT )
+    write(OUTPUT_UNIT,*) '==================================='
+    call db1%merge( db2 )
+    call db1%writeINI( UNIT=OUTPUT_UNIT )
+    write(OUTPUT_UNIT,*) '==================================='
+
+  end subroutine test_config_merge
+
+   !/ =====================================================================================
+  subroutine test_config_merge1
+    !/ -----------------------------------------------------------------------------------
+       use configdb_mod
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+
+    type(configdb_t) :: db1, db2
+
+    call db1%readINI( FILE='../config_test_1.ini' )
+    call db2%readINI( FILE='../config_test_2.ini' )
+    write(OUTPUT_UNIT,*) '========================================================'
+    call db1%writeINI( UNIT=OUTPUT_UNIT )
+    write(OUTPUT_UNIT,*) '========================================================'
+    call db2%writeINI( UNIT=OUTPUT_UNIT )
+    call db1%merge( db2 )
+    write(OUTPUT_UNIT,*) '========================================================'
+    call db1%writeINI( UNIT=OUTPUT_UNIT )
+    write(OUTPUT_UNIT,*) '========================================================'
+
+  end subroutine test_config_merge1
 
   
 end module ftest_config_test
@@ -733,34 +811,43 @@ program main
   implicit none
   !/ -------------------------------------------------------------------------------------
 
-  write (*,*) '===== CONFIG ENTRY ============================================='
-  write (*,*)
-  call test_config_entry
-  write (*,*)
+  !write (*,*) '===== CONFIG ENTRY ============================================='
+  !write (*,*)
+  !call test_config_entry
+  !write (*,*)
   
-  write (*,*)
-  write (*,*) '===== CONFIG LIST =============================================='
-  write (*,*)
-  call test_config_entry_list
-  write (*,*)
+  !write (*,*)
+  !write (*,*) '===== CONFIG LIST =============================================='
+  !write (*,*)
+  !call test_config_entry_list
+  !write (*,*)
   
-  write (*,*)
-  write (*,*) '===== CONFIG SECTION ==========================================='
-  write (*,*)
-  call test_config_section
-  write (*,*)
+  !write (*,*)
+  !write (*,*) '===== CONFIG SECTION ==========================================='
+  !write (*,*)
+  !call test_config_section
+  !write (*,*)
 
-  write (*,*)
-  write (*,*) '===== CONFIG DB ================================================'
-  write (*,*)
-  call test_config_db
-  write (*,*)
+  !write (*,*)
+  !write (*,*) '===== CONFIG DB ================================================'
+  !write (*,*)
+  !call test_config_db
+  !write (*,*)
+
+  !write (*,*)
+  !write (*,*) '===== SECTION MERGE ============================================'
+  !write (*,*)
+  !call test_section_merge
+  !write (*,*)
 
 
-  call test01
+  !write (*,*)
+  !write (*,*) '===== CONFIG MERGE ============================================='
+  !write (*,*)
+  call test_config_merge1
+  !write (*,*)
 
 
-  
 
 end program main
 

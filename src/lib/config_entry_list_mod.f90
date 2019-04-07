@@ -40,19 +40,11 @@ module config_entry_list_mod
 
   integer, parameter :: ADDITIONAL_PADDING = 16
 
-  
-  !/ =====================================================================================
-  type :: entry_pointer
-     !/ ----------------------------------------------------------------------------------
-     class(config_entry_t), pointer :: ptr => null()
-  end type entry_pointer
-
-
   !/ =====================================================================================
   type, public :: config_entry_list_t
      !/ ----------------------------------------------------------------------------------
 
-     class(entry_pointer), private, pointer :: entries(:) => null()
+     type(config_entry_t), private, allocatable :: entries(:)
 
      integer, private :: current_index  = 0
      integer, private :: iterator_index = 1
@@ -60,14 +52,10 @@ module config_entry_list_mod
 
    contains
 
-     procedure         :: clear_one_entry
-     procedure         :: clear_all_entries
-     procedure         :: delete_one_entry
-     procedure         :: delete_all_entries
-     
-     generic,   public :: clear      => clear_one_entry, clear_all_entries
-     generic,   public :: delete     => delete_one_entry, delete_all_entries
+     procedure         :: clear_entries
      procedure         :: grow       => grow_list
+     
+     procedure, public :: clear      => clear_entries
 
      procedure, public :: rewind     => rewind_list_index
      procedure, public :: next       => get_next_entry
@@ -117,16 +105,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     implicit none
     type(config_entry_list_t), intent(inout) :: list
     !/ -----------------------------------------------------------------------------------
-    integer :: i,n
 
-    if ( associated( list%entries ) ) then
-       n = size( list%entries )
-       do i=1,n
-          nullify( list%entries(i)%ptr )
-       end do
+    if ( allocated( list%entries ) ) then
+       call list%clear
+       deallocate( list%entries )
     end if
-
-    nullify( list%entries )
 
     list%current_index  = 0
     list%iterator_index = 1
@@ -146,10 +129,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     integer :: i
     !/ -----------------------------------------------------------------------------------
-    
+
     n = 0
     do i=1,list%current_index
-       if ( associated( list%entries(i)%ptr ) ) then
+       if ( list%entries(i)%isUsed() ) then
           n = n + 1
        end if
     end do
@@ -159,113 +142,32 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine clear_all_entries( self )
-    !/ -----------------------------------------------------------------------------------
-    !! Clear all of the entries from the list.
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(config_entry_list_t), intent(inout) :: self !! reference to this entry list.
-    !/ -----------------------------------------------------------------------------------
-    integer :: i, n
-    !/ -----------------------------------------------------------------------------------
-
-    if ( associated( self%entries ) ) then
-       n = size( self%entries )
-       do i=1,n
-          if ( associated( self%entries(i)%ptr ) ) then
-             call self%entries(i)%ptr%clear
-          end if
-       end do
-    else
-       self%maximum_index = 0
-    end if
-
-    self%current_index  = 0
-    self%iterator_index = 1
-
-  end subroutine clear_all_entries
-
-
-  !/ =====================================================================================
-  subroutine clear_one_entry( self, index )
+  subroutine clear_entries( self, INDEX )
     !/ -----------------------------------------------------------------------------------
     !! Clear one of the entries from the list.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(config_entry_list_t), intent(inout) :: self  !! reference to this entry list.
-    integer,                    intent(in)    :: index !! index
-    !/ -----------------------------------------------------------------------------------
-    integer :: n
-    !/ -----------------------------------------------------------------------------------
-
-    if ( associated( self%entries ) ) then
-       n = size( self%entries )
-       if ( index.le.n ) then
-          if ( associated( self%entries(index)%ptr ) ) then
-             call self%entries(index)%ptr%clear
-          end if
-          if ( index.eq.self%current_index ) then
-             self%current_index = self%current_index - 1
-          end if
-       end if
-    end if
-
-  end subroutine clear_one_entry
-
-
-  !/ =====================================================================================
-  subroutine delete_all_entries( self )
-    !/ -----------------------------------------------------------------------------------
-    !! Delete all of the entries from the list.
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(config_entry_list_t), intent(inout) :: self !! reference to this entry list.
+    integer, optional,          intent(in)    :: INDEX !! index
     !/ -----------------------------------------------------------------------------------
     integer :: i, n
     !/ -----------------------------------------------------------------------------------
 
-    if ( associated( self%entries ) ) then
-       n = size( self%entries )
-       do i=1,n
-          if ( associated( self%entries(i)%ptr ) ) then
-             nullify( self%entries(i)%ptr )
-          end if
-       end do
-    else
-       self%maximum_index = 0
-    end if
+    if ( allocated( self%entries ) ) then
+       if ( present( INDEX ) ) then
+          call self%entries(index)%clear
+       else
+          n = self%maximum_index
+          do i=1,n
+             call self%clear(i)
+          end do
 
-    self%current_index  = 0
-    self%iterator_index = 1
-
-  end subroutine delete_all_entries
-
-
-  !/ =====================================================================================
-  subroutine delete_one_entry( self, index )
-    !/ -----------------------------------------------------------------------------------
-    !! Delete one of the entries from the list.
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(config_entry_list_t), intent(inout) :: self  !! reference to this entry list.
-    integer,                    intent(in)    :: index !! index
-    !/ -----------------------------------------------------------------------------------
-    integer :: n
-    !/ -----------------------------------------------------------------------------------
-
-    if ( associated( self%entries ) ) then
-       n = size( self%entries )
-       if ( index.le.n ) then
-          if ( associated( self%entries(index)%ptr ) ) then
-             nullify( self%entries(index)%ptr )
-          end if
-          if ( index.eq.self%current_index ) then
-             self%current_index = self%current_index - 1
-          end if
+          self%current_index  = 0
+          self%iterator_index = 1
        end if
     end if
 
-  end subroutine delete_one_entry
+  end subroutine clear_entries
 
 
   !/ =====================================================================================
@@ -278,37 +180,29 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer,                    intent(in)    :: new_max
     !/ -----------------------------------------------------------------------------------
     integer :: i, n
-    class(entry_pointer), pointer :: temp(:) => null()
+    type(config_entry_t), allocatable :: temp(:)
     !/ -----------------------------------------------------------------------------------
 
     n = new_max
     if ( n.le.0 ) then
        n = ADDITIONAL_PADDING
-       call log_debug( 'Added padding', I4=n )
+       call log_debug( 'EntryList::GrowList:   Added padding', I4=n )
     end if
 
-    if ( associated( self%entries ) ) then
-       temp         => self%entries
-       self%entries => null()
-       call log_debug( 'Grow to', I4=n )
-       allocate( self%entries(n) )
+    if ( allocated( self%entries ) ) then
+       allocate( temp(n) )
        do i=1,self%current_index
-          if ( associated( temp(i)%ptr ) ) then
-             self%entries(i)%ptr => temp(i)%ptr
-          else
-             self%entries(i)%ptr => null()
-          end if
+          call temp(i)%clear
+          call temp(i)%copy( self%entries(i) )
+          call self%entries(i)%clear
        end do
-       if ( self%current_index.lt.n ) then
-          do i=self%current_index+1,n
-             self%entries(i)%ptr => null()
-          end do
-       end if
+       call move_alloc( temp, self%entries )
     else
-       call log_debug( 'Inital alloc', I4=n )
+       call log_debug( 'EntryList::GrowList:   Inital alloc', I4=n )
        allocate( self%entries(n) )
+       self%current_index = 1
        do i=1,n
-          self%entries(i)%ptr => null()
+          call self%entries(i)%clear
        end do
     end if
 
@@ -329,7 +223,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer,                    intent(in)    :: index !! index.
     !/ -----------------------------------------------------------------------------------
 
-    flag = self%entries(index)%ptr%isComment()
+    flag = self%entries(index)%isComment()
 
   end function entry_by_index_is_only_comment
 
@@ -345,7 +239,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer,                    intent(in)    :: index !! index.
     !/ -----------------------------------------------------------------------------------
 
-    flag = self%entries(index)%ptr%isKVPair()
+    flag = self%entries(index)%isKVPair()
 
   end function entry_by_index_has_KV_pair
 
@@ -384,7 +278,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function get_next_entry( self, STATUS ) result( ent )
+  subroutine get_next_entry( self, ent, STATUS )
     !/ -----------------------------------------------------------------------------------
     !! Get the next available entry.
     !!
@@ -394,8 +288,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! |    1   |  no more  |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(config_entry_t), pointer            :: ent    !! pointer to an entry.
     class(config_entry_list_t), intent(inout) :: self   !! reference to this entry list.
+    type(config_entry_t),       intent(inout) :: ent    !! an entry.
     integer, optional,          intent(out)   :: STATUS !! return error code
     !/ -----------------------------------------------------------------------------------
     logical :: report
@@ -404,43 +298,46 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     ier    = 0
     report = .true.
-    ent => null()
 
     if ( present( STATUS ) ) report = .false.
+
+    call ent%clear
+
+    !! THERE IS A BETTER LOOP TO BE PUT HERE
 
 100 continue
 
     if ( self%iterator_index.le.self%current_index ) then
-       ent => self%get( self%iterator_index ) ! this is a deep copy see below
+       call ent%copy( self%entries(self%iterator_index) )
        self%iterator_index = self%iterator_index + 1
-       if ( associated( ent ) ) goto 200
+       if ( ent%isUsed() ) goto 200
        goto 100
-    else
-       if ( report ) then
-          call log_warn( 'ConfigEntryList%next: read past end' )
-       end if
-       ier = 1
     end if
 
+    if ( report ) then
+       call log_warn( 'ConfigEntryList%next: read past end' )
+    end if
+    ier = 1
+
 200 continue
-    
+
     if ( present( STATUS ) ) STATUS = ier
 
-  end function get_next_entry
+  end subroutine get_next_entry
 
-  
+
   !/ =====================================================================================
   function get_key_at_index( self, index ) result( key )
     !/ -----------------------------------------------------------------------------------
     !! Get the key from the indexed entry.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    character(:), allocatable                    :: key
+    character(:), allocatable                 :: key
     class(config_entry_list_t), intent(inout) :: self   !! reference to this entry list.
     integer,                    intent(in)    :: index    
     !/ -----------------------------------------------------------------------------------
-    if ( associated( self%entries(index)%ptr ) ) then
-       key = self%entries(index)%ptr%getKey()
+    if ( allocated( self%entries ) ) then
+       key = self%entries(index)%getKey()
     end if
   end function get_key_at_index
 
@@ -451,12 +348,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Get the value from the indexed entry.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    character(:), allocatable                    :: val
+    character(:), allocatable                 :: val
     class(config_entry_list_t), intent(inout) :: self   !! reference to this entry list.
     integer,                    intent(in)    :: index    
     !/ -----------------------------------------------------------------------------------
-    if ( associated( self%entries(index)%ptr ) ) then
-       val = self%entries(index)%ptr%getValue()
+    if ( allocated( self%entries ) ) then
+       val = self%entries(index)%getValue()
     end if
   end function get_value_at_index
 
@@ -471,14 +368,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     class(config_entry_list_t), intent(inout) :: self   !! reference to this entry list.
     integer,                    intent(in)    :: index    
     !/ -----------------------------------------------------------------------------------
-    if ( associated( self%entries(index)%ptr ) ) then
-       com = self%entries(index)%ptr%getComment()
+    if ( allocated( self%entries ) ) then
+       com = self%entries(index)%getComment()
     end if
   end function get_comment_at_index
 
 
   !/ =====================================================================================
-  function get_entry_at_index( self, index, STATUS ) result( ent )
+  subroutine get_entry_at_index( self, ent, index, STATUS )
     !/ -----------------------------------------------------------------------------------
     !! Get the data from the indexed entry.
     !!
@@ -488,8 +385,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! |    1   |  index out of bounds  |
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(config_entry_t), pointer            :: ent    !! pointer to a config entry.
     class(config_entry_list_t), intent(inout) :: self   !! reference to this entry list.
+    type(config_entry_t),       intent(inout) :: ent    !! config entry.
     integer,                    intent(in)    :: index  !! index
     integer,          optional, intent(out)   :: STATUS !! return error code
     !/ -----------------------------------------------------------------------------------
@@ -502,23 +399,22 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     if ( present( STATUS ) ) report = .false.
 
+    call ent%clear
+
     if ( index.gt.self%current_index ) then
        if ( report ) then
           call log_warn( 'ConfigEntryList%get: read past end' )
        end if
        ier = 1
     else
-       if ( associated( self%entries(index)%ptr ) ) then
-          allocate( ent )
-          call ent%copy( self%entries(index)%ptr )
-       else
-          ent => null()
+       if ( allocated( self%entries ) ) then
+          call ent%copy( self%entries(index) )
        end if
     end if
 
     if ( present( STATUS ) ) STATUS = ier
 
-  end function get_entry_at_index
+  end subroutine get_entry_at_index
 
 
   !/ =====================================================================================
@@ -535,11 +431,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        call self%grow( index+ADDITIONAL_PADDING )
     end if
 
-    if ( .not. associated( self%entries(index)%ptr ) ) then
-       allocate( self%entries(index)%ptr )
-    end if
-
-    call self%entries(index)%ptr%copy( ent )
+    call self%entries(index)%copy( ent )
 
     if ( index.gt.self%current_index ) then
        self%current_index = index

@@ -41,10 +41,10 @@ module deque_object_class
      !! Deque Node.
      !/ ----------------------------------------------------------------------------------
      
-     class(*),         pointer :: object => null() !! node object
-     type(deque_node), pointer :: prev   => null() !! pointer to the previous node in
+     class(*),          pointer :: object => null() !! node object
+     class(deque_node), pointer :: prev   => null() !! pointer to the previous node in
      !!                                               the deque
-     type(deque_node), pointer :: next   => null() !! pointer to the next node in the deque
+     class(deque_node), pointer :: next   => null() !! pointer to the next node in the deque
 
 
    contains
@@ -279,7 +279,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     class(Deque),      intent(inout) :: self !! reference to this deque class.
     class(*), pointer, intent(in) :: obj  !! deque data.
     !/ -----------------------------------------------------------------------------------
-    type(deque_node), pointer :: new_node
+    class(deque_node), pointer :: new_node
     !/ -----------------------------------------------------------------------------------
 
     new_node => deque_node( obj )
@@ -312,7 +312,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     class(Deque),      intent(inout) :: self !! reference to this deque class.
     class(*), pointer, intent(in)    :: obj  !! deque data.
     !/ -----------------------------------------------------------------------------------
-    type(deque_node), pointer :: new_node
+    class(deque_node), pointer :: new_node
     !/ -----------------------------------------------------------------------------------
 
     new_node => deque_node( obj )

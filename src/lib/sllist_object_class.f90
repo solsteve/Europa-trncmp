@@ -41,9 +41,8 @@ module sllist_object_class
      !! sllist Node.
      !/ ----------------------------------------------------------------------------------
      
-     class(*),          pointer :: object => null() !! node object
-     type(sllist_node), pointer :: next   => null() !! pointer to the next node in the sllist
-
+     class(*),           pointer :: object => null() !! node object
+     class(sllist_node), pointer :: next   => null() !! pointer to the next node in the sllist
 
    contains
 
@@ -253,7 +252,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
 
-
   !/ =====================================================================================
   subroutine sllist_push_tail_object( self, obj )
     !/ -----------------------------------------------------------------------------------
@@ -263,7 +261,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     class(sllist),     intent(inout) :: self !! reference to this sllist class.
     class(*), pointer, intent(in)    :: obj  !! sllist data.
     !/ -----------------------------------------------------------------------------------
-    type(sllist_node), pointer :: new_node
+    class(sllist_node), pointer :: new_node
     !/ -----------------------------------------------------------------------------------
 
     new_node => sllist_node( obj )

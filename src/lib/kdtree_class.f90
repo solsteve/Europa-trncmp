@@ -241,7 +241,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(kd_tree_t),          intent(inout) :: tree      !! Reference to this KDTree.
-    type(kd_node_t), pointer,  intent(in)    :: root      !! Root node.
+    class(kd_node_t), pointer, intent(in)    :: root      !! Root node.
     type(kd_node_t),           intent(in)    :: nd        !! Test node.
     integer,                   intent(in)    :: dim       !! Dimension to test.
     integer,                   intent(in)    :: max_dim   !! Number of dimensions.

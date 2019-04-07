@@ -527,8 +527,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Attempt to return a pointer to the next node in this Hashmap's internal iterattor.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(Hashmap),     intent(inout) :: self  !! reference to this hashmap
-    type(hashmap_node), intent(inout) :: node  !! pointer to the next node
+    class(Hashmap),      intent(inout) :: self  !! reference to this hashmap
+    class(hashmap_node), intent(inout) :: node  !! pointer to the next node
     !/ -----------------------------------------------------------------------------------
     class(btree),      pointer :: tree
     class(btree_node), pointer :: bnode

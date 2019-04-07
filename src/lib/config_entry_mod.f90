@@ -55,16 +55,20 @@ module config_entry_mod
      procedure, public :: getValue   => get_value
      procedure, public :: getComment => get_comment
 
+     procedure :: set_key
+     procedure :: set_value
+     procedure :: set_comment
+
      procedure, public :: set        => set_kvc
 
      procedure, public :: fromString => entry_from_string
      procedure, public :: toString   => entry_to_string
 
+     procedure, public :: isUsed     => is_entry_used
+
      final :: destroy_entry
 
   end type config_entry_t
-
-
 
 
   !/ =====================================================================================
@@ -73,6 +77,30 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
 
+  
+  !/ =====================================================================================
+  function is_entry_used( self ) result( tf )
+   !/ -----------------------------------------------------------------------------------
+    implicit none
+    logical                           :: tf
+    class(config_entry_t), intent(in) :: self !! reference to this entry.
+    !/ -----------------------------------------------------------------------------------
+    tf = .false.
+
+    if ( allocated( self%key_string ) ) then
+       tf = .true.
+    end if
+    
+    if ( allocated( self%value_string ) ) then
+       tf = .true.
+    end if
+    
+    if ( allocated( self%comment_string ) ) then
+       tf = .true.
+    end if
+    
+  end function is_entry_used
+  
 
   !/ =====================================================================================
   subroutine destroy_entry( ent )
@@ -124,16 +152,16 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     call self%clear
     
-    if ( allocated(src%key_string) ) then
-       self%key_string = TRIM(ADJUSTL(src%key_string))
+    if ( allocated( src%key_string ) ) then
+       allocate( self%key_string, source=TRIM(ADJUSTL(src%key_string)) )
     end if
 
-    if ( allocated(src%value_string) ) then
-       self%value_string = src%value_string
+    if ( allocated( src%value_string ) ) then
+       allocate( self%value_string, source=src%value_string )
     end if
 
-    if ( allocated(src%comment_string ) ) then
-       self%comment_string = TRIM(ADJUSTL(src%comment_string))
+    if ( allocated( src%comment_string ) ) then
+       allocate( self%comment_string, source=TRIM(ADJUSTL( src%comment_string ) ) )
     end if
 
   end subroutine copy_entry
@@ -232,6 +260,63 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
+  subroutine set_key( self, key )
+    !/ -----------------------------------------------------------------------------------
+    !! Set the key for this entry.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(config_entry_t), intent(inout) :: self !! reference to this entry.
+    character(*),          intent(in) :: key
+    !/ -----------------------------------------------------------------------------------
+
+    if ( allocated( self%key_string ) ) then
+       deallocate( self%key_string )
+    end if
+    
+    allocate( self%key_string, source=TRIM(ADJUSTL(key)) )
+
+  end subroutine set_key
+
+
+  !/ =====================================================================================
+  subroutine set_value( self, val )
+    !/ -----------------------------------------------------------------------------------
+    !! Set the value for this entry.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(config_entry_t), intent(inout) :: self !! reference to this entry.
+    character(*),          intent(in) :: val
+    !/ -----------------------------------------------------------------------------------
+
+    if ( allocated( self%value_string ) ) then
+       deallocate( self%value_string )
+    end if
+    
+    allocate( self%value_string, source=TRIM(ADJUSTL(val)) )
+
+  end subroutine set_value
+
+
+  !/ =====================================================================================
+  subroutine set_comment( self, com )
+    !/ -----------------------------------------------------------------------------------
+    !! Set the comment for this entry.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(config_entry_t), intent(inout) :: self !! reference to this entry.
+    character(*),          intent(in) :: com
+    !/ -----------------------------------------------------------------------------------
+
+    if ( allocated( self%comment_string ) ) then
+       deallocate( self%comment_string )
+    end if
+    
+    allocate( self%comment_string, source=TRIM(ADJUSTL(com)) )
+
+  end subroutine set_comment
+
+  
+  !/ =====================================================================================
   subroutine set_kvc( self, KEY, VAL, COM, LINE, ENT )
     !/ -----------------------------------------------------------------------------------
     !! Set Entry.
@@ -256,15 +341,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     ! ----- the following allows you to overide parsed values -------------
 
     if ( present( KEY ) ) then
-       self%key_string = TRIM(ADJUSTL(KEY))
+       call self%set_key( KEY )
     end if
 
     if ( present( VAL ) ) then
-       self%value_string = VAL
+       call self%set_value( VAL )
     end if
 
     if ( present( COM ) ) then
-       self%comment_string = TRIM(ADJUSTL(COM))
+       call self%set_comment( COM )
     end if
 
   end subroutine set_kvc
@@ -294,22 +379,23 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     call split( SP, line, ';', COUNT=n )
+    
     if ( 2.eq.n ) then ! ----- comment found ----------------------
-       S1                  = SP%get(1)
-       self%comment_string = TRIM(ADJUSTL(SP%get(2)))
+       S1 = SP%get(1)
+       call self%set_comment( SP%get(2) )
        call split( SP, S1, '=', COUNT=n )
        k = len( SP%get(1) )
        if ( 0.lt.k ) then
-          self%key_string = TRIM(ADJUSTL(SP%get(1)))
+          call self%set_key( SP%get(1) )
        end if
        if ( 2.eq.n ) then
-          self%value_string = SP%get(2)
+          call self%set_value( SP%get(2) )
        end if
     else ! ----- no comment found ---------------------------------
        call split( SP, line, '=', COUNT=n )
-       self%key_string   = TRIM(ADJUSTL(SP%get(1)))
+       call self%set_key( SP%get(1) )
        if ( 2.eq.n ) then
-          self%value_string = SP%get(2)
+          call self%set_value( SP%get(2) )
        end if
     end if
 
@@ -329,6 +415,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     integer :: count, ier
     logical :: report
+    character(:), allocatable :: temp_str
     !/ -----------------------------------------------------------------------------------
 
     count  = 0
@@ -341,33 +428,35 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     if ( allocated( self%comment_string ) ) count = count + 4
 
     if    ( 1.eq.count ) then
-       pstr = self%key_string
+       temp_str = self%key_string
     elseif( 2.eq.count ) then
        if ( report ) then
           call log_warn( 'value with no key' )
        end if
        ier = 2
     elseif( 3.eq.count ) then
-       pstr = self%key_string // ' = ' // self%value_string
+       temp_str = self%key_string // ' = ' // self%value_string
     elseif( 4.eq.count ) then
-       pstr = '; '
-       pstr = pstr // self%comment_string
+       temp_str = '; '
+       temp_str = temp_str // self%comment_string
     elseif( 5.eq.count ) then
-       pstr = self%key_string // ' ; ' // self%comment_string
+       temp_str = self%key_string // ' ; ' // self%comment_string
     elseif( 6.eq.count ) then
        if ( report ) then
           call log_warn( 'value with no key' )
        end if
        ier = 3
     elseif( 7.eq.count ) then
-       pstr = self%key_string // ' = ' // self%value_string // ' ; ' // self%comment_string
+       temp_str = self%key_string // ' = ' // self%value_string // ' ; ' // self%comment_string
     else
-       pstr = ''
+       temp_str = ''
        ier = 1
     end if
 
-    if ( present( STATUS ) ) STATUS = ier  
+    if ( present( STATUS ) ) STATUS = ier
 
+    allocate( pstr, source=TRIM( ADJUSTL( temp_str ) ) )
+    
   end function entry_to_string
 
 
