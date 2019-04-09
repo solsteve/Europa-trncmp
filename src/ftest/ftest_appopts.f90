@@ -34,8 +34,8 @@ program main
   
   !/ -------------------------------------------------------------------------------------
 
-  call cli%add( 'if', 'APP', 'infile',  .true.,  '', 'path to an input  file' )
-  call cli%add( 'of', 'APP', 'outfile', .true.,  '', 'path to an output file' )
+  call cli%add( 'if', 'APP', 'infile',  .true.,  'input.dat', 'path to an input  file' )
+  call cli%add( 'of', 'APP', 'outfile', .true.,  'output.dat', 'path to an output file' )
   call cli%add( 'n',  'APP', 'count',   .false., '', 'number of records to process' )
 
   call AppOptions%init( cli )
@@ -45,12 +45,18 @@ program main
   
   call AppOptions%getConfigDB( cfg, STATUS=ierr )
 
-  call cfg%writeINI( UNIT=6 )
-
   if ( 0 .eq. ierr ) then
-     
+     write( ERROR_UNIT, * ) 'Success'
   else
      write( ERROR_UNIT, * ) 'Configuration failed'
+  end if
+
+  call cfg%writeINI( UNIT=6, IOSTAT=ierr )
+
+  if ( 0 .eq. ierr ) then
+     write( ERROR_UNIT, * ) 'Success'
+  else
+     write( ERROR_UNIT, * ) 'WriteINI failed'
   end if
 
 end program main

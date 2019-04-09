@@ -479,6 +479,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     
     !/ ----- check for help --------------------------------------------------------------
 
+    write(*,*) 'check for help'
+    
     arg_len = 256
     if ( self%check_for_help ) then
        n = COMMAND_ARGUMENT_COUNT()
@@ -493,17 +495,23 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     
     !/ ----- add user defaults -----------------------------------------------------------
 
+    write(*,*) 'add user defaults'
+
     n = self%climap%cur_entry
+    write(*,*) '   self%climap%cur_entry = ', n
     do i=1,n
        if ( allocated( self%climap%cli_map(i)%ptr%default ) ) then
           dsec => cfg%get( self%climap%cli_map(i)%ptr%section )
           dkey = self%climap%cli_map(i)%ptr%cfg_key
           dval = self%climap%cli_map(i)%ptr%default
+          write(*,*) dsec%getName(), dkey, dval
           call dsec%set( KEY=dkey, VAL=dval )
        end if
     end do
 
     !/ ----- load command line and environment -------------------------------------------
+
+    write(*,*) 'load command line and environment'
 
     call self%parse_environment( cfg )
     call self%parse_command_line( cfg )
