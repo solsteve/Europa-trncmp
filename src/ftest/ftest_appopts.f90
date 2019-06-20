@@ -30,23 +30,51 @@ program main
 
   type(cli_map_t)  :: cli
   type(configdb_t) :: cfg
+  type(config_section_t), pointer :: sec
   integer          :: ierr
+  character(:), allocatable :: nstr
   
   !/ -------------------------------------------------------------------------------------
 
+<<<<<<< HEAD
   call cli%add( 'if', 'APP', 'infile',  .true.,  'input.dat', 'path to an input  file' )
   call cli%add( 'of', 'APP', 'outfile', .true.,  'output.dat', 'path to an output file' )
   call cli%add( 'n',  'APP', 'count',   .false., '', 'number of records to process' )
+=======
+  call tlogger_set( CONSOLE=tlogger_debug )
+  
+  call cli%add( APP_OPT_FILENAME, 'APP', 'flag',    .true.,  '',  'operation: E, D, or G' )
+  call cli%add( 'if',             'APP', 'infile',  .true.,  '',  'path to an input  file' )
+  call cli%add( 'of',             'APP', 'outfile', .true.,  '',  'path to an output file' )
+  call cli%add( 'n',              'APP', 'count',   .false., '9', 'number of records to process' )
+>>>>>>> Added experiment in solving Kepler's equation
 
   call AppOptions%init( cli )
-  call AppOptions%setConfigBase( 'app' )
+  call AppOptions%setConfigBase( 'ftest' )
+  call AppOptions%setConfigPath( '~:..' )
+  call AppOptions%setEnvSectionName( 'NewEnv' )
+  call AppOptions%setOptSectionName( 'NewOPts' )
+  call AppOptions%setEnvConfigFilename( 'ECFG' )
   call AppOptions%setOptConfigFilename( 'cfg' )
   call AppOptions%setHelp( 'help' )
-  
   call AppOptions%getConfigDB( cfg, STATUS=ierr )
 
   if ( 0 .eq. ierr ) then
+<<<<<<< HEAD
      write( ERROR_UNIT, * ) 'Success'
+=======
+     sec  => cfg%get( 'APP', STATUS=ierr )
+     if ( 0.eq.ierr ) then
+        call sec%get( 'count', VAL=nstr, STATUS=ierr )
+        if ( 0.eq.ierr ) then
+           write(*,*) 'count =', nstr
+        else
+           write(*,*) 'Key "count" not found'
+        end if
+     else
+        write(*,*) 'Section "APP" not found'
+     end if
+>>>>>>> Added experiment in solving Kepler's equation
   else
      write( ERROR_UNIT, * ) 'Configuration failed'
   end if

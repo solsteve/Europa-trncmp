@@ -22,13 +22,14 @@
 !/ **                                                                                   **
 !/ ----- Modification History ------------------------------------------------------------
 !
-!> @brief  Feed Forward Neural Network.
+!! author:  Stephen W. Soliday
+!! date:    2017-07-02
+!! license: GPL
 !!
-!! @details Provides the interface and procedures for implementing a fully connected
-!!          multi-layer feed forward neural network.
+!!## Feed Forward Neural Network.
 !!
-!! @author  Stephen W. Soliday
-!! @date    2017-JUL-02
+!! Provides the interface and procedures for implementing a fully connected
+!! multi-layer feed forward neural network.
 !
 !/ =======================================================================================
 module bpn2_class
@@ -39,29 +40,29 @@ module bpn2_class
   !/ =====================================================================================
   type BPN2
      !/ ----------------------------------------------------------------------------------
-     integer  :: num_inp           !< number of inputs.
-     integer  :: num_hid           !< number of hidden elements.
-     integer  :: num_out           !< number of output elements.
+     integer  :: num_inp           !! number of inputs.
+     integer  :: num_hid           !! number of hidden elements.
+     integer  :: num_out           !! number of output elements.
 
-     real(dp), pointer :: B1(:)    => null()  !< first  layer bias
-     real(dp), pointer :: W1(:,:)  => null()  !< first  layer weights
-     real(dp), pointer :: z1(:)    => null()  !< first  layer sums
-     real(dp), pointer :: a1(:)    => null()  !< first  layer outputs
-     real(dp), pointer :: d1(:)    => null()  !< first  layer errors
-     real(dp), pointer :: dB1(:)   => null()  !< first  layer bias differential
-     real(dp), pointer :: dW1(:,:) => null()  !< first  layer weights differential
-     real(dp), pointer :: aB1(:)   => null()  !< first  layer bias accumulator
-     real(dp), pointer :: aW1(:,:) => null()  !< first  layer weights accumulator
+     real(dp), pointer :: B1(:)    => null()  !! first  layer bias
+     real(dp), pointer :: W1(:,:)  => null()  !! first  layer weights
+     real(dp), pointer :: z1(:)    => null()  !! first  layer sums
+     real(dp), pointer :: a1(:)    => null()  !! first  layer outputs
+     real(dp), pointer :: d1(:)    => null()  !! first  layer errors
+     real(dp), pointer :: dB1(:)   => null()  !! first  layer bias differential
+     real(dp), pointer :: dW1(:,:) => null()  !! first  layer weights differential
+     real(dp), pointer :: aB1(:)   => null()  !! first  layer bias accumulator
+     real(dp), pointer :: aW1(:,:) => null()  !! first  layer weights accumulator
 
-     real(dp), pointer :: B2(:)    => null()  !< second layer bias
-     real(dp), pointer :: W2(:,:)  => null()  !< second layer weights
-     real(dp), pointer :: z2(:)    => null()  !< second layer sums
-     real(dp), pointer :: a2(:)    => null()  !< second layer outputs
-     real(dp), pointer :: d2(:)    => null()  !< second layer errors
-     real(dp), pointer :: dB2(:)   => null()  !< second layer bias differential
-     real(dp), pointer :: dW2(:,:) => null()  !< second layer weights differential
-     real(dp), pointer :: aB2(:)   => null()  !< second layer bias accumulator
-     real(dp), pointer :: aW2(:,:) => null()  !< second layer weights accumulator
+     real(dp), pointer :: B2(:)    => null()  !! second layer bias
+     real(dp), pointer :: W2(:,:)  => null()  !! second layer weights
+     real(dp), pointer :: z2(:)    => null()  !! second layer sums
+     real(dp), pointer :: a2(:)    => null()  !! second layer outputs
+     real(dp), pointer :: d2(:)    => null()  !! second layer errors
+     real(dp), pointer :: dB2(:)   => null()  !! second layer bias differential
+     real(dp), pointer :: dW2(:,:) => null()  !! second layer weights differential
+     real(dp), pointer :: aB2(:)   => null()  !! second layer bias accumulator
+     real(dp), pointer :: aW2(:,:) => null()  !! second layer weights accumulator
 
    contains
 
@@ -119,18 +120,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Constructor.
-  !! @param[in,out] self reference to this two layer network.
-  !! @param[in]     inp  number of inputs.
-  !! @param[in]     hid  number of hidden elements.
-  !! @param[in]     out  number of outputs.
+  !! Constructor.
   !/ -------------------------------------------------------------------------------------
   subroutine bpn_set_size1( self, inp, hid )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(BPN2), intent(inout) :: self
-    integer,     intent(in)    :: inp    !< number of inputs.         
-    integer,     intent(in)    :: hid    !< number of hidden elements.
+    class(BPN2), intent(inout) :: self   !! reference to this two layer network.
+    integer,     intent(in)    :: inp    !! number of inputs.         
+    integer,     intent(in)    :: hid    !! number of hidden elements.
     !/ -----------------------------------------------------------------------------------
     self%num_inp = inp
     self%num_hid = hid
@@ -149,17 +146,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   
 
   !/ =====================================================================================
-  !> @brief Constructor.
-  !! @param[in,out] self reference to this two layer network.
-  !! @param[in]     hid  number of hidden elements.
-  !! @param[in]     out  number of outputs.
+  !! Constructor.
   !/ -------------------------------------------------------------------------------------
   subroutine bpn_set_size2( self, hid, out )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(BPN2), intent(inout) :: self
-    integer,     intent(in)    :: hid    !< number of hidden elements.
-    integer,     intent(in)    :: out    !< number of output elements.
+    class(BPN2), intent(inout) :: self   !! reference to this two layer network.
+    integer,     intent(in)    :: hid    !! number of hidden elements.
+    integer,     intent(in)    :: out    !! number of output elements.
     !/ -----------------------------------------------------------------------------------
     self%num_hid = hid
     self%num_out = out
@@ -178,19 +172,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   
   !/ =====================================================================================
-  !> @brief Constructor.
-  !! @param[in,out] self reference to this two layer network.
-  !! @param[in]     inp  number of inputs.
-  !! @param[in]     hid  number of hidden elements.
-  !! @param[in]     out  number of outputs.
+  !! Constructor.
   !/ -------------------------------------------------------------------------------------
   subroutine bpn_set_size( self, inp, hid, out )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(BPN2), intent(inout) :: self
-    integer,     intent(in)    :: inp    !< number of inputs.         
-    integer,     intent(in)    :: hid    !< number of hidden elements.
-    integer,     intent(in)    :: out    !< number of output elements.
+    class(BPN2), intent(inout) :: self   !! reference to this two layer network.
+    integer,     intent(in)    :: inp    !! number of inputs.         
+    integer,     intent(in)    :: hid    !! number of hidden elements.
+    integer,     intent(in)    :: out    !! number of output elements.
     !/ -----------------------------------------------------------------------------------
 
     call self%bpn_set_size1( inp, hid )
@@ -200,19 +190,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   
   !/ =====================================================================================
-  !> @brief Constructor.
-  !! @param[in,out] net reference to a two layer network.
-  !! @param[in]     inp number of inputs.
-  !! @param[in]     hid number of hidden elements.
-  !! @param[in]     out number of outputs.
+  !! Constructor.
   !/ -------------------------------------------------------------------------------------
   subroutine bpn_create_params( net, inp, hid, out )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(BPN2), intent(inout) :: net
-    integer,    intent(in)    :: inp    !< number of inputs.         
-    integer,    intent(in)    :: hid    !< number of hidden elements.
-    integer,    intent(in)    :: out    !< number of output elements.
+    type(BPN2), intent(inout) :: net    !! reference to a two layer network.
+    integer,    intent(in)    :: inp    !! number of inputs.         
+    integer,    intent(in)    :: hid    !! number of hidden elements.
+    integer,    intent(in)    :: out    !! number of output elements.
     !/ -----------------------------------------------------------------------------------
 
     call net%bpn_set_size( inp, hid, out )
@@ -220,17 +206,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end subroutine bpn_create_params
   
   !/ =====================================================================================
-  !> @brief Constructor.
-  !! @param[in,out] net reference to a two layer network.
-  !! @param[in]     inp number of inputs.
-  !! @param[in]     hid number of hidden elements.
-  !! @param[in]     out number of outputs.
+  !! Constructor.
   !/ -------------------------------------------------------------------------------------
   subroutine bpn_create_read_file( net, file )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(BPN2),   intent(inout) :: net
-    character(*), intent(in)    :: file
+    type(BPN2),   intent(inout) :: net    !! reference to a two layer network.
+    character(*), intent(in)    :: file   !! configuration file
     !/ -----------------------------------------------------------------------------------
 
     call net%bpn_read_weights( FILE=file )
@@ -238,19 +220,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end subroutine bpn_create_read_file
   
   !/ =====================================================================================
-  !> @brief Constructor.
-  !! @param[in] inp number of inputs.
-  !! @param[in] hid number of hidden elements.
-  !! @param[in] out number of outputs.
-  !! @return net pointer to a two layer network.
+  !! Constructor.
   !/ -------------------------------------------------------------------------------------
   function bpn_allocate_params( inp, hid, out ) result( net )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(BPN2), pointer   :: net
-    integer,    intent(in) :: inp    !< number of inputs.         
-    integer,    intent(in) :: hid    !< number of hidden elements.
-    integer,    intent(in) :: out    !< number of output elements.
+    class(BPN2), pointer   :: net    !! pointer to a two layer network.
+    integer,    intent(in) :: inp    !! number of inputs.         
+    integer,    intent(in) :: hid    !! number of hidden elements.
+    integer,    intent(in) :: out    !! number of output elements.
     !/ -----------------------------------------------------------------------------------
 
     allocate( net )
@@ -260,17 +238,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   
   !/ =====================================================================================
-  !> @brief Constructor.
-  !! @param[in] inp number of inputs.
-  !! @param[in] hid number of hidden elements.
-  !! @param[in] out number of outputs.
-  !! @return net pointer to a two layer network.
+  !! Constructor.
   !/ -------------------------------------------------------------------------------------
   function bpn_allocate_read_file( file ) result( net )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(BPN2), pointer     :: net
-    character(*), intent(in) :: file
+    class(BPN2), pointer     :: net    !! pointer to a two layer network.
+    character(*), intent(in) :: file   !! configuration
     !/ -----------------------------------------------------------------------------------
 
     allocate( net )
@@ -297,14 +271,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     
   
   !/ =====================================================================================
-  !> @brief Weight Initialization.
-  !! @param[in,out] self reference to this net.
+  !! Weight Initialization.
   !/ -------------------------------------------------------------------------------------
   subroutine bpn_weight_init( self, eta )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(BPN2),        intent(inout) :: self
-    real(dp), optional, intent(in)    :: eta
+    class(BPN2),        intent(inout) :: self  !! reference to this net.
+    real(dp), optional, intent(in)    :: eta   !! reference to this net.
     !/ -----------------------------------------------------------------------------------
     real(dp) :: s
     integer  :: i, j
@@ -337,13 +310,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Reset Network.
-  !! @param[in,out] self reference to this net.
+  !! Reset Network.
   !/ -------------------------------------------------------------------------------------
   subroutine bpn_reset( self )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(BPN2), intent(inout) :: self
+    class(BPN2), intent(inout) :: self !! reference to this net.
     !/ -----------------------------------------------------------------------------------
     integer :: i, j
     !/ -----------------------------------------------------------------------------------
@@ -376,17 +348,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Forward Pass.
-  !! @param[in,out] self reference to this net.
-  !! @param[in,out] X    input vector.
-  !! @param[in,out] y    optional output vector.
+  !! Forward Pass.
   !/ -------------------------------------------------------------------------------------
   subroutine bpn_forward( self, X, y )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(BPN2),        intent(inout) :: self
-    real(dp),           intent(inout) :: X(:)
-    real(dp), optional, intent(inout) :: y(:)
+    class(BPN2),        intent(inout) :: self !! reference to this net.
+    real(dp),           intent(inout) :: X(:) !! input vector.
+    real(dp), optional, intent(inout) :: y(:) !! optional output vector.
     !/ -----------------------------------------------------------------------------------
     integer  :: n, c, inp, hid, out
     real(dp) :: s
@@ -423,19 +392,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Backwards Pass.
-  !! @param[in,out] self reference to this net.
-  !! @param[in,out] X    input vector.
-  !! @param[in,out] T    desired output vector.
-  !! @param[out]    CST  optional error output
+  !! Backwards Pass.
   !/ -------------------------------------------------------------------------------------
   subroutine bpn_backwards( self, X, T, CST )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(BPN2),        intent(inout) :: self
-    real(dp),           intent(inout) :: X(:)
-    real(dp),           intent(inout) :: T(:)
-    real(dp), optional, intent(out)   :: CST
+    class(BPN2),        intent(inout) :: self !! reference to this net.
+    real(dp),           intent(inout) :: X(:) !! input vector.
+    real(dp),           intent(inout) :: T(:) !! desired output vector.
+    real(dp), optional, intent(out)   :: CST  !! optional error output
     !/ -----------------------------------------------------------------------------------
     integer  :: n, c, j, inp, hid, out
     real(dp) :: s, fout, cost, dif, temp
@@ -488,15 +453,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Update the Weights.
-  !! @param[in,out] self reference to this net.
-  !! @param[in]     eta  optional learning parameter.
+  !! Update the Weights.
   !/ -------------------------------------------------------------------------------------
   subroutine bpn_update( self, eta )
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(BPN2),        intent(inout) :: self
-    real(dp), optional, intent(in)    :: eta
+    class(BPN2),        intent(inout) :: self !! reference to this net.
+    real(dp), optional, intent(in)    :: eta  !! optional learning parameter.
     !/ -----------------------------------------------------------------------------------
     real(dp) :: alf
     integer  :: n, c, inp, hid, out
@@ -528,13 +491,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Write Weights.
-  !! @param[in,out] self   reference to this net.
-  !! @param[in]     file   optional path to an new or existing file.
-  !! @param[in]     unit   file unit for an open unit
-  !! @param[out]    iostat optional error return.
-  !! @param[in]     fmt    optional output format ( default 'ES15.8' )
-  !!
+  !! Write Weights.
   !! Write the structure and weights of this two layer neural network.
   !/ -------------------------------------------------------------------------------------
   subroutine bpn_write_weights( self, FILE, UNIT, IOSTAT, FMT )
@@ -542,11 +499,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     use file_tools, only : WriteUnit
     use tlogger,    only : log_error
     implicit none
-    class(BPN2),            intent(inout) :: self
-    character(*), optional, intent(in)    :: FILE
-    integer,      optional, intent(in)    :: UNIT
-    integer,      optional, intent(out)   :: IOSTAT
-    character(*), optional, intent(in)    :: FMT
+    class(BPN2),            intent(inout) :: self   !! reference to this net.
+    character(*), optional, intent(in)    :: FILE   !! optional path to an new or existing file.
+    integer,      optional, intent(in)    :: UNIT   !! file unit for an open unit.
+    integer,      optional, intent(out)   :: IOSTAT !! optional error return.
+    character(*), optional, intent(in)    :: FMT    !! optional output format ( default 'ES15.8' )
     !/ -----------------------------------------------------------------------------------
     integer   :: outf, ios, i, j
     logical   :: report
@@ -624,12 +581,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  !> @brief Write Weights.
-  !! @param[in,out] self   reference to this net.
-  !! @param[in]     file   optional path to an new or existing file.
-  !! @param[in]     unit   file unit for an open unit
-  !! @param[out]    iostat optional error return.
-  !!
+  !! Write Weights.
   !! Write the structure and weights of this two layer neural network.
   !/ -------------------------------------------------------------------------------------
   subroutine bpn_read_weights( self, FILE, UNIT, IOSTAT )
@@ -637,10 +589,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     use file_tools, only : ReadUnit
     use tlogger,    only : log_error
     implicit none
-    class(BPN2),            intent(inout) :: self
-    character(*), optional, intent(in)    :: FILE
-    integer,      optional, intent(in)    :: UNIT
-    integer,      optional, intent(out)   :: IOSTAT
+    class(BPN2),            intent(inout) :: self   !! reference to this net.
+    character(*), optional, intent(in)    :: FILE   !! optional path to an new or existing file.
+    integer,      optional, intent(in)    :: UNIT   !! file unit for an open unit.
+    integer,      optional, intent(out)   :: IOSTAT !! optional error return.
     !/ -----------------------------------------------------------------------------------
     integer   :: inf, ios, i, j, inp, hid, out, temp
     logical   :: report

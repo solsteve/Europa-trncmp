@@ -34,9 +34,11 @@ module app_options_mod
   use trncmp_env
   use configdb_mod
   use tlogger
+  use string_tools
   private
 
   integer, parameter :: DEFAULT_MAX = 128
+  character(12), parameter, public :: APP_OPT_FILENAME = 'WXYZFSPC1234'
 
   !/ =====================================================================================
   type :: cli_map_entry_t
@@ -47,6 +49,7 @@ module app_options_mod
      logical                   :: required = .false. !! is this option required
      character(:), allocatable :: default            !! default value is option is missing
      character(:), allocatable :: description        !! description for usage function
+
   end type cli_map_entry_t
 
 
@@ -64,6 +67,7 @@ module app_options_mod
      type(cli_map_entry_ptr_t), allocatable :: cli_map(:)      !! array of entries
      integer                                :: max_entries = 0 !! max array length
      integer                                :: cur_entry   = 0 !! number of entries
+     integer                                :: cur_file    = 0 !! number of entries
 
    contains
 
@@ -79,45 +83,47 @@ module app_options_mod
   type :: app_option_t
      !/ ----------------------------------------------------------------------------------
 
-     class(cli_map_t),  pointer :: climap   => null()
-     class(configdb_t), pointer :: cfgdb    => null()
-     logical                    :: req_init = .true.
+     class(cli_map_t),  pointer :: climap         => null()
+     class(configdb_t), pointer :: cfgdb          => null()
+     logical                    :: req_init       = .true.
      logical                    :: check_for_help = .false.
 
-     character(:), allocatable  :: base_name !! base name for config files
-     character(:), allocatable  :: cfg_key   !! command line key for config file
-     character(:), allocatable  :: help_key  !! command line key for help screen
-     character(:), allocatable  :: prog_name !! program name
+     character(:), allocatable  :: base_name    !! base name for config files
+     character(:), allocatable  :: cfg_key      !! command line key for config file
+     character(:), allocatable  :: env_cfg_key  !! environment key for config file
+     character(:), allocatable  :: help_key     !! command line key for help screen
+     character(:), allocatable  :: prog_name    !! program name
 
      character(:), allocatable  :: env_secname  !! environment section name
      character(:), allocatable  :: opt_secname  !! command line section name
      
+     character(:), allocatable  :: title        !! application title
+     character(:), allocatable  :: path         !! search path
+
    contains
 
      procedure, private :: alloc_instance
+     procedure, public  :: init                 => initialize_with_cli_map
+
+     procedure, public  :: setTitleLine         => set_title_line
+     procedure, public  :: setConfigBase        => set_base_config_name
+     procedure, public  :: setConfigPath        => set_config_path
+     procedure, public  :: setEnvSectionName    => set_env_section_name
+     procedure, public  :: setOptSectionName    => set_config_section_name
+     procedure, public  :: setOptConfigFilename => set_config_file_key
+     procedure, public  :: setEnvConfigFilename => set_env_config_file_key
+     procedure, public  :: setHelp              => set_help_key
+
+     procedure, public  :: usage                => display_usage_page
+   ! procedure, public  :: setUsageFunction     => set_usage_function
+
      procedure, private :: parse_command_line
      procedure, private :: parse_environment
-     
-     procedure, public  :: usage                => display_usage_page
-     procedure, public  :: init                 => initialize_with_cli_map
-     procedure, public  :: setConfigBase        => set_base_config_name
-     procedure, public  :: setOptConfigFilename => set_config_file_key
-     procedure, public  :: setHelp              => set_help_key
+   ! procedure, public  :: setCommandLine       => set_command_line
+   ! procedure, public  :: addOptions           => add_options
+
      procedure, public  :: getConfigDB          => get_configdb
-
-
-
-
-     ! setConfigDB
-     ! setAppName
-     ! setConfigPath
-     ! setEnvSectionName
-     ! setOptSectionName
-     ! setEnvConfigFilename
-     ! setCommandLine
-     ! addOptions
-
-     
+   ! procedure, public  :: setConfigDB          => set_configdb
 
      final :: destroy_app_options
 
@@ -142,27 +148,30 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
 
 
+
+  
   !/ =====================================================================================
   function get_number_cli_entries( map ) result( n )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Return the number of entries in the CLI map.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    integer                        :: n
-    type(cli_map_t), intent(inout) :: map
+    integer                        :: n   !! return the number of entries.
+    type(cli_map_t), intent(inout) :: map !! reference to a CLI map.
     !/ -----------------------------------------------------------------------------------
 
-
+    n = map%cur_entry
+    
   end function get_number_cli_entries
 
   
   !/ =====================================================================================
   subroutine destroy_map( map )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Destructor
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(cli_map_t), intent(inout) :: map
+    type(cli_map_t), intent(inout) :: map !! reference to a CLI map.
     !/ -----------------------------------------------------------------------------------
     integer :: i
     !/ -----------------------------------------------------------------------------------
@@ -189,15 +198,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Set a specific size for the map.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(cli_map_t), intent(inout) :: self
-    integer,          intent(in)    :: n
+    class(cli_map_t), intent(inout) :: self !! reference to this CLI map.
+    integer,          intent(in)    :: n    !! desired entry capacity
     !/ -----------------------------------------------------------------------------------
     integer :: i
     !/ -----------------------------------------------------------------------------------
 
     if ( n.gt.self%max_entries ) then
        allocate( self%cli_map(n) )
-       call log_info( 'Allocate map', I4=n )
+       call log_debug( 'Allocate map', I4=n )
        do i=1,n
           self%cli_map(i)%ptr => null()
        end do
@@ -211,10 +220,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine add_command_line_description( self, name, sec, cfgkey, req, def, desc )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Add a command reference.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(cli_map_t), intent(inout) :: self
+    class(cli_map_t), intent(inout) :: self   !! reference to this CLI map.
     character(*),     intent(in)    :: name   !! command line option key
     character(*),     intent(in)    :: sec    !! section name
     character(*),     intent(in)    :: cfgkey !! configdb file key
@@ -222,7 +231,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     character(*),     intent(in)    :: def    !! default value is option is missing
     character(*),     intent(in)    :: desc   !! description for usage function
     !/ -----------------------------------------------------------------------------------
-    integer :: dummy
+    integer       :: dummy
+    character(16) :: FSPC
     !/ -----------------------------------------------------------------------------------
 
     call self%setMax( DEFAULT_MAX )
@@ -236,7 +246,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
        allocate( self%cli_map(self%cur_entry)%ptr )
 
-       self%cli_map(self%cur_entry)%ptr%name        = name
+       if ( LEQ( APP_OPT_FILENAME, name ) ) then
+          self%cur_file = self%cur_file + 1
+          write(FSPC,100) self%cur_file
+100       format('file',I0)
+          self%cli_map(self%cur_entry)%ptr%name = TRIM(ADJUSTL(FSPC))
+       else
+          self%cli_map(self%cur_entry)%ptr%name = name
+       end if
+
        self%cli_map(self%cur_entry)%ptr%section     = sec
        self%cli_map(self%cur_entry)%ptr%cfg_key     = cfgkey
        self%cli_map(self%cur_entry)%ptr%required    = req
@@ -253,7 +271,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine destroy_app_options( appopt )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Destructor.
     !/ -----------------------------------------------------------------------------------
     implicit none
     type(app_option_t), intent(inout) :: appopt !! reference to an app option
@@ -284,7 +302,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine parse_command_line( self, cfg )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Parse the command line for key=value pairs. When just a value appears on the line
+    !! it will be interpreted as a file and given sequential keys: file1=, file2=,...
     !/ -----------------------------------------------------------------------------------
     use config_entry_mod
     use config_section_mod
@@ -293,57 +312,53 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     type(configdb_t),    intent(inout) :: cfg  !! reference to the configdb
     !/ -----------------------------------------------------------------------------------
     class(config_section_t), pointer :: csec
-    type(config_entry_t)            :: entry
-    character(256)                  :: temp_arg
-    character(16)                   :: file_key
-    character(:), allocatable       :: key, val
-    integer                         :: i, arg_len, sidx, file_index, count, istat
+    type(config_entry_t)             :: entry
+    character(256)                   :: temp_arg
+    character(16)                    :: file_key
+    character(:), allocatable        :: key, val
+    integer                          :: i, arg_len, sidx, file_index, count, istat
     !/ -----------------------------------------------------------------------------------
-    
+
     csec => null()
-    
+
     sidx = cfg%find( self%opt_secname, STATUS=istat )
-    if ( 0.eq.istat ) then
-       csec => cfg%get( sidx ) 
-    else
+
+    if ( 0.ne.istat ) then
        allocate( csec )
        call csec%setName( self%opt_secname )
        call cfg%add( csec )
+       deallocate( csec )  ! This is because add==merge and merge==copy
     end if
 
+    csec => cfg%get( self%opt_secname, STATUS=istat )
+    
     count = COMMAND_ARGUMENT_COUNT()
 
     call GET_COMMAND_ARGUMENT( NUMBER=0, VALUE=temp_arg, LENGTH=arg_len )
-    !write(*,*) 0, TRIM(ADJUSTL(temp_arg)), itest, ierr
 
     self%prog_name = TRIM( ADJUSTL( temp_arg ) )
 
-    call csec%set( KEY='progname', VAL=temp_arg )
+    call csec%set( KEY='progname', VAL=temp_arg, STATUS=istat )
 
     file_index = 1
     do i=1,count
        call GET_COMMAND_ARGUMENT( NUMBER=i, VALUE=temp_arg, LENGTH=arg_len )
-       !write(*,*) 'Read [',TRIM(ADJUSTL(temp_arg)),']'
+
        call entry%clear
        call entry%fromString( temp_arg )
        if ( entry%isKVPair() ) then
           key = entry%getKey()
           val = entry%getValue()
-          !write(*,200) temp_arg 
           call csec%set( KEY=key, VAL=val )
        else
           write(file_key,100) file_index
           file_index = file_index + 1
           call csec%set( KEY=file_key, VAL=temp_arg )
-          !write(*,300) file_key, temp_arg 
        end if
 
     end do
 
 100 format( 'file',I0 )
-
-200 format( 'KV Pair:    ',A )
-300 format( 'File Token: ',A,' ',A )
     
   end subroutine parse_command_line
 
@@ -351,7 +366,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine alloc_instance( self )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Initialization.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(app_option_t), intent(inout) :: self !! reference to this app option
@@ -359,10 +374,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     if ( self%req_init ) then
        self%req_init = .false.
        call log_info( 'Set default values' )
+       
        !/ ----- set default values --------------------
+       self%base_name   = 'configdb'
        self%env_secname = 'ENV'
        self%opt_secname = 'CLI'
-       
+       self%prog_name   = 'Application'
+       self%title       = 'Application * ver 1.0 * 20xx'
+       self%path        = '/etc:~:.'
     end if
   end subroutine alloc_instance
 
@@ -370,7 +389,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine initialize_with_cli_map( self, climap )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Initialize with user supplied CLI map.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(app_option_t),     intent(inout) :: self   !! reference to this app option
@@ -386,7 +405,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine set_base_config_name( self, base_name )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Set the base config file name.
+    !!
+    !! three directories will be searched: /etc, ~, and .
+    !! two file names will be derived:   .base_name and base_name.cfg
+    !! this creates 6 possible config files.
+    !! the order is /etc/.base /etc/base.cfg ~/.base ~/base.cfg ./.base ./base.cfg
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(app_option_t), intent(inout) :: self       !! reference to this app option
@@ -402,7 +426,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine set_config_file_key( self, cfg_key )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! This is the optional command line key that points to a config file.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(app_option_t), intent(inout) :: self     !! reference to this app option
@@ -416,9 +440,25 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
+  subroutine set_env_config_file_key( self, env_cfg_key )
+    !/ -----------------------------------------------------------------------------------
+    !! This is the optional environment variable key that points to a config file.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self         !! reference to this app option
+    character(*),        intent(in)    :: env_cfg_key  !! environment key for config file
+    !/ -----------------------------------------------------------------------------------
+    call self%alloc_instance
+
+    self%env_cfg_key = TRIM( ADJUSTL( env_cfg_key ) )
+
+  end subroutine set_env_config_file_key
+
+
+  !/ =====================================================================================
   subroutine set_help_key( self, help_key )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! This is the command line word that will activate the usage page and abort.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(app_option_t), intent(inout) :: self      !! reference to this app option
@@ -432,17 +472,106 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end subroutine set_help_key
 
 
+
+
+
+
+
+
+
+
+
+  !/ =====================================================================================
+  subroutine set_title_line( self, title )
+    !/ -----------------------------------------------------------------------------------
+    !! Set the title line above the usage statement.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self      !! reference to this app option
+    character(*),        intent(in)    :: title     !! application title
+    !/ -----------------------------------------------------------------------------------
+
+    call self%alloc_instance
+    self%title = TRIM( ADJUSTL( title ) )
+
+  end subroutine set_title_line
+
+
+  !/ =====================================================================================
+  subroutine set_config_path( self, path )
+    !/ -----------------------------------------------------------------------------------
+    !! 
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self      !! reference to this app option
+    character(*),        intent(in)    :: path      !! search path for config
+    !/ -----------------------------------------------------------------------------------
+
+    call self%alloc_instance
+    self%path = TRIM( ADJUSTL( path ) )
+
+  end subroutine set_config_path
+
+
+  !/ =====================================================================================
+  subroutine set_env_section_name( self, sname )
+    !/ -----------------------------------------------------------------------------------
+    !! 
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self      !! reference to this app option
+    character(*),        intent(in)    :: sname
+    !/ -----------------------------------------------------------------------------------
+
+    call self%alloc_instance
+    self%env_secname  = TRIM( ADJUSTL( sname ) )
+
+  end subroutine set_env_section_name
+
+
+  !/ =====================================================================================
+  subroutine set_config_section_name( self, cname )
+    !/ -----------------------------------------------------------------------------------
+    !! 
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self      !! reference to this app option
+    character(*),        intent(in)    :: cname
+    !/ -----------------------------------------------------------------------------------
+
+    call self%alloc_instance
+    self%opt_secname  = TRIM( ADJUSTL( cname ) )
+
+  end subroutine set_config_section_name
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   !/ =====================================================================================
   subroutine display_usage_page( self, PNAME )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Display the aoutomatic usage page.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(app_option_t),    intent(inout) :: self  !! reference to this app option
     character(*), optional, intent(in)    :: PNAME !! program name
     !/ -----------------------------------------------------------------------------------
     character(:), allocatable :: pn
+    integer                   :: i, n, nOpt, nReq
+    !/ -----------------------------------------------------------------------------------
 
+    write( ERROR_UNIT, * ) self%title
+    
     if ( present( PNAME ) ) then
        allocate( pn, source=TRIM( ADJUSTL( PNAME ) ) )
     else
@@ -453,10 +582,54 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        end if
     end if
 
+    write( ERROR_UNIT, * )
     write( ERROR_UNIT, 100 ) pn
 
+    !/ ----- count required and optional -------------------------------------------------
+
+    nReq = 0
+    nOpt = 0
+    n = self%climap%cur_entry
+    do i=1,n
+       if ( self%climap%cli_map(i)%ptr%required ) then
+          nReq = nReq + 1
+       else
+          nOpt = nOpt + 1
+       end if
+    end do
+
+    !/ ----- display required ------------------------------------------------------------
+
+    if ( 0.lt.nReq ) then
+       write( ERROR_UNIT, * )
+       write( ERROR_UNIT, * ) '  Required:'
+       do i=1,n
+          if ( self%climap%cli_map(i)%ptr%required ) then
+             write( ERROR_UNIT, 200 ) self%climap%cli_map(i)%ptr%name, &
+                  &                   self%climap%cli_map(i)%ptr%description
+          end if
+       end do
+    end if
+
+    !/ ----- display optional ------------------------------------------------------------
+
+    if ( 0.lt.nReq ) then
+       write( ERROR_UNIT, * )
+       write( ERROR_UNIT, * ) '  Optional:'
+       do i=1,n
+          if ( .not.self%climap%cli_map(i)%ptr%required ) then
+             write( ERROR_UNIT, 200 ) self%climap%cli_map(i)%ptr%name, &
+                  &                   self%climap%cli_map(i)%ptr%description
+          end if
+       end do
+    end if
+
+    write( ERROR_UNIT, * )
 
 100 format( 'USAGE: ',A,' options' )
+200 format( '     ',A,' - ',A )
+
+    stop
 
   end subroutine display_usage_page
 
@@ -464,19 +637,34 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine get_configdb( self, cfg, STATUS )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Compile and return the ConfigDB for this application.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(app_option_t),      intent(inout) :: self   !! reference to this app option
     type(configdb_t), target, intent(inout) :: cfg    !! reference to the configdb
     integer, optional,        intent(out)   :: STATUS !! error return
     !/ -----------------------------------------------------------------------------------
-    class(config_section_t), pointer :: csec, dsec
-    integer :: i, n, ierr, arg_len
-    character(256) :: temp_arg
-    character(:), allocatable :: dkey, dval
+    class(config_section_t), pointer :: csec, dsec, cli
+    integer                          :: i, j, n, m, ierr, arg_len, idx, fn
+    character(256)                   :: temp_arg
+    character(:), allocatable        :: ckey, dkey, cval, dval, cfg_file, sname, temp_path
+    type(configDB_t)                 :: temp_cfg
+    type(config_entry_t)             :: ent
+    logical                          :: validated
     !/ -----------------------------------------------------------------------------------
+
+    type(string_splitter) :: path_splitter
     
+    character(20), parameter, dimension(8) :: cfg_fmt = [ &
+         &    "(A,'/',A)           ",                     &
+         &    "(A,'/',A,'.ini')    ",                     &
+         &    "(A,'/',A,'.cfg')    ",                     &
+         &    "(A,'/',A,'.config') ",                     &
+         &    "(A,'/.',A)          ",                     &
+         &    "(A,'/.',A,'.ini')   ",                     &
+         &    "(A,'/.',A,'.cfg')   ",                     &
+         &    "(A,'/.',A,'.config')" ]
+
     !/ ----- check for help --------------------------------------------------------------
 
     write(*,*) 'check for help'
@@ -492,6 +680,18 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
           end if
        end do
     end if
+    
+    !/ ----- add user sections -----------------------------------------------------------
+
+    n = self%climap%cur_entry
+    do i=1,n
+       sname = self%climap%cli_map(i)%ptr%section
+       idx = cfg%find( sname, STATUS=ierr )
+       if ( 0.eq.idx ) then
+          call cfg%add( sname )
+          call log_debug( 'User section added', STR=sname )
+       end if
+    end do
     
     !/ ----- add user defaults -----------------------------------------------------------
 
@@ -516,24 +716,138 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call self%parse_environment( cfg )
     call self%parse_command_line( cfg )
 
+    cli => cfg%get( self%opt_secname, STATUS=ierr )
+    if ( ierr.ne.0 ) then
+       call log_critical( 'app_options%getConfigDB: The command line was not parsed' )
+    end if
+
     !/ ----- guess where config files are ------------------------------------------------
 
+    call split( path_splitter, self%path, ':' )
+    n = path_splitter%count()
+    m = size( cfg_fmt )
+    do j=1,n
+       temp_path = path_splitter%get(j)
+       do i=1,m
+          write( temp_arg, TRIM(cfg_fmt(i)) ) &
+               & temp_path, TRIM(ADJUSTL(self%base_name))
+          cfg_file = TRIM(ADJUSTL(temp_arg))
+          call log_debug('Look for config file', STR=cfg_file )
+          call temp_cfg%delete( STATUS=ierr )
+          call temp_cfg%deleteComment( STATUS=ierr )
+          call temp_cfg%readINI( FILE=cfg_file, IOSTAT=ierr )
+          if ( 0.eq.ierr ) then
+             call log_info('Located config file', STR=cfg_file )
+             call cfg%merge( temp_cfg )   !! Merge the configuration file
+          end if
+       end do
+    end do
 
     !/ ----- check if an environment variable requests a config --------------------------
 
+    if ( allocated( self%env_cfg_key ) ) then
+       call log_debug( 'Check the Environment for config key:', STR=self%env_cfg_key )
+
+       call GET_ENVIRONMENT_VARIABLE( NAME=self%env_cfg_key, VALUE=temp_arg, STATUS=ierr )
+
+       if ( 0.eq.ierr ) then
+          cfg_file = TRIM(ADJUSTL(temp_arg))
+
+          call log_debug( 'Config file was specified in the environment', STR=cfg_file )
+
+          call temp_cfg%delete( STATUS=ierr )
+          call temp_cfg%deleteComment( STATUS=ierr )
+
+          call temp_cfg%readINI( FILE=cfg_file, IOSTAT=ierr )
+          if ( 0.eq.ierr ) then
+             call cfg%merge( temp_cfg )   !! Merge the configuration file
+          else
+             call log_warn( 'Config file could not be read', STR=cfg_file )
+          end if
+       else
+          if ( 2.eq.ierr ) then
+             call log_critical( 'This processor does not support environment variables' )
+          end if
+          call log_debug( 'the config key was not used' )
+       end if
+    else
+       call log_debug( 'No config file key was setup for the CLI' )
+    end if
+     
     !/ ----- check if the command line requests a config ---------------------------------
 
+    if ( allocated( self%cfg_key ) ) then
+       call log_debug( 'Check the CLI for config key:', STR=self%cfg_key )
+       idx = cli%find( self%cfg_key )
+       if ( 0.lt.idx ) then
+          call cli%get( self%cfg_key, VAL=cfg_file )
+          call log_debug( 'Config file was specified on the command line', STR=cfg_file )
 
+          call temp_cfg%delete( STATUS=ierr )
+          call temp_cfg%deleteComment( STATUS=ierr )
+
+          call temp_cfg%readINI( FILE=cfg_file, IOSTAT=ierr )
+          if ( 0.eq.ierr ) then
+             call cfg%merge( temp_cfg )   !! Merge the configuration file
+          else
+             call log_warn( 'Config file could not be read', STR=cfg_file )
+          end if
+       else
+           call log_debug( 'the config key was not used' )
+       end if
+    else
+       call log_debug( 'No config file key was setup for the CLI' )
+    end if
+    
     !/ ----- use command line to override keypairs ---------------------------------------
 
+    !  call cli%add( 'if', 'APP', 'infile',  .true.,  '', 'path to an input  file' )
 
+    n = self%climap%cur_entry
+    do i=1,n
+       ckey   = self%climap%cli_map(i)%ptr%name
+       dkey   = self%climap%cli_map(i)%ptr%cfg_key
+       dval   = self%climap%cli_map(i)%ptr%default
+
+       dsec => cfg%get( self%climap%cli_map(i)%ptr%section )
+       call cli%get( ckey, VAL=cval, STATUS=ierr )
+       if ( 0.eq.ierr ) then
+          call dsec%set( dkey, VAL=cval )
+       else
+          if ( .not.LEQ( '', dval ) ) then
+             call dsec%set( dkey, VAL=dval )
+          end if
+       end if
+    end do
 
     !/ ----- validate the config database ------------------------------------------------
 
+    validated = .true.
+    n = self%climap%cur_entry
+    do i=1,n
+       if ( self%climap%cli_map(i)%ptr%required ) then
+          sname = self%climap%cli_map(i)%ptr%section
+          dsec => cfg%get( sname )
+          dkey = self%climap%cli_map(i)%ptr%cfg_key
+          call dsec%get( dkey, STATUS=ierr )
+          if ( 0.ne.ierr ) then
+             ckey = self%climap%cli_map(i)%ptr%name
+             write( temp_arg, 1000 ) ckey, sname, dkey
+             call log_warn( 'required key not found', STR=TRIM(ADJUSTL(temp_arg)) )
+             validated = .false.
+          end if
+       end if
+    end do
+
+    if ( .not.validated ) then
+       call self%usage
+    end if
+        
+    !/ -----------------------------------------------------------------------------------
     
-999 continue
     self%cfgdb => cfg
 
+1000 format( 'CLI ',A,'= or Config ',A,'.',A )
     
   end subroutine get_configdb
 

@@ -45,18 +45,11 @@ module configdb_mod
 
 
   !/ =====================================================================================
-  type :: comment_pointer
-     !/ ----------------------------------------------------------------------------------
-     character(:), allocatable :: str
-  end type comment_pointer
-
-
-  !/ =====================================================================================
   type, public :: configdb_t
      !/ ----------------------------------------------------------------------------------
 
      class(section_pointer), private, pointer :: sections(:) => null()
-     class(comment_pointer), private, pointer :: comments(:) => null()
+     class(string_array_t), private, pointer :: comments(:) => null()
 
      integer, private :: max_section     = 0 !! maximum slots for sections
      integer, private :: max_comment     = 0 !! maximum slots for comments
@@ -241,16 +234,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     report = .true.
 
     if ( present( STATUS ) ) report = .false.
-
+    
     !/ -----------------------------------------------------------------------------------
 
     if ( associated( self%sections ) ) then
-
        if ( present( INDEX ) ) then !/ ----- delete one section --------------------------
           if ( index.gt.self%max_section ) then
              ier = 1
              if ( report ) then
-                call log_warn( 'Configdb%deleteSection: index out of bounds' )
+                call log_warn( 'Configdb::deleteSection: index out of bounds' )
              end if
           else
              if ( associated( self%sections(index)%ptr ) ) then
@@ -273,7 +265,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     else
        ier = 2
        if ( report ) then
-          call log_warn( 'Configdb%deleteSection: section array not allocated' )
+          call log_debug( 'Configdb::deleteSection: section array not allocated' )
        end if
     end if
 
@@ -317,7 +309,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
           if ( index.gt.self%max_comment ) then
              ier = 1
              if ( report ) then
-                call log_warn( 'Configdb%deleteComment: index out of bounds' )
+                call log_warn( 'Configdb::deleteComment: index out of bounds' )
              end if
           else
              if ( allocated( self%comments(index)%str ) ) then
@@ -338,7 +330,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     else
        ier = 2
        if ( report ) then
-          call log_warn( 'Configdb%deleteComment: comment array not allocated' )
+          call log_debug( 'Configdb::deleteComment: comment array not allocated' )
        end if
     end if
 
@@ -365,13 +357,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     n = new_max
     if ( n.lt.1 ) then
        n = ADDITIONAL_PADDING
-       call log_debug( 'ConfigDB:growSections: Added padding', I4=n )
+       call log_debug( 'ConfigDB::growSections: Added padding', I4=n )
     end if
 
     if ( associated( self%sections ) ) then
        temp          => self%sections
        self%sections => null()
-       call log_debug( 'ConfigDB:growSections: Grow to', I4=n )
+       call log_debug( 'ConfigDB::growSections: Grow to', I4=n )
        allocate( self%sections(n) )
        do i=1,self%current_section
           self%sections(i)%ptr => temp(i)%ptr
@@ -382,7 +374,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
           end do
        end if
     else
-       call log_debug( 'ConfigDB:growSections: Inital alloc', I4=n )
+       call log_debug( 'ConfigDB::growSections: Inital alloc', I4=n )
        allocate( self%sections(n) )
        do i=1,n
           self%sections(i)%ptr => null()
@@ -404,25 +396,25 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer,           intent(in)    :: new_max !! new max size.
     !/ -----------------------------------------------------------------------------------
     integer :: i, n
-    class(comment_pointer), pointer :: temp(:) => null()
+    class(string_array_t), pointer :: temp(:) => null()
     !/ -----------------------------------------------------------------------------------
 
     n = new_max
     if ( n.lt.1 ) then
        n = ADDITIONAL_PADDING
-       call log_debug( 'ConfigDB:growComments: Added padding', I4=n )
+       call log_debug( 'ConfigDB::growComments: Added padding', I4=n )
     end if
 
     if ( associated( self%comments ) ) then
        temp          => self%comments
        self%comments => null()
-       call log_debug( 'ConfigDB:growComments: Grow to', I4=n )
+       call log_debug( 'ConfigDB::growComments: Grow to', I4=n )
        allocate( self%comments(n) )
        do i=1,self%current_comment
           self%comments(i)%str = temp(i)%str
        end do
     else
-       call log_debug( 'ConfigDB:growComments: Inital alloc', I4=n )
+       call log_debug( 'ConfigDB::growComments: Inital alloc', I4=n )
        allocate( self%comments(n) )
     end if
 
@@ -441,15 +433,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     type(config_section_t), target, intent(inout) :: sec
     !/ -----------------------------------------------------------------------------------
     class(config_section_t), pointer :: temp
-    integer                          :: index
+    integer                          :: index, ierr
     character(:), allocatable        :: sname
     !/ -----------------------------------------------------------------------------------
 
     sname = sec%getName()
 
-    index = self%find( sname )
+    index = self%find( sname, STATUS=ierr )
 
-    if ( 0.eq.index ) then
+    if ( 0.ne.ierr ) then
 
        self%current_section = self%current_section + 1
        if ( self%current_section.ge.self%max_section ) then
@@ -558,14 +550,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     else
        ier = 2
        if ( report ) then
-          call log_warn( 'Configdb%find: section array not allocated' )
+          call log_warn( 'ConfigDB::find: section array not allocated' )
        end if
     end if
 
     if ( 0.eq.index ) then
        ier = 1
        if ( report ) then
-          call log_warn( 'ConfigDB:find: no name found, matching:', STR=name )
+          call log_warn( 'ConfigDB::find: no name found, matching:', STR=name )
        end if
     end if
 
@@ -605,7 +597,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     if ( index.gt.self%current_section ) then
        ier = 1
        if ( report ) then
-          call log_warn( 'ConfigDB:getSection(index): index out of bounds:', I4=index )
+          call log_warn( 'ConfigDB::getSection(index): index out of bounds:', I4=index )
        end if
     else
        if ( associated( self%sections(index)%ptr ) ) then
@@ -650,11 +642,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     if ( 0.eq.ier ) then
        sec => self%get_section_by_index( index, STATUS=ier2 )
        if ( 0.ne.ier2 ) then
-          call log_error( 'ConfigDB:getSection(name): this should not happen' )
+          call log_error( 'ConfigDB::getSection(name): this should not happen' )
        end if
     else
        if ( report ) then
-          call log_warn( 'ConfigDB:getSection(name): no name was found, matching:', STR=name )
+          call log_warn( 'ConfigDB::getSection(name): no name was found, matching:', STR=name )
        end if
     end if
 
@@ -691,7 +683,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     if ( index.gt.self%current_comment ) then
        ier = 1
        if ( report ) then
-          call log_warn( 'ConfigDB:getComment: index out of bounds:', I4=index )
+          call log_warn( 'ConfigDB::getComment: index out of bounds:', I4=index )
        end if
     else
        com = self%comments(index)%str
@@ -802,7 +794,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        goto 100
     else
        if ( report ) then
-          call log_warn( 'ConfigDB%next: read past end' )
+          call log_warn( 'ConfigDB::next: read past end' )
        end if
        ier = 1
     end if
@@ -848,7 +840,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        goto 100
     else
        if ( report ) then
-          call log_warn( 'ConfigDB%nextComment: read past end' )
+          call log_warn( 'ConfigDB::nextComment: read past end' )
        end if
        ier = 1
     end if
@@ -996,7 +988,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 100    continue
 
        call ReadLine( un, buffer, IOSTAT=ios)
-       if ( ios.eq.IOSTAT_END ) goto 120
+       if ( ios.eq.IOSTAT_END ) then
+          ios = 0
+          goto 120
+       end if
        if ( ios.ne.0 ) goto 110
 
        if ( 0.lt.LEN(buffer) ) then

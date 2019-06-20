@@ -411,7 +411,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     else
        if ( report ) then
-          call log_error( 'Section%get: no such key', STR=key )
+          call log_error( 'Section::get: no such key', STR=key )
        end if
     end if
 
@@ -505,7 +505,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
           key_value = temp%getKey()
           call self%set( key_value, ENT=temp )
        else
-          call log_error( 'Section%append: neither Comment nor KV Pair' )
+          call log_error( 'Section::append: neither Comment nor KV Pair' )
           ier = 1
        end if
     end if
@@ -545,7 +545,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     if ( index.gt.cn ) then
        if ( report ) then
-          call log_warn( 'ConfigSection%getComment: index out of bounds' )
+          call log_warn( 'ConfigSection::getComment: index out of bounds' )
        end if
        ier = 1
     else
@@ -607,7 +607,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        str = temp
     else
        if ( report ) then
-          call log_error( 'Section%getString: no such key', STR=key )
+          call log_error( 'Section::getString: no such key', STR=key )
        end if
     end if
 
@@ -651,12 +651,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        if ( 0.ne.rstat ) then
           ier = 2
           if ( report ) then
-             call log_error( 'Section%getInteger: not an integer', STR=temp )
+             call log_error( 'Section::getInteger: not an integer', STR=temp )
           end if
        end if
     else
        if ( report ) then
-          call log_error( 'Section%getInteger: no such key', STR=key )
+          call log_error( 'Section::getInteger: no such key', STR=key )
        end if
     end if
 
@@ -701,12 +701,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        if ( 0.ne.rstat ) then
           ier = 2
           if ( report ) then
-             call log_error( 'Section%getReal: not an real', STR=temp )
+             call log_error( 'Section::getReal: not an real', STR=temp )
           end if
        end if
     else
        if ( report ) then
-          call log_error( 'Section%getReal: no such key', STR=key )
+          call log_error( 'Section::getReal: no such key', STR=key )
        end if
     end if
 

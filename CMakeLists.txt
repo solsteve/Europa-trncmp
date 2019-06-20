@@ -114,17 +114,17 @@ endif ( )
 #/ ---------------------------------------------------------------------------------------
 
 
-set ( PFUNIT_DIR $ENV{PFUNIT} )
+#set ( PFUNIT_DIR $ENV{PFUNIT} )
 
-if ( IS_DIRECTORY ${PFUNIT_DIR} )
-  message ( STATUS "pFUnit found in ${PFUNIT_DIR}" )
+#if ( IS_DIRECTORY ${PFUNIT_DIR} )
+#  message ( STATUS "pFUnit found in ${PFUNIT_DIR}" )
   
-  if ( ${CMAKE_BUILD_TYPE} MATCHES "DEBUG" )
-    message ( STATUS "Adding compile options -fprofile-arcs -ftest-coverage" )
-    set ( CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage" )
-  endif ( )
+#  if ( ${CMAKE_BUILD_TYPE} MATCHES "DEBUG" )
+#    message ( STATUS "Adding compile options -fprofile-arcs -ftest-coverage" )
+#    set ( CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage" )
+#  endif ( )
   
-endif ( IS_DIRECTORY ${PFUNIT_DIR} )
+#endif ( IS_DIRECTORY ${PFUNIT_DIR} )
 
 
 #/ =======================================================================================

@@ -51,82 +51,82 @@ module constants_env
   integer, public, parameter :: dp=REAL64    !! 8  byte floating point
   integer, public, parameter :: sp=REAL32    !! 4  byte floating point
 
-  real(dp), public, parameter :: N_ZERO      = 0.0d0              !! 0
-  real(dp), public, parameter :: N_HALF      = 5.0d-1             !! 1/2
-  real(dp), public, parameter :: N_ONE       = 1.0d0              !! 1
-  real(dp), public, parameter :: N_TWO       = 2.0d0              !! 2
-  real(dp), public, parameter :: N_THREE     = 3.0d0              !! 3
-  real(dp), public, parameter :: N_FOUR      = 4.0d0              !! 4
-  real(dp), public, parameter :: N_FIVE      = 5.0d0              !! 5
-  real(dp), public, parameter :: N_SIX       = 6.0d0              !! 6
-  real(dp), public, parameter :: N_SEVEN     = 7.0d0              !! 7
-  real(dp), public, parameter :: N_EIGHT     = 8.0d1              !! 8
-  real(dp), public, parameter :: N_NINE      = 9.0d1              !! 9
-  real(dp), public, parameter :: N_TEN       = 1.0d1              !! 10
-  real(dp), public, parameter :: N_E         = exp(N_ONE)         !! E (Napier)
-  real(dp), public, parameter :: N_PI        = acos(-N_ONE)       !! Pi
+  real(dp), public, parameter :: D_ZERO      = 0.0d0              !! 0
+  real(dp), public, parameter :: D_HALF      = 5.0d-1             !! 1/2
+  real(dp), public, parameter :: D_ONE       = 1.0d0              !! 1
+  real(dp), public, parameter :: D_TWO       = 2.0d0              !! 2
+  real(dp), public, parameter :: D_THREE     = 3.0d0              !! 3
+  real(dp), public, parameter :: D_FOUR      = 4.0d0              !! 4
+  real(dp), public, parameter :: D_FIVE      = 5.0d0              !! 5
+  real(dp), public, parameter :: D_SIX       = 6.0d0              !! 6
+  real(dp), public, parameter :: D_SEVEN     = 7.0d0              !! 7
+  real(dp), public, parameter :: D_EIGHT     = 8.0d1              !! 8
+  real(dp), public, parameter :: D_NINE      = 9.0d1              !! 9
+  real(dp), public, parameter :: D_TEN       = 1.0d1              !! 10
+  real(dp), public, parameter :: D_E         = exp(D_ONE)         !! E (Napier)
+  real(dp), public, parameter :: D_PI        = acos(-D_ONE)       !! Pi
 
-  real(dp), public, parameter :: N_LN_2      = log(N_TWO)         !! Log_e(2)
-  real(dp), public, parameter :: N_LN_10     = log(N_TEN)         !! Log_e(10)
-  real(dp), public, parameter :: N_LN_PI     = log(N_PI)          !! Log_e(Pi)
+  real(dp), public, parameter :: D_LN_2      = log(D_TWO)         !! Log_e(2)
+  real(dp), public, parameter :: D_LN_10     = log(D_TEN)         !! Log_e(10)
+  real(dp), public, parameter :: D_LN_PI     = log(D_PI)          !! Log_e(Pi)
 
-  real(dp), public, parameter :: N_LOG_2     = log10(N_TWO)       !! Log_10(2)
-  real(dp), public, parameter :: N_LOG_E     = log10(N_E)         !! Log_10(E)
-  real(dp), public, parameter :: N_LOG_PI    = log10(N_PI)        !! Log_10(Pi)
+  real(dp), public, parameter :: D_LOG_2     = log10(D_TWO)       !! Log_10(2)
+  real(dp), public, parameter :: D_LOG_E     = log10(D_E)         !! Log_10(E)
+  real(dp), public, parameter :: D_LOG_PI    = log10(D_PI)        !! Log_10(Pi)
 
-  real(dp), public, parameter :: N_L2_10     = log(N_TEN)/N_LN_2  !! Log_2(10)
-  real(dp), public, parameter :: N_L2_E      = log(N_E)/N_LN_2    !! Log_2(E)
-  real(dp), public, parameter :: N_L2_PI     = log(N_PI)/N_LN_2   !! Log_2(Pi)
+  real(dp), public, parameter :: D_L2_10     = log(D_TEN)/D_LN_2  !! Log_2(10)
+  real(dp), public, parameter :: D_L2_E      = log(D_E)/D_LN_2    !! Log_2(E)
+  real(dp), public, parameter :: D_L2_PI     = log(D_PI)/D_LN_2   !! Log_2(Pi)
 
-  real(dp), public, parameter :: N_LPI_2     = log(N_TWO)/N_LN_PI !! Log_pi(2)
-  real(dp), public, parameter :: N_LPI_10    = log(N_TEN)/N_LN_PI !! Log_pi(10)
-  real(dp), public, parameter :: N_LPI_E     = log(N_E)/N_LN_PI   !! Log_pi(E)
+  real(dp), public, parameter :: D_LPI_2     = log(D_TWO)/D_LN_PI !! Log_pi(2)
+  real(dp), public, parameter :: D_LPI_10    = log(D_TEN)/D_LN_PI !! Log_pi(10)
+  real(dp), public, parameter :: D_LPI_E     = log(D_E)/D_LN_PI   !! Log_pi(E)
 
-  real(dp), public, parameter :: N_2PI       = N_TWO*N_PI         !! 2*Pi
-  real(dp), public, parameter :: N_3PI       = N_THREE*N_PI       !! 3*Pi
-  real(dp), public, parameter :: N_4PI       = N_FOUR*N_PI        !! 4*Pi
-  real(dp), public, parameter :: N_PI_2      = acos(N_ZERO)       !! Pi/2
-  real(dp), public, parameter :: N_PI_4      = N_HALF*N_PI_2      !! Pi/4
-  real(dp), public, parameter :: N_3PI_2     = N_THREE*N_PI_2     !! 3*Pi/2
-  real(dp), public, parameter :: N_3PI_4     = N_THREE*N_PI_4     !! 3*Pi/4
-  real(dp), public, parameter :: N_5PI_4     = N_FIVE*N_PI_4      !! 5*Pi/4
-  real(dp), public, parameter :: N_7PI_4     = N_SEVEN*N_PI_4     !! 7*Pi/4
+  real(dp), public, parameter :: D_2PI       = D_TWO*D_PI         !! 2*Pi
+  real(dp), public, parameter :: D_3PI       = D_THREE*D_PI       !! 3*Pi
+  real(dp), public, parameter :: D_4PI       = D_FOUR*D_PI        !! 4*Pi
+  real(dp), public, parameter :: D_PI_2      = acos(D_ZERO)       !! Pi/2
+  real(dp), public, parameter :: D_PI_4      = D_HALF*D_PI_2      !! Pi/4
+  real(dp), public, parameter :: D_3PI_2     = D_THREE*D_PI_2     !! 3*Pi/2
+  real(dp), public, parameter :: D_3PI_4     = D_THREE*D_PI_4     !! 3*Pi/4
+  real(dp), public, parameter :: D_5PI_4     = D_FIVE*D_PI_4      !! 5*Pi/4
+  real(dp), public, parameter :: D_7PI_4     = D_SEVEN*D_PI_4     !! 7*Pi/4
 
-  real(dp), public, parameter :: N_PI2       = N_PI*N_PI          !! Pi**2
-  real(dp), public, parameter :: N_1_PI      = N_ONE/N_PI         !! 1/Pi
-  real(dp), public, parameter :: N_2_PI      = N_TWO/N_PI         !! 2/Pi
+  real(dp), public, parameter :: D_PI2       = D_PI*D_PI          !! Pi**2
+  real(dp), public, parameter :: D_1_PI      = D_ONE/D_PI         !! 1/Pi
+  real(dp), public, parameter :: D_2_PI      = D_TWO/D_PI         !! 2/Pi
 
-  real(dp), public, parameter :: N_SQRTPI    = sqrt(N_PI)         !! sqrt(Pi)
-  real(dp), public, parameter :: N_SQRT2PI   = sqrt(N_2PI)        !! sqrt(2Pi)
-  real(dp), public, parameter :: N_1_SQRTPI  = N_ONE/N_SQRTPI     !! 1/sqrt(Pi)
-  real(dp), public, parameter :: N_1_SQRT2PI = N_ONE/N_SQRT2PI    !! 1/sqrt(2Pi)
-  real(dp), public, parameter :: N_2_SQRTPI  = N_TWO/N_SQRTPI     !! 2/sqrt(Pi)
+  real(dp), public, parameter :: D_SQRTPI    = sqrt(D_PI)         !! sqrt(Pi)
+  real(dp), public, parameter :: D_SQRT2PI   = sqrt(D_2PI)        !! sqrt(2Pi)
+  real(dp), public, parameter :: D_1_SQRTPI  = D_ONE/D_SQRTPI     !! 1/sqrt(Pi)
+  real(dp), public, parameter :: D_1_SQRT2PI = D_ONE/D_SQRT2PI    !! 1/sqrt(2Pi)
+  real(dp), public, parameter :: D_2_SQRTPI  = D_TWO/D_SQRTPI     !! 2/sqrt(Pi)
 
-  real(dp), public, parameter :: N_SQRT_PI_2 = sqrt(N_PI/N_TWO)   !! sqrt(Pi/2)
-  real(dp), public, parameter :: N_SQRT_PI_4 = sqrt(N_PI)/N_TWO   !! sqrt(Pi/4) = sqrt(Pi)/2
+  real(dp), public, parameter :: D_SQRT_PI_2 = sqrt(D_PI/D_TWO)   !! sqrt(Pi/2)
+  real(dp), public, parameter :: D_SQRT_PI_4 = sqrt(D_PI)/D_TWO   !! sqrt(Pi/4) = sqrt(Pi)/2
 
-  real(dp), public, parameter :: N_SQRTE     = exp(N_HALF)        !! sqrt(E)
-  real(dp), public, parameter :: N_1_SQRTE   = N_ONE/N_SQRTE      !! 1/sqrt(E)
+  real(dp), public, parameter :: D_SQRTE     = exp(D_HALF)        !! sqrt(E)
+  real(dp), public, parameter :: D_1_SQRTE   = D_ONE/D_SQRTE      !! 1/sqrt(E)
 
-  real(dp), public, parameter :: N_SQRT2     = sqrt(N_TWO)        !! sqrt(2)
-  real(dp), public, parameter :: N_1_SQRT2   = N_ONE/N_SQRT2      !! 1/sqrt(2)
-  real(dp), public, parameter :: N_2_SQRT2   = N_TWO/N_SQRT2      !! 2/sqrt(2)
+  real(dp), public, parameter :: D_SQRT2     = sqrt(D_TWO)        !! sqrt(2)
+  real(dp), public, parameter :: D_1_SQRT2   = D_ONE/D_SQRT2      !! 1/sqrt(2)
+  real(dp), public, parameter :: D_2_SQRT2   = D_TWO/D_SQRT2      !! 2/sqrt(2)
 
-  real(dp), public, parameter :: N_SQRT3     = sqrt(N_THREE)      !! sqrt(3)
-  real(dp), public, parameter :: N_1_SQRT3   = N_ONE/N_SQRT3      !! 1/sqrt(3)
-  real(dp), public, parameter :: N_2_SQRT3   = N_TWO/N_SQRT3      !! 2/sqrt(3)
+  real(dp), public, parameter :: D_SQRT3     = sqrt(D_THREE)      !! sqrt(3)
+  real(dp), public, parameter :: D_1_SQRT3   = D_ONE/D_SQRT3      !! 1/sqrt(3)
+  real(dp), public, parameter :: D_2_SQRT3   = D_TWO/D_SQRT3      !! 2/sqrt(3)
 
-  real(dp), public, parameter :: N_180_PI    = 1.8D2/N_PI         !! 180/Pi
-  real(dp), public, parameter :: N_PI_180    = N_PI/1.8D2         !! Pi/180
+  real(dp), public, parameter :: D_180_PI    = 1.8D2/D_PI         !! 180/Pi
+  real(dp), public, parameter :: D_PI_180    = D_PI/1.8D2         !! Pi/180
 
-  real(dp), public, parameter :: N_EULER     = 5.7721566490153286554942724D-01 !! Euler constant
+  real(dp), public, parameter :: D_EULER     = 5.7721566490153286554942724D-01 !! Euler constant
 
-  real(dp), public, parameter :: N_EPSILON   =  epsilon(1.0_dp) !! smallest number
-  real(dp), public, parameter :: N_MAX_POS   =  huge(0.0d0)     !! Use this to init min_value
-  real(dp), public, parameter :: N_MAX_NEG   = -huge(0.0d0)     !! Use this to init max_value
+  real(dp), public, parameter :: D_EPSILON   =  epsilon(1.0_dp) !! smallest number
+  real(dp), public, parameter :: D_MAX_POS   =  huge(0.0d0)     !! Use this to init min_value
+  real(dp), public, parameter :: D_MAX_NEG   = -huge(0.0d0)     !! Use this to init max_value
 
-  real(dp), public, parameter :: RAD2DEG     = 1.8d2 / N_PI    !! Convert Radian to Degree
-  real(dp), public, parameter :: DEG2RAD     = N_PI  / 1.8d2   !! Convert Degree to Radian
+  real(dp), public, parameter :: RAD2DEG     = 1.8d2 / D_PI    !! Convert Radian to Degree
+  real(dp), public, parameter :: DEG2RAD     = D_PI  / 1.8d2   !! Convert Degree to Radian
 
   integer(int8),  public, parameter :: MAX_I8  = huge( 1_int8  )  !! Largest 8 bit integer
   integer(int16), public, parameter :: MAX_I16 = huge( 1_int16 )  !! Largest 16 bit integer

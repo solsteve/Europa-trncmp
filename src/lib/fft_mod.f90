@@ -73,7 +73,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     ! combine
     do i=1,N/2
-       t=exp(cmplx(0.0_dp,-2.0_dp*N_PI*real(i-1,dp)/real(N,dp),kind=dp))*even(i)
+       t=exp(cmplx(0.0_dp,-2.0_dp*D_PI*real(i-1,dp)/real(N,dp),kind=dp))*even(i)
        x(i)     = odd(i) + t
        x(i+N/2) = odd(i) - t
     end do

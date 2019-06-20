@@ -12,7 +12,6 @@ module testCopy_C16
 
 contains
 
-
   !=========================================================
   ! Copy Complex 128 bit 1D
   !---------------------------------------------------------
@@ -26,17 +25,17 @@ contains
     idx = 0
 
     do i=1,dim1
-             idx = idx + (1.1_dp, 1.3_dp)
-             ibuff(i) = idx
+       idx = idx + (1.1_dp, 1.3_dp)
+       ibuff(i) = idx
     end do
 
     call copy( obuff, ibuff )
 
     do i=1,dim1
-             @assertFalse( real(obuff(i)).lt.real(ibuff(i)) )
-             @assertFalse( real(obuff(i)).gt.real(ibuff(i)) )
-             @assertFalse( aimag(obuff(i)).lt.aimag(ibuff(i)) )
-             @assertFalse( aimag(obuff(i)).gt.aimag(ibuff(i)) )
+       @assertFalse( real(obuff(i)).lt.real(ibuff(i)) )
+       @assertFalse( real(obuff(i)).gt.real(ibuff(i)) )
+       @assertFalse( aimag(obuff(i)).lt.aimag(ibuff(i)) )
+       @assertFalse( aimag(obuff(i)).gt.aimag(ibuff(i)) )
     end do
 
   end subroutine test_copy_C16_1d
@@ -56,8 +55,8 @@ contains
 
     do i=1,dim1
        do j=1,dim2
-             idx = idx + (1.1_dp, 1.3_dp)
-             ibuff(i,j) = idx
+          idx = idx + (1.1_dp, 1.3_dp)
+          ibuff(i,j) = idx
        end do
     end do
 
@@ -65,10 +64,10 @@ contains
 
     do i=1,dim1
        do j=1,dim2
-             @assertFalse( real(obuff(i,j)).lt.real(ibuff(i,j)) )
-             @assertFalse( real(obuff(i,j)).gt.real(ibuff(i,j)) )
-             @assertFalse( aimag(obuff(i,j)).lt.aimag(ibuff(i,j)) )
-             @assertFalse( aimag(obuff(i,j)).gt.aimag(ibuff(i,j)) )
+          @assertFalse( real(obuff(i,j)).lt.real(ibuff(i,j)) )
+          @assertFalse( real(obuff(i,j)).gt.real(ibuff(i,j)) )
+          @assertFalse( aimag(obuff(i,j)).lt.aimag(ibuff(i,j)) )
+          @assertFalse( aimag(obuff(i,j)).gt.aimag(ibuff(i,j)) )
        end do
     end do
 

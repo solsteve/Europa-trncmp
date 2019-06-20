@@ -315,7 +315,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end if
 
     if ( report ) then
-       call log_warn( 'ConfigEntryList%next: read past end' )
+       call log_warn( 'ConfigEntryList::next: read past end' )
     end if
     ier = 1
 
@@ -403,7 +403,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     if ( index.gt.self%current_index ) then
        if ( report ) then
-          call log_warn( 'ConfigEntryList%get: read past end' )
+          call log_warn( 'ConfigEntryList::get: read past end' )
        end if
        ier = 1
     else
