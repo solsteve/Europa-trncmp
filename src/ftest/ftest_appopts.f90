@@ -36,18 +36,12 @@ program main
   
   !/ -------------------------------------------------------------------------------------
 
-<<<<<<< HEAD
-  call cli%add( 'if', 'APP', 'infile',  .true.,  'input.dat', 'path to an input  file' )
-  call cli%add( 'of', 'APP', 'outfile', .true.,  'output.dat', 'path to an output file' )
-  call cli%add( 'n',  'APP', 'count',   .false., '', 'number of records to process' )
-=======
   call tlogger_set( CONSOLE=tlogger_debug )
   
   call cli%add( APP_OPT_FILENAME, 'APP', 'flag',    .true.,  '',  'operation: E, D, or G' )
   call cli%add( 'if',             'APP', 'infile',  .true.,  '',  'path to an input  file' )
   call cli%add( 'of',             'APP', 'outfile', .true.,  '',  'path to an output file' )
   call cli%add( 'n',              'APP', 'count',   .false., '9', 'number of records to process' )
->>>>>>> Added experiment in solving Kepler's equation
 
   call AppOptions%init( cli )
   call AppOptions%setConfigBase( 'ftest' )
@@ -59,10 +53,9 @@ program main
   call AppOptions%setHelp( 'help' )
   call AppOptions%getConfigDB( cfg, STATUS=ierr )
 
+  call cfg%writeINI( UNIT=6 )
+
   if ( 0 .eq. ierr ) then
-<<<<<<< HEAD
-     write( ERROR_UNIT, * ) 'Success'
-=======
      sec  => cfg%get( 'APP', STATUS=ierr )
      if ( 0.eq.ierr ) then
         call sec%get( 'count', VAL=nstr, STATUS=ierr )
@@ -74,17 +67,8 @@ program main
      else
         write(*,*) 'Section "APP" not found'
      end if
->>>>>>> Added experiment in solving Kepler's equation
   else
      write( ERROR_UNIT, * ) 'Configuration failed'
-  end if
-
-  call cfg%writeINI( UNIT=6, IOSTAT=ierr )
-
-  if ( 0 .eq. ierr ) then
-     write( ERROR_UNIT, * ) 'Success'
-  else
-     write( ERROR_UNIT, * ) 'WriteINI failed'
   end if
 
 end program main
