@@ -1,0 +1,249 @@
+%/ ====================================================================== BEGIN FILE =====
+%/ **                                   A N O M A L Y                                   **
+%/ =======================================================================================
+%/ **                                                                                   **
+%/ **  Copyright (c) 2019, Stephen W. Soliday                                           **
+%/ **                      stephen.soliday@trncmp.org                                   **
+%/ **                      http://research.trncmp.org                                   **
+%/ **                                                                                   **
+%/ **  -------------------------------------------------------------------------------  **
+%/ **                                                                                   **
+%/ **  This program is free software: you can redistribute it and/or modify it under    **
+%/ **  the terms of the GNU General Public License as published by the Free Software    **
+%/ **  Foundation, either version 3 of the License, or (at your option)                 **
+%/ **  any later version.                                                               **
+%/ **                                                                                   **
+%/ **  This program is distributed in the hope that it will be useful, but WITHOUT      **
+%/ **  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS    **
+%/ **  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.   **
+%/ **                                                                                   **
+%/ **  You should have received a copy of the GNU General Public License along with     **
+%/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
+%/ **                                                                                   **
+%/ ----- Modification History ------------------------------------------------------------
+%/
+%/  @file Anomaly.tex
+%/   Provides a description of a method for anomaly detection in high dimensionality data.
+%/
+%/  @author Stephen W. Soliday
+%/  @date 2019-Jul-21 (final)
+%/  @date 2019-Jun-25 (draft)
+%/
+%/ =======================================================================================
+
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{trncmp}
+\usepackage{picinpar}
+\usepackage{asiwp}
+\usepackage{environ}
+\usepackage{fancyvrb}
+
+%  =======================================================================================
+% Heading arguments are {volume}{year}{pages}{submitted}{published}{author-full-names}
+
+\jmlrheading{Program Whitepaper}{2019}{}{6/25}{-}{Stephen W.~Soliday}{L3T/ADS}
+
+% Short headings should be running head and authors last names
+
+\ShortHeadings{Anomaly Detection}{Soliday}
+\firstpageno{1}
+%  =======================================================================================
+
+
+\begin{document}
+\title{Auto-encoding Deep Neural Networks for Anomaly Detection}
+\author{ \name Stephen W.~Soliday \email stephen.soliday@sg.l3t.com \\
+  \addr L3 Technologies \\ Advanced Defense Solutions
+}
+\date{25-June-2019}
+
+\maketitle
+
+\begin{abstract}%
+
+  Analysts have to sift through thousands of images looking for the one image that may be different.
+  This approach uses unsupervised learning to discover relevant features in a mass of similar images.
+  The system then sorts the images from least likly to most likelyto represent the archtype image.
+  Two experiments are performed. One with image data, the second with highdimentional non-image data.
+  
+\end{abstract}
+
+\vspace{12pt}
+\textbf{Keywords}: Auto-encoding, Neural network, Unsupervised
+
+%/ =======================================================================================
+\section{Introduction\label{sec:intro}}
+%/ =======================================================================================
+
+A typical task for image analysts is to sift through thousands of similar images, looking
+for that one image that is different. Deep Neural Networks have been very successfull at
+learningto classifiy images, when presended with labeled data.
+
+Imagine that you have a thousand small round stones in you driveway.
+Amongst those thousand stones is one snail, and you must find the snail.
+Prior to the task you have no knowleged about either stones or snails.
+
+You would pick up and examine each object. Over time you would come to
+understand what attributes or features are common to the mass and what is different.
+
+Within the mass some objects would be the most like the average of the mass and some
+objects that are very different from the mass.
+
+Little if anything that you learn in this task may be used in the next task. Maybe next time
+your task is to find the one dime in ajar of nickles.
+
+
+%/ ---------------------------------------------------------------------------------------
+\subsection{Background and Opposing Arguments\label{sec:back}}
+%/ ---------------------------------------------------------------------------------------
+
+This is a short, intermediate section that may be useful to include
+between the Introduction and the Body of the paper, depending on the
+topic. In this section you can briefly present some background
+information that readers may need in order to understand and evaluate
+the thesis support. 
+
+In addition (or instead), this section may include a brief discussion of views or arguments 
+that run counter to the paper’s thesis, yet have some merit and are relevant to the central issue.
+
+\newpage
+
+%/ =======================================================================================
+\section{Auto Encoding Decoding Neural Network\label{sec:autoencoder}}
+%/ =======================================================================================
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=4in]{figures/AutoGen.eps}
+    \caption{Three layer feed forward neural network}
+    \label{fig:threelayer}
+  \end{center}
+\end{figure}
+
+Figure\ref{fig:threelayer}, shows the schematic for an auto-encoding/decoding neural network.
+
+
+\newpage
+
+%/ =======================================================================================
+\section{Results\label{sec:results}}
+%/ =======================================================================================
+
+How you present the results of your research depends on what kind of
+research you did, your subject matter, and your readers’
+expectations. 
+
+The distinction between the results section and the discussion section
+is not always so clear-cut. Although many writers think you should
+simply present and report your findings on the data you have
+collected, others believe some evaluation and commentary on your data
+may be appropriate and even necessary here. You and your teacher can
+decide how strict you want to be in this decision.
+
+There are specific conventions for creating tables, charts, and graphs
+and organizing the information they contain. In general, you should
+use these only when you are sure they will enlighten your readers
+rather than confuse them. In the accompanying explanation and your
+discussion, always refer to the graphic by number and explain
+specifically what you are referring to. Give your graphic element a
+descriptive caption as well. The rule of thumb for presenting a
+graphic is first to introduce it by name, show it, and then interpret
+it. You can consult a textbook, such as Lannon’s Technical Writing for
+more information and guidance. The results section is usually written
+in past tense.
+
+\subsection{Quantitative\label{sec:quant}}
+Quantitative information, data that can be measured, can
+be presented systematically and economically in tables, charts, and
+graphs. Quantitative information includes quantities and comparisons
+of sets of data. If you are unfamiliar with the conventions, you may
+find it challenging to present quantitative findings. You may include
+some commentary to explain to your reader what your findings are and
+how to read them.
+
+\subsection{Qualitative\label{sec:qual}}
+Qualitative information, which includes brief descriptions,
+explanations, or instructions, can also be presented in prose
+tables. This kind of descriptive or explanatory information, however,
+is often presented in essay-like prose or even lists.
+
+%/ =======================================================================================
+\section{Discussion\label{sec:discuss}}
+%/ =======================================================================================
+
+Your discussion section should generalize on what you have learned
+from your research. One way to generalize is to explain the
+consequences or meaning of your results and then make your points that
+support and refer back to the statements you made in your
+introduction. Your discussion should be organized so that it relates
+directly to your thesis. You want to avoid introducing new ideas here
+or discussing tangential issues not directly related to the
+exploration and discovery of your thesis. This section, along with the
+introduction, is usually written in present tense.
+
+%/ =======================================================================================
+\subsection{Conclusions and Recommendations\label{sec:conclude}}
+%/ =======================================================================================
+
+Some academic research assignments might end with the discussion and
+not need a separate conclusions and recommendations section. Often, in
+shorter assignments, your conclusion is just a paragraph or two added
+to the discussion section. In many of your research assignments,
+however, you will be asked to provide your conclusions and
+recommendations in your research paper.
+
+Conclusions unify your research results and discussion and elaborate
+on their significance to your thesis. Your conclusion ties your
+research to your thesis, binding together all the main ideas in your
+thinking and writing. By presenting the logical outcome of your
+research and thinking, your conclusion answers your research inquiry
+for you and your readers. Your conclusions should relate directly to
+the ideas presented in your introduction section and not present any
+new ideas.
+
+You may be asked to present your recommendations separately in your
+research assignment. If so, you will want to add some elements to your
+conclusion section. For example, you may be asked to recommend a
+course of action, make a prediction, propose a solution to a problem,
+offer a judgment, or speculate on the implications and consequences of
+your ideas. The conclusions and recommendations section is usually
+written in present tense.
+
+\nocite{savitsky:03}
+
+
+
+
+
+%/ =======================================================================================
+\section*{References\label{sec:cites}}
+%/ =======================================================================================
+
+\bibliography{soliday}
+
+%/ =======================================================================================
+%\section{Appendices\label{sec:apendix}}
+%/ =======================================================================================
+
+
+%  ==========================================================================================
+
+%\newpage
+%\include{bio} 
+
+%\begin{verbatim}
+%http://www2.fiu.edu/~sabar/enc1102/Research%20Paper%20Advice.htm
+%http://tychousa8.umuc.edu/WRTG999A/index.html
+%\end{verbatim}
+
+\end{document}
+
+%/ =======================================================================================
+%/ **                          H E A D I N G S P E E D . T E X                          **
+%  ======================================================================== END FILE =====

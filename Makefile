@@ -74,14 +74,15 @@ pages:
 #/ =======================================================================================
 
 clean:
-	make -C docs $@
+	make -C docs   $@
+	make -C papers $@
 
 
 fullclean: clean
 	make -C docs $@
 	rm -rf RELEASE DEBUG
 	find . -name "*~" | xargs rm -f
-	make -C papers/bpnn $@
+	make -C papers $@
 	make -C python $@
 
 
