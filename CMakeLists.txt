@@ -10,7 +10,7 @@
 #/ **                                                                                   **
 #/ **  This program is free software: you can redistribute it and/or modify it under    **
 #/ **  the terms of the GNU General Public License as published by the Free Software    **
-#/ **  Foundation, either version 3 of the License, or ( at your option)                 **
+#/ **  Foundation, either version 3 of the License, or ( at your option)                **
 #/ **  any later version.                                                               **
 #/ **                                                                                   **
 #/ **  This program is distributed in the hope that it will be useful, but WITHOUT      **
@@ -114,17 +114,17 @@ endif ( )
 #/ ---------------------------------------------------------------------------------------
 
 
-#set ( PFUNIT_DIR $ENV{PFUNIT} )
+set ( PFUNIT_DIR $ENV{PFUNIT} )
 
-#if ( IS_DIRECTORY ${PFUNIT_DIR} )
-#  message ( STATUS "pFUnit found in ${PFUNIT_DIR}" )
+if ( IS_DIRECTORY ${PFUNIT_DIR} )
+  message ( STATUS "pFUnit found in ${PFUNIT_DIR}" )
   
-#  if ( ${CMAKE_BUILD_TYPE} MATCHES "DEBUG" )
-#    message ( STATUS "Adding compile options -fprofile-arcs -ftest-coverage" )
-#    set ( CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage" )
-#  endif ( )
+  if ( ${CMAKE_BUILD_TYPE} MATCHES "DEBUG" )
+    message ( STATUS "Adding compile options -fprofile-arcs -ftest-coverage" )
+    set ( CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage" )
+  endif ( )
   
-#endif ( IS_DIRECTORY ${PFUNIT_DIR} )
+endif ( IS_DIRECTORY ${PFUNIT_DIR} )
 
 
 #/ =======================================================================================

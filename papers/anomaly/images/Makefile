@@ -1,7 +1,7 @@
 %.eps: %.png
 	convert $< $@
 
-IMAGES = Soliday.eps ShipPCA.eps
+IMAGES = Soliday.eps ShipPCA.eps Chips.eps Rendered.eps Wireframe.eps
 
 all: $(IMAGES)
 

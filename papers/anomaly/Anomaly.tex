@@ -59,7 +59,7 @@
 \begin{document}
 \title{Auto-encoding Deep Neural Networks for Anomaly Detection}
 \author{ \name Stephen W.~Soliday \email stephen.soliday@sg.l3t.com \\
-  \addr L3 Technologies \\ Advanced Defense Solutions
+  \addr L3 Harris Technologies \\ Airborne and Space Systems
 }
 \date{25-June-2019}
 
@@ -69,8 +69,8 @@
 
   Analysts have to sift through thousands of images looking for the one image that may be different.
   This approach uses unsupervised learning to discover relevant features in a mass of similar images.
-  The system then sorts the images from least likly to most likelyto represent the archtype image.
-  Two experiments are performed. One with image data, the second with highdimentional non-image data.
+  The system then sorts the images from least likely to most likely to represent the archetype image.
+  Two experiments are performed. One with image data, the second with high dimensional non-image data.
   
 \end{abstract}
 
@@ -81,13 +81,33 @@
 \section{Introduction\label{sec:intro}}
 %/ =======================================================================================
 
+Present Tense
+
+\begin{enumerate}
+\item Provide two UC examples
+  \begin{enumerate}
+  \item Choose an image task using synthetically generated images.
+  \item Choose a non-image high dimensional data set from literature.
+  \end{enumerate}
+\item say how knowledge gained on this task may not translate to the next.
+  Rock/snail followed by nickles/dime.
+\item show images
+  \begin{enumerate}
+  \item waves/wake
+  \item rocks and snail
+  \item cruise ships/destroyer
+  \end{enumerate}
+\item Mention prior work on image anomaly detection.
+  Show how the train a classifier to identify a finite set of classes.
+\end{enumerate}
+
 A typical task for image analysts is to sift through thousands of similar images, looking
-for that one image that is different. Deep Neural Networks have been very successfull at
-learningto classifiy images, when presended with labeled data.
+for that one image that is different. Deep Neural Networks have been very successful at
+learning to classify images, when presented with labeled data.
 
 Imagine that you have a thousand small round stones in you driveway.
-Amongst those thousand stones is one snail, and you must find the snail.
-Prior to the task you have no knowleged about either stones or snails.
+Among those thousand stones is one snail, and you must find the snail.
+Prior to the task you have no knowledge about either stones or snails.
 
 You would pick up and examine each object. Over time you would come to
 understand what attributes or features are common to the mass and what is different.
@@ -100,17 +120,10 @@ your task is to find the one dime in ajar of nickles.
 
 
 %/ ---------------------------------------------------------------------------------------
-\subsection{Background and Opposing Arguments\label{sec:back}}
+\subsection{Background\label{sec:back}}
 %/ ---------------------------------------------------------------------------------------
 
-This is a short, intermediate section that may be useful to include
-between the Introduction and the Body of the paper, depending on the
-topic. In this section you can briefly present some background
-information that readers may need in order to understand and evaluate
-the thesis support. 
-
-In addition (or instead), this section may include a brief discussion of views or arguments 
-that run counter to the paper’s thesis, yet have some merit and are relevant to the central issue.
+Find 3-5 papers on Autoencodeing, GANN's, and Feature clustering. Discuss their usage and success or failure.
 
 \newpage
 
@@ -121,12 +134,80 @@ that run counter to the paper’s thesis, yet have some merit and are relevant t
 \begin{figure}
   \begin{center}
     \includegraphics[width=4in]{figures/AutoGen.eps}
-    \caption{Three layer feed forward neural network}
+    \caption{Auto-encoding / decodeing neural network}
     \label{fig:threelayer}
   \end{center}
 \end{figure}
 
 Figure\ref{fig:threelayer}, shows the schematic for an auto-encoding/decoding neural network.
+
+Describe the architecture.
+what does it do?
+
+\section{Method\label{sec:method}}
+
+\subsection{Synthetic training data}
+What is this?
+
+\subsubsection{3-D Models}
+AC3D and Blender
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=3in]{images/Wireframe.eps}
+    \caption{Wireframe Diagram of DDG-51 USS Arleigh Burke}
+    \label{fig:threelayer}
+  \end{center}
+\end{figure}
+
+\subsubsection{Raytracing}
+PovRay, python scripts. Discuss: Camera angle, Sun Angle, and Sea State.
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=3in]{images/Rendered.eps}
+    \caption{PovRay Rendered Image of DDG-51 USS Arleigh Burke}
+    \label{fig:threelayer}
+  \end{center}
+\end{figure}
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=2in]{images/Chips.eps}
+    \caption{Selection of chips with various camera and sun angles}
+    \label{fig:threelayer}
+  \end{center}
+\end{figure}
+
+\subsubsection{Training, Validation, Testing}
+Discuss Quantity and Quantity.
+
+\subsection{Hyperparameter Selection}
+
+\subsection{Alternate Method -- Single Train vs. All Classes}
+
+As an alternative experiment the same architecture was used with a different work flow.
+To review. The work flow described above was as follows:
+\begin{enumerate}
+\item Select a class and a quantity for the mass (e.g. DDG x 1000)
+\item Select a class for the anomaly (e.g. Tanker)
+\item Train Auto-encoder/decoder to reconstruct all images.
+\item Run all images (\textit{ mass and anomaly }) through encoder only creating a corresponding list of feature vectors.
+\item Generate a mean feature vector and a covariance matrix from the feature vectors.
+  \item find the Mahalanobis distance of each feature vector from the mean vector and sort in descending order of distance.
+\end{enumerate}
+
+As an alternative work flow, the following was tried:
+\begin{enumerate}
+\item Select an existing unlabeled data set of images similar to targets, non-targets and clutter. In this case one thousand chips of each of the four classes was used.
+\item Train Auto-encoder/decoder to reconstruct all images.
+\item Select a class and a quantity for the mass (e.g. DDG x 1000)
+\item Select a class for the anomaly (e.g. Tanker)
+\item Run all images (\textit{ mass and anomaly }) through encoder only creating a corresponding list of feature vectors.
+\item Generate a mean feature vector and a covariance matrix from the feature vectors.
+  \item find the Mahalanobis distance of each feature vector from the mean vector and sort in descending order of distance.
+\end{enumerate}
+
+The disadvantage of this second work flow is that it requires you to posses exemplar data.
 
 
 \newpage
@@ -135,85 +216,39 @@ Figure\ref{fig:threelayer}, shows the schematic for an auto-encoding/decoding ne
 \section{Results\label{sec:results}}
 %/ =======================================================================================
 
-How you present the results of your research depends on what kind of
-research you did, your subject matter, and your readers’
-expectations. 
+past tense
 
-The distinction between the results section and the discussion section
-is not always so clear-cut. Although many writers think you should
-simply present and report your findings on the data you have
-collected, others believe some evaluation and commentary on your data
-may be appropriate and even necessary here. You and your teacher can
-decide how strict you want to be in this decision.
+evaluation and commentary on your data.
 
-There are specific conventions for creating tables, charts, and graphs
-and organizing the information they contain. In general, you should
-use these only when you are sure they will enlighten your readers
-rather than confuse them. In the accompanying explanation and your
-discussion, always refer to the graphic by number and explain
-specifically what you are referring to. Give your graphic element a
-descriptive caption as well. The rule of thumb for presenting a
-graphic is first to introduce it by name, show it, and then interpret
-it. You can consult a textbook, such as Lannon’s Technical Writing for
-more information and guidance. The results section is usually written
-in past tense.
+Introduce a graphic by name
+show it
+interpret it
 
-\subsection{Quantitative\label{sec:quant}}
-Quantitative information, data that can be measured, can
-be presented systematically and economically in tables, charts, and
-graphs. Quantitative information includes quantities and comparisons
-of sets of data. If you are unfamiliar with the conventions, you may
-find it challenging to present quantitative findings. You may include
-some commentary to explain to your reader what your findings are and
-how to read them.
+Describe each run and choice of hyper parameters
 
-\subsection{Qualitative\label{sec:qual}}
-Qualitative information, which includes brief descriptions,
-explanations, or instructions, can also be presented in prose
-tables. This kind of descriptive or explanatory information, however,
-is often presented in essay-like prose or even lists.
+What are the value of each metric
+
 
 %/ =======================================================================================
 \section{Discussion\label{sec:discuss}}
 %/ =======================================================================================
 
-Your discussion section should generalize on what you have learned
-from your research. One way to generalize is to explain the
-consequences or meaning of your results and then make your points that
-support and refer back to the statements you made in your
-introduction. Your discussion should be organized so that it relates
-directly to your thesis. You want to avoid introducing new ideas here
-or discussing tangential issues not directly related to the
-exploration and discovery of your thesis. This section, along with the
-introduction, is usually written in present tense.
+Present Tense
+
+How did the results support your introduction
+The anomalous image was always in the top 20 out of 1000
+how did it improve - that analys need not look at all 1000 images
+
+Do not introduce new ideas here.
+
 
 %/ =======================================================================================
 \subsection{Conclusions and Recommendations\label{sec:conclude}}
 %/ =======================================================================================
 
-Some academic research assignments might end with the discussion and
-not need a separate conclusions and recommendations section. Often, in
-shorter assignments, your conclusion is just a paragraph or two added
-to the discussion section. In many of your research assignments,
-however, you will be asked to provide your conclusions and
-recommendations in your research paper.
+make some subjective statements
 
-Conclusions unify your research results and discussion and elaborate
-on their significance to your thesis. Your conclusion ties your
-research to your thesis, binding together all the main ideas in your
-thinking and writing. By presenting the logical outcome of your
-research and thinking, your conclusion answers your research inquiry
-for you and your readers. Your conclusions should relate directly to
-the ideas presented in your introduction section and not present any
-new ideas.
-
-You may be asked to present your recommendations separately in your
-research assignment. If so, you will want to add some elements to your
-conclusion section. For example, you may be asked to recommend a
-course of action, make a prediction, propose a solution to a problem,
-offer a judgment, or speculate on the implications and consequences of
-your ideas. The conclusions and recommendations section is usually
-written in present tense.
+next efforts
 
 \nocite{savitsky:03}
 
