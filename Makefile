@@ -35,17 +35,8 @@
 
 all: debug
 
-COMPILERS=-DCMAKE_Fortran_COMPILER=gfortran
-XCOMPILERS=-DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_CXX_COMPILER=g++ -DCMAKE_CC_COMPILER=gcc
-
-#/ ---------------------------------------------------------------------------------------
-
-debug: DEBUG
-	make -C $<
-
-DEBUG:
-	mkdir -p $@
-	cd $@; cmake $(COMPILERS) -DCMAKE_BUILD_TYPE=$@ ..
+COMPILERS=-DCMAKE_Fortran_COMPILER=gfortran-8
+XCOMPILERS=-DCMAKE_Fortran_COMPILER=gfortran-8 -DCMAKE_CXX_COMPILER=g++-8 -DCMAKE_CC_COMPILER=gcc-8
 
 #/ ---------------------------------------------------------------------------------------
 
@@ -53,6 +44,15 @@ release: RELEASE
 	make -C $<
 
 RELEASE:
+	mkdir -p $@
+	cd $@; cmake $(COMPILERS) -DCMAKE_BUILD_TYPE=$@ ..
+
+#/ ---------------------------------------------------------------------------------------
+
+debug: DEBUG
+	make -C $<
+
+DEBUG:
 	mkdir -p $@
 	cd $@; cmake $(COMPILERS) -DCMAKE_BUILD_TYPE=$@ ..
 
@@ -84,7 +84,6 @@ fullclean: clean
 	find . -name "*~" | xargs rm -f
 	make -C papers $@
 	make -C python $@
-
 
 distclean: fullclean
 	make -C python $@
