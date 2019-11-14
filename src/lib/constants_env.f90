@@ -2,23 +2,25 @@
 !/ **                             C O N S T A N T S _ E N V                             **
 !/ =======================================================================================
 !/ **                                                                                   **
+!/ **  This file is part of the TRNCMP Research Library, `Europa' (Fortran 2018)        **
+!/ **                                                                                   **
 !/ **  Copyright (c) 2015, Stephen W. Soliday                                           **
 !/ **                      stephen.soliday@trncmp.org                                   **
 !/ **                      http://research.trncmp.org                                   **
 !/ **                                                                                   **
 !/ **  -------------------------------------------------------------------------------  **
 !/ **                                                                                   **
-!/ **  This program is free software: you can redistribute it and/or modify it under    **
-!/ **  the terms of the GNU General Public License as published by the Free Software    **
+!/ **  Europa is free software: you can redistribute it and/or modify it under the      **
+!/ **  terms of the GNU General Public License as published by the Free Software        **
 !/ **  Foundation, either version 3 of the License, or (at your option)                 **
 !/ **  any later version.                                                               **
 !/ **                                                                                   **
-!/ **  This program is distributed in the hope that it will be useful, but WITHOUT      **
-!/ **  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS    **
-!/ **  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.   **
+!/ **  Europa is distributed in the hope that it will be useful, but WITHOUT ANY        **
+!/ **  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR    **
+!/ **  A PARTICULAR PURPOSE. See the GNU General Public License for more details.       **
 !/ **                                                                                   **
 !/ **  You should have received a copy of the GNU General Public License along with     **
-!/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
+!/ **  Europa. If not, see <http://www.gnu.org/licenses/>.                              **
 !/ **                                                                                   **
 !/ =======================================================================================
 module constants_env
@@ -125,7 +127,7 @@ module constants_env
   real(dp), public, parameter :: D_MAX_POS   =  huge(0.0d0)     !! Use this to init min_value
   real(dp), public, parameter :: D_MAX_NEG   = -huge(0.0d0)     !! Use this to init max_value
 
-  real(dp), public, parameter :: RAD2DEG     = 1.8d2 / D_PI    !! Convert Radian to Degree
+  real(dp), public, parameter :: RAD2DEG     = 1.8D2 / D_PI    !! Convert Radian to Degree
   real(dp), public, parameter :: DEG2RAD     = D_PI  / 1.8d2   !! Convert Degree to Radian
 
   integer(int8),  public, parameter :: MAX_I8  = huge( 1_int8  )  !! Largest 8 bit integer

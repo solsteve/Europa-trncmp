@@ -156,7 +156,7 @@ module summation_mod
 
   end interface sumsq
 
-  
+
   !/ -------------------------------------------------------------------------------------
   interface wsum                                                           ! weighted sums
      !/ ----------------------------------------------------------------------------------
@@ -202,7 +202,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  pure function sum_square_I4_1d( array ) result( total )
+  function sum_square_I4_1d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -216,15 +216,19 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     n     = size(array)
     total = 0
 
+    !$omp parallel private(i) shared(array,n)
+    !$omp do reduction (+:total)
     do i=1,n
        total = total + ( array(i) * array(i) )
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_I4_1d
 
 
   !/ =====================================================================================
-  pure function sum_square_I4_2d( array ) result( total )
+  function sum_square_I4_2d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -232,21 +236,28 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer, dimension(:,:), intent(in) :: array !! reference to the array to be summed. 
     integer                             :: total !! sum of the squares: s = sum(i=1,n) A(i)**2
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, n1, n2
     !/ -----------------------------------------------------------------------------------
 
-    n     = size(array,dim=2)
+    n1    = size(array,DIM=1)
+    n2    = size(array,DIM=2)
     total = 0
 
-    do i=1,n
-       total = total + sum_square_I4_1d( array(:,i) )
+    !$omp parallel private(i1,i2) shared(array,n1,n2)
+    !$omp do reduction (+:total)
+    do i2=1,n2
+       do i1=1,n1
+          total = total + ( array(i1,i2) * array(i1,i2) )
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_I4_2d
 
 
   !/ =====================================================================================
-  pure function sum_square_I4_3d( array ) result( total )
+  function sum_square_I4_3d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -254,19 +265,31 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer, dimension(:,:,:), intent(in) :: array !! reference to the array to be summed. 
     integer                               :: total !! sum of the squares: s = sum(i=1,n) A(i)**2
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, n1, n2, n3
     !/ -----------------------------------------------------------------------------------
-    n     = size(array,dim=3)
+
+    n1    = size(array,DIM=1)
+    n2    = size(array,DIM=2)
+    n3    = size(array,DIM=3)
     total = 0
 
-    do i=1,n
-       total = total + sum_square_I4_2d( array(:,:,i) )
+    !$omp parallel private(i1,i2,i3) shared(array,n1,n2,n3)
+    !$omp do reduction (+:total)
+    do i3=1,n3
+       do i2=1,n2
+          do i1=1,n1
+             total = total + ( array(i1,i2,i3) * array(i1,i2,i3) )
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
+
   end function sum_square_I4_3d
 
 
   !/ =====================================================================================
-  pure function sum_square_I4_4d( array ) result( total )
+  function sum_square_I4_4d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -274,27 +297,36 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer, dimension(:,:,:,:), intent(in) :: array !! reference to the array to be summed. 
     integer                                 :: total !! sum of the squares: s = sum(i=1,n) A(i)**2
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, i4, n1, n2, n3, n4
     !/ -----------------------------------------------------------------------------------
 
-    n     = size(array,dim=4)
+    n1    = size(array,DIM=1)
+    n2    = size(array,DIM=2)
+    n3    = size(array,DIM=3)
+    n4    = size(array,DIM=4)
     total = 0
 
-    do i=1,n
-       total = total + sum_square_I4_3d( array(:,:,:,i) )
+    !$omp parallel private(i1,i2,i3,i4) shared(array,n1,n2,n3,n4)
+    !$omp do reduction (+:total)
+    do i4=1,n4
+       do i3=1,n3
+          do i2=1,n2
+             do i1=1,n1
+                total = total + ( array(i1,i2,i3,i4) * array(i1,i2,i3,i4) )
+             end do
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_I4_4d
 
 
 
 
-
-
-
-
   !/ =====================================================================================
-  pure function sum_square_R4_1d( array ) result( total )
+  function sum_square_R4_1d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -306,17 +338,21 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     n     = size(array)
-    total = 0.0_sp
+    total = 0.0e0
 
+    !$omp parallel private(i) shared(array,n)
+    !$omp do reduction (+:total)
     do i=1,n
        total = total + ( array(i) * array(i) )
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_R4_1d
 
 
   !/ =====================================================================================
-  pure function sum_square_R4_2d( array ) result( total )
+  function sum_square_R4_2d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -324,21 +360,28 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(sp), dimension(:,:), intent(in) :: array !! reference to the array to be summed. 
     real(sp)                             :: total !! sum of the squares: s = sum(i=1,n) A(i)**2
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, n1, n2
     !/ -----------------------------------------------------------------------------------
 
-    n     = size(array,dim=2)
-    total = 0.0_sp
+    n1    = size(array,DIM=1)
+    n2    = size(array,DIM=2)
+    total = 0.0e0
 
-    do i=1,n
-       total = total + sum_square_R4_1d( array(:,i) )
+    !$omp parallel private(i1,i2) shared(array,n1,n2)
+    !$omp do reduction (+:total)
+    do i2=1,n2
+       do i1=1,n1
+          total = total + ( array(i1,i2) * array(i1,i2) )
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_R4_2d
 
 
   !/ =====================================================================================
-  pure function sum_square_R4_3d( array ) result( total )
+  function sum_square_R4_3d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -346,19 +389,31 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(sp), dimension(:,:,:), intent(in) :: array !! reference to the array to be summed. 
     real(sp)                               :: total !! sum of the squares: s = sum(i=1,n) A(i)**2
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, n1, n2, n3
     !/ -----------------------------------------------------------------------------------
-    n     = size(array,dim=3)
-    total = 0.0_sp
 
-    do i=1,n
-       total = total + sum_square_R4_2d( array(:,:,i) )
+    n1    = size(array,DIM=1)
+    n2    = size(array,DIM=2)
+    n3    = size(array,DIM=3)
+    total = 0.0e0
+
+    !$omp parallel private(i1,i2,i3) shared(array,n1,n2,n3)
+    !$omp do reduction (+:total)
+    do i3=1,n3
+       do i2=1,n2
+          do i1=1,n1
+             total = total + ( array(i1,i2,i3) * array(i1,i2,i3) )
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
+
   end function sum_square_R4_3d
 
 
   !/ =====================================================================================
-  pure function sum_square_R4_4d( array ) result( total )
+  function sum_square_R4_4d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -366,15 +421,28 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(sp), dimension(:,:,:,:), intent(in) :: array !! reference to the array to be summed. 
     real(sp)                                 :: total !! sum of the squares: s = sum(i=1,n) A(i)**2
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, i4, n1, n2, n3, n4
     !/ -----------------------------------------------------------------------------------
 
-    n     = size(array,dim=4)
-    total = 0.0_sp
+    n1    = size(array,DIM=1)
+    n2    = size(array,DIM=2)
+    n3    = size(array,DIM=3)
+    n4    = size(array,DIM=4)
+    total = 0.0e0
 
-    do i=1,n
-       total = total + sum_square_R4_3d( array(:,:,:,i) )
+    !$omp parallel private(i1,i2,i3,i4) shared(array,n1,n2,n3,n4)
+    !$omp do reduction (+:total)
+    do i4=1,n4
+       do i3=1,n3
+          do i2=1,n2
+             do i1=1,n1
+                total = total + ( array(i1,i2,i3,i4) * array(i1,i2,i3,i4) )
+             end do
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_R4_4d
 
@@ -386,7 +454,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  pure function sum_square_R8_1d( array ) result( total )
+  function sum_square_R8_1d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -398,17 +466,21 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     n     = size(array)
-    total = 0.0_dp
+    total = 0.0d0
 
+    !$omp parallel private(i) shared(array,n)
+    !$omp do reduction (+:total)
     do i=1,n
        total = total + ( array(i) * array(i) )
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_R8_1d
 
 
   !/ =====================================================================================
-  pure function sum_square_R8_2d( array ) result( total )
+  function sum_square_R8_2d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -416,21 +488,28 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(dp), dimension(:,:), intent(in) :: array !! reference to the array to be summed. 
     real(dp)                             :: total !! sum of the squares: s = sum(i=1,n) A(i)**2
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, n1, n2
     !/ -----------------------------------------------------------------------------------
 
-    n     = size(array,dim=2)
-    total = 0.0_dp
+    n1    = size(array,DIM=1)
+    n2    = size(array,DIM=2)
+    total = 0.0d0
 
-    do i=1,n
-       total = total + sum_square_R8_1d( array(:,i) )
+    !$omp parallel private(i1,i2) shared(array,n1,n2)
+    !$omp do reduction (+:total)
+    do i2=1,n2
+       do i1=1,n1
+          total = total + ( array(i1,i2) * array(i1,i2) )
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_R8_2d
 
 
   !/ =====================================================================================
-  pure function sum_square_R8_3d( array ) result( total )
+  function sum_square_R8_3d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -438,19 +517,31 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(dp), dimension(:,:,:), intent(in) :: array !! reference to the array to be summed. 
     real(dp)                               :: total !! sum of the squares: s = sum(i=1,n) A(i)**2
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, n1, n2, n3
     !/ -----------------------------------------------------------------------------------
-    n     = size(array,dim=3)
-    total = 0.0_dp
 
-    do i=1,n
-       total = total + sum_square_R8_2d( array(:,:,i) )
+    n1    = size(array,DIM=1)
+    n2    = size(array,DIM=2)
+    n3    = size(array,DIM=3)
+    total = 0.0d0
+
+    !$omp parallel private(i1,i2,i3) shared(array,n1,n2,n3)
+    !$omp do reduction (+:total)
+    do i3=1,n3
+       do i2=1,n2
+          do i1=1,n1
+             total = total + ( array(i1,i2,i3) * array(i1,i2,i3) )
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
+
   end function sum_square_R8_3d
 
 
   !/ =====================================================================================
-  pure function sum_square_R8_4d( array ) result( total )
+  function sum_square_R8_4d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -458,15 +549,28 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(dp), dimension(:,:,:,:), intent(in) :: array !! reference to the array to be summed. 
     real(dp)                                 :: total !! sum of the squares: s = sum(i=1,n) A(i)**2
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, i4, n1, n2, n3, n4
     !/ -----------------------------------------------------------------------------------
 
-    n     = size(array,dim=4)
-    total = 0.0_dp
+    n1    = size(array,DIM=1)
+    n2    = size(array,DIM=2)
+    n3    = size(array,DIM=3)
+    n4    = size(array,DIM=4)
+    total = 0.0d0
 
-    do i=1,n
-       total = total + sum_square_R8_3d( array(:,:,:,i) )
+    !$omp parallel private(i1,i2,i3,i4) shared(array,n1,n2,n3,n4)
+    !$omp do reduction (+:total)
+    do i4=1,n4
+       do i3=1,n3
+          do i2=1,n2
+             do i1=1,n1
+                total = total + ( array(i1,i2,i3,i4) * array(i1,i2,i3,i4) )
+             end do
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_R8_4d
 
@@ -478,7 +582,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  pure function sum_square_C16_1d( array ) result( total )
+  function sum_square_C16_1d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -489,18 +593,22 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer :: i, n
     !/ -----------------------------------------------------------------------------------
 
-    n     = size(array)
-    total = ( 0.0_dp, 0.0_dp )
+    n    = size(array)
+    total = (0.0d0,0.0d0)
 
+    !$omp parallel private(i) shared(array,n)
+    !$omp do reduction (+:total)
     do i=1,n
        total = total + ( array(i) * conjg(array(i)) )
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_C16_1d
 
 
   !/ =====================================================================================
-  pure function sum_square_C16_2d( array ) result( total )
+  function sum_square_C16_2d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -508,21 +616,28 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     complex(dp), dimension(:,:), intent(in) :: array !! reference to the array to be summed. 
     complex(dp)                             :: total !! sum of the squares: s = sum(i=1,n) A(i)**2
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, n1, n2
     !/ -----------------------------------------------------------------------------------
 
-    n     = size(array,dim=2)
-    total = ( 0.0_dp, 0.0_dp )
+    n1    = size(array,DIM=1)
+    n2    = size(array,DIM=2)
+    total = (0.0d0,0.0d0)
 
-    do i=1,n
-       total = total + sum_square_C16_1d( array(:,i) )
+    !$omp parallel private(i1,i2) shared(array,n1,n2)
+    !$omp do reduction (+:total)
+    do i2=1,n2
+       do i1=1,n1
+          total = total + ( array(i1,i2) * conjg(array(i1,i2)) )
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_C16_2d
 
 
   !/ =====================================================================================
-  pure function sum_square_C16_3d( array ) result( total )
+  function sum_square_C16_3d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -530,19 +645,31 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     complex(dp), dimension(:,:,:), intent(in) :: array !! reference to the array to be summed. 
     complex(dp)                               :: total !! sum of the squares: s = sum(i=1,n) A(i)**2
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, n1, n2, n3
     !/ -----------------------------------------------------------------------------------
-    n     = size(array,dim=3)
-    total = ( 0.0_dp, 0.0_dp )
 
-    do i=1,n
-       total = total + sum_square_C16_2d( array(:,:,i) )
+    n1    = size(array,DIM=1)
+    n2    = size(array,DIM=2)
+    n3    = size(array,DIM=3)
+    total = (0.0d0,0.0d0)
+
+    !$omp parallel private(i1,i2,i3) shared(array,n1,n2,n3)
+    !$omp do reduction (+:total)
+    do i3=1,n3
+       do i2=1,n2
+          do i1=1,n1
+             total = total + ( array(i1,i2,i3) * conjg(array(i1,i2,i3)) )
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
+
   end function sum_square_C16_3d
 
 
   !/ =====================================================================================
-  pure function sum_square_C16_4d( array ) result( total )
+  function sum_square_C16_4d( array ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square of each element of the array.
     !/ -----------------------------------------------------------------------------------
@@ -550,27 +677,36 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     complex(dp), dimension(:,:,:,:), intent(in) :: array !! reference to the array to be summed. 
     complex(dp)                                 :: total !! sum of the squares: s = sum(i=1,n) A(i)**2
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, i4, n1, n2, n3, n4
     !/ -----------------------------------------------------------------------------------
 
-    n     = size(array,dim=4)
-    total = ( 0.0_dp, 0.0_dp )
+    n1    = size(array,DIM=1)
+    n2    = size(array,DIM=2)
+    n3    = size(array,DIM=3)
+    n4    = size(array,DIM=4)
+    total = (0.0d0,0.0d0)
 
-    do i=1,n
-       total = total + sum_square_C16_3d( array(:,:,:,i) )
+    !$omp parallel private(i1,i2,i3,i4) shared(array,n1,n2,n3,n4)
+    !$omp do reduction (+:total)
+    do i4=1,n4
+       do i3=1,n3
+          do i2=1,n2
+             do i1=1,n1
+                total = total + ( array(i1,i2,i3,i4) * conjg(array(i1,i2,i3,i4)) )
+             end do
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_C16_4d
 
 
 
 
-
-
-
-
   !/ =====================================================================================
-  pure function sum_square_difference_I4_0d( x1, x2 ) result( d2 )
+  function sum_square_difference_I4_0d( x1, x2 ) result( d2 )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square difference between two scalar values.
     !/ -----------------------------------------------------------------------------------
@@ -589,7 +725,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_I4_1d( lhs, rhs ) result( total )
+  function sum_square_difference_I4_1d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square difference between corresponding elements of the two arrays array.
     !/ -----------------------------------------------------------------------------------
@@ -598,80 +734,120 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer, dimension(:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     integer                           :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    integer :: d
+    integer :: diff
     integer :: i, n
     !/ -----------------------------------------------------------------------------------
 
     n     = min( size(lhs), size(rhs) )
     total = 0
 
+    !$omp parallel private(i,diff) shared(lhs,rhs,n)
+    !$omp do reduction (+:total)
     do i=1,n
-       d = lhs(i) - rhs(i)
-       total = total + ( d * d )
+       diff  = lhs(i) - rhs(i)
+       total = total + ( diff * diff )
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_I4_1d
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_I4_2d( lhs, rhs ) result( total )
+  function sum_square_difference_I4_2d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     implicit none
     integer, dimension(:,:), intent(in) :: lhs   !! reference to the left  hand side array to be summed.
     integer, dimension(:,:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     integer                             :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: diff
+    integer :: i1, i2, n1, n2
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(lhs,dim=2), size(rhs,dim=2) )
+    n1    = min( size(lhs,DIM=1), size(rhs,DIM=1) )
+    n2    = min( size(lhs,DIM=2), size(rhs,DIM=2) )
     total = 0
 
-    do i=1,n
-       total = total + sum_square_difference_I4_1d( lhs(:,i), rhs(:,i) )
+    !$omp parallel private(i1,i2,diff) shared(lhs,rhs,n1,n2)
+    !$omp do reduction (+:total)
+    do i2=1,n2
+       do i1=1,n1
+          diff  = lhs(i1,i2) - rhs(i1,i2)
+          total = total + ( diff * diff )
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_I4_2d
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_I4_3d( lhs, rhs ) result( total )
+  function sum_square_difference_I4_3d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     implicit none
     integer, dimension(:,:,:), intent(in) :: lhs   !! reference to the left  hand side array to be summed.
     integer, dimension(:,:,:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     integer                               :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: diff
+    integer :: i1, i2, i3, n1, n2, n3
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(lhs,dim=3), size(rhs,dim=3) )
+    n1    = min( size(lhs,DIM=1), size(rhs,DIM=1) )
+    n2    = min( size(lhs,DIM=2), size(rhs,DIM=2) )
+    n3    = min( size(lhs,DIM=3), size(rhs,DIM=3) )
     total = 0
 
-    do i=1,n
-       total = total + sum_square_difference_I4_2d( lhs(:,:,i), rhs(:,:,i) )
+    !$omp parallel private(i1,i2,i3,diff) shared(lhs,rhs,n1,n2,n3)
+    !$omp do reduction (+:total)
+    do i3=1,n3
+       do i2=1,n2
+          do i1=1,n1
+             diff  = lhs(i1,i2,i3) - rhs(i1,i2,i3)
+             total = total + ( diff * diff )
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_I4_3d
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_I4_4d( lhs, rhs ) result( total )
+  function sum_square_difference_I4_4d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     implicit none
     integer, dimension(:,:,:,:), intent(in) :: lhs   !! reference to the left  hand side array to be summed.
     integer, dimension(:,:,:,:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     integer                                 :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: diff
+    integer :: i1, i2, i3, i4, n1, n2, n3, n4
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(lhs,dim=4), size(rhs,dim=4) )
+    n1    = min( size(lhs,DIM=1), size(rhs,DIM=1) )
+    n2    = min( size(lhs,DIM=2), size(rhs,DIM=2) )
+    n3    = min( size(lhs,DIM=3), size(rhs,DIM=3) )
+    n4    = min( size(lhs,DIM=4), size(rhs,DIM=4) )
     total = 0
 
-    do i=1,n
-       total = total + sum_square_difference_I4_3d( lhs(:,:,:,i), rhs(:,:,:,i) )
+    !$omp parallel private(i1,i2,i3,i4,diff) shared(lhs,rhs,n1,n2,n3,n4)
+    !$omp do reduction (+:total)
+    do i4=1,n4
+       do i3=1,n3
+          do i2=1,n2
+             do i1=1,n1
+                diff  = lhs(i1,i2,i3,i4) - rhs(i1,i2,i3,i4)
+                total = total + ( diff * diff )
+             end do
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_I4_4d
 
@@ -683,7 +859,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_R4_0d( x1, x2 ) result( d2 )
+  function sum_square_difference_R4_0d( x1, x2 ) result( d2 )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square difference between two scalar values.
     !/ -----------------------------------------------------------------------------------
@@ -702,7 +878,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_R4_1d( lhs, rhs ) result( total )
+  function sum_square_difference_R4_1d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square difference between corresponding elements of the two arrays array.
     !/ -----------------------------------------------------------------------------------
@@ -711,92 +887,128 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(sp), dimension(:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     real(sp)                           :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    real(sp) :: d
-    integer :: i, n
+    real(sp) :: diff
+    integer  :: i, n
     !/ -----------------------------------------------------------------------------------
 
     n     = min( size(lhs), size(rhs) )
-    total = 0.0_sp
+    total = 0.0e0
 
+    !$omp parallel private(i,diff) shared(lhs,rhs,n)
+    !$omp do reduction (+:total)
     do i=1,n
-       d = lhs(i) - rhs(i)
-       total = total + ( d * d )
+       diff  = lhs(i) - rhs(i)
+       total = total + ( diff * diff )
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_R4_1d
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_R4_2d( lhs, rhs ) result( total )
+  function sum_square_difference_R4_2d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     implicit none
     real(sp), dimension(:,:), intent(in) :: lhs   !! reference to the left  hand side array to be summed.
     real(sp), dimension(:,:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     real(sp)                             :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    real(sp) :: diff
+    integer  :: i1, i2, n1, n2
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(lhs,dim=2), size(rhs,dim=2) )
-    total = 0.0_sp
+    n1    = min( size(lhs,DIM=1), size(rhs,DIM=1) )
+    n2    = min( size(lhs,DIM=2), size(rhs,DIM=2) )
+    total = 0.0e0
 
-    do i=1,n
-       total = total + sum_square_difference_R4_1d( lhs(:,i), rhs(:,i) )
+    !$omp parallel private(i1,i2,diff) shared(lhs,rhs,n1,n2)
+    !$omp do reduction (+:total)
+    do i2=1,n2
+       do i1=1,n1
+          diff  = lhs(i1,i2) - rhs(i1,i2)
+          total = total + ( diff * diff )
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_R4_2d
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_R4_3d( lhs, rhs ) result( total )
+  function sum_square_difference_R4_3d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     implicit none
     real(sp), dimension(:,:,:), intent(in) :: lhs   !! reference to the left  hand side array to be summed.
     real(sp), dimension(:,:,:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     real(sp)                               :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    real(sp) :: diff
+    integer  :: i1, i2, i3, n1, n2, n3
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(lhs,dim=3), size(rhs,dim=3) )
-    total = 0.0_sp
+    n1    = min( size(lhs,DIM=1), size(rhs,DIM=1) )
+    n2    = min( size(lhs,DIM=2), size(rhs,DIM=2) )
+    n3    = min( size(lhs,DIM=3), size(rhs,DIM=3) )
+    total = 0.0e0
 
-    do i=1,n
-       total = total + sum_square_difference_R4_2d( lhs(:,:,i), rhs(:,:,i) )
+    !$omp parallel private(i1,i2,i3,diff) shared(lhs,rhs,n1,n2,n3)
+    !$omp do reduction (+:total)
+    do i3=1,n3
+       do i2=1,n2
+          do i1=1,n1
+             diff  = lhs(i1,i2,i3) - rhs(i1,i2,i3)
+             total = total + ( diff * diff )
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_R4_3d
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_R4_4d( lhs, rhs ) result( total )
+  function sum_square_difference_R4_4d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     implicit none
     real(sp), dimension(:,:,:,:), intent(in) :: lhs   !! reference to the left  hand side array to be summed.
     real(sp), dimension(:,:,:,:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     real(sp)                                 :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    real(sp) :: diff
+    integer  :: i1, i2, i3, i4, n1, n2, n3, n4
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(lhs,dim=4), size(rhs,dim=4) )
-    total = 0.0_sp
+    n1    = min( size(lhs,DIM=1), size(rhs,DIM=1) )
+    n2    = min( size(lhs,DIM=2), size(rhs,DIM=2) )
+    n3    = min( size(lhs,DIM=3), size(rhs,DIM=3) )
+    n4    = min( size(lhs,DIM=4), size(rhs,DIM=4) )
+    total = 0.0e0
 
-    do i=1,n
-       total = total + sum_square_difference_R4_3d( lhs(:,:,:,i), rhs(:,:,:,i) )
+    !$omp parallel private(i1,i2,i3,i4,diff) shared(lhs,rhs,n1,n2,n3,n4)
+    !$omp do reduction (+:total)
+    do i4=1,n4
+       do i3=1,n3
+          do i2=1,n2
+             do i1=1,n1
+                diff  = lhs(i1,i2,i3,i4) - rhs(i1,i2,i3,i4)
+                total = total + ( diff * diff )
+             end do
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_R4_4d
 
 
 
 
-
-
-
-
   !/ =====================================================================================
-  pure function sum_square_difference_R8_0d( x1, x2 ) result( d2 )
+  function sum_square_difference_R8_0d( x1, x2 ) result( d2 )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square difference between two scalar values.
     !/ -----------------------------------------------------------------------------------
@@ -815,7 +1027,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_R8_1d( lhs, rhs ) result( total )
+  function sum_square_difference_R8_1d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square difference between corredponding elements of the two arrays array.
     !/ -----------------------------------------------------------------------------------
@@ -824,80 +1036,120 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(dp), dimension(:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     real(dp)                           :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    real(dp) :: d
-    integer :: i, n
+    real(dp) :: diff
+    integer  :: i, n
     !/ -----------------------------------------------------------------------------------
 
     n     = min( size(lhs), size(rhs) )
-    total = 0.0_dp
+    total = 0.0d0
 
+    !$omp parallel private(i,diff) shared(lhs,rhs,n)
+    !$omp do reduction (+:total)
     do i=1,n
-       d = lhs(i) - rhs(i)
-       total = total + ( d * d )
+       diff  = lhs(i) - rhs(i)
+       total = total + ( diff * diff )
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_R8_1d
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_R8_2d( lhs, rhs ) result( total )
+  function sum_square_difference_R8_2d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     implicit none
     real(dp), dimension(:,:), intent(in) :: lhs   !! reference to the left  hand side array to be summed.
     real(dp), dimension(:,:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     real(dp)                             :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    real(dp) :: diff
+    integer  :: i1, i2, n1, n2
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(lhs,dim=2), size(rhs,dim=2) )
-    total = 0.0_dp
+    n1    = min( size(lhs,DIM=1), size(rhs,DIM=1) )
+    n2    = min( size(lhs,DIM=2), size(rhs,DIM=2) )
+    total = 0.0d0
 
-    do i=1,n
-       total = total + sum_square_difference_R8_1d( lhs(:,i), rhs(:,i) )
+    !$omp parallel private(i1,i2,diff) shared(lhs,rhs,n1,n2)
+    !$omp do reduction (+:total)
+    do i2=1,n2
+       do i1=1,n1
+          diff  = lhs(i1,i2) - rhs(i1,i2)
+          total = total + ( diff * diff )
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_R8_2d
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_R8_3d( lhs, rhs ) result( total )
+  function sum_square_difference_R8_3d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     implicit none
     real(dp), dimension(:,:,:), intent(in) :: lhs   !! reference to the left  hand side array to be summed.
     real(dp), dimension(:,:,:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     real(dp)                               :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    real(dp) :: diff
+    integer  :: i1, i2, i3, n1, n2, n3
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(lhs,dim=3), size(rhs,dim=3) )
-    total = 0.0_dp
+    n1    = min( size(lhs,DIM=1), size(rhs,DIM=1) )
+    n2    = min( size(lhs,DIM=2), size(rhs,DIM=2) )
+    n3    = min( size(lhs,DIM=3), size(rhs,DIM=3) )
+    total = 0.0d0
 
-    do i=1,n
-       total = total + sum_square_difference_R8_2d( lhs(:,:,i), rhs(:,:,i) )
+    !$omp parallel private(i1,i2,i3,diff) shared(lhs,rhs,n1,n2,n3)
+    !$omp do reduction (+:total)
+    do i3=1,n3
+       do i2=1,n2
+          do i1=1,n1
+             diff  = lhs(i1,i2,i3) - rhs(i1,i2,i3)
+             total = total + ( diff * diff )
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_R8_3d
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_R8_4d( lhs, rhs ) result( total )
+  function sum_square_difference_R8_4d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     implicit none
     real(dp), dimension(:,:,:,:), intent(in) :: lhs   !! reference to the left  hand side array to be summed.
     real(dp), dimension(:,:,:,:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     real(dp)                                 :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    real(dp) :: diff
+    integer  :: i1, i2, i3, i4, n1, n2, n3, n4
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(lhs,dim=4), size(rhs,dim=4) )
-    total = 0.0_dp
+    n1    = min( size(lhs,DIM=1), size(rhs,DIM=1) )
+    n2    = min( size(lhs,DIM=2), size(rhs,DIM=2) )
+    n3    = min( size(lhs,DIM=3), size(rhs,DIM=3) )
+    n4    = min( size(lhs,DIM=4), size(rhs,DIM=4) )
+    total = 0.0d0
 
-    do i=1,n
-       total = total + sum_square_difference_R8_3d( lhs(:,:,:,i), rhs(:,:,:,i) )
+    !$omp parallel private(i1,i2,i3,i4,diff) shared(lhs,rhs,n1,n2,n3,n4)
+    !$omp do reduction (+:total)
+    do i4=1,n4
+       do i3=1,n3
+          do i2=1,n2
+             do i1=1,n1
+                diff  = lhs(i1,i2,i3,i4) - rhs(i1,i2,i3,i4)
+                total = total + ( diff * diff )
+             end do
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_R8_4d
 
@@ -909,7 +1161,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_C16_0d( x1, x2 ) result( d2 )
+  function sum_square_difference_C16_0d( x1, x2 ) result( d2 )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square difference between two scalar values.
     !/ -----------------------------------------------------------------------------------
@@ -922,13 +1174,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     d  = ( x1 - x2 )
-    d2 = d * d
+    d2 = d * conjg(d)
 
   end function sum_square_difference_C16_0d
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_C16_1d( lhs, rhs ) result( total )
+  function sum_square_difference_C16_1d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Sum the square difference between corredponding elements of the two arrays array.
     !/ -----------------------------------------------------------------------------------
@@ -937,92 +1189,128 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     complex(dp), dimension(:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     complex(dp)                           :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    complex(dp) :: d
-    integer :: i, n
+    complex(dp) :: diff
+    integer  :: i, n
     !/ -----------------------------------------------------------------------------------
 
     n     = min( size(lhs), size(rhs) )
-    total = ( 0.0_dp, 0.0_dp )
+    total = (0.0d0,0.0d0)
 
+    !$omp parallel private(i,diff) shared(lhs,rhs,n)
+    !$omp do reduction (+:total)
     do i=1,n
-       d = lhs(i) - rhs(i)
-       total = total + ( d * d )
+       diff  = lhs(i) - rhs(i)
+       total = total + ( diff * conjg(diff) )
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_C16_1d
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_C16_2d( lhs, rhs ) result( total )
+  function sum_square_difference_C16_2d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     implicit none
     complex(dp), dimension(:,:), intent(in) :: lhs   !! reference to the left  hand side array to be summed.
     complex(dp), dimension(:,:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     complex(dp)                             :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    complex(dp) :: diff
+    integer  :: i1, i2, n1, n2
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(lhs,dim=2), size(rhs,dim=2) )
-    total = ( 0.0_dp, 0.0_dp )
+    n1    = min( size(lhs,DIM=1), size(rhs,DIM=1) )
+    n2    = min( size(lhs,DIM=2), size(rhs,DIM=2) )
+    total = (0.0d0,0.0d0)
 
-    do i=1,n
-       total = total + sum_square_difference_C16_1d( lhs(:,i), rhs(:,i) )
+    !$omp parallel private(i1,i2,diff) shared(lhs,rhs,n1,n2)
+    !$omp do reduction (+:total)
+    do i2=1,n2
+       do i1=1,n1
+          diff  = lhs(i1,i2) - rhs(i1,i2)
+          total = total + ( diff * conjg(diff) )
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_C16_2d
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_C16_3d( lhs, rhs ) result( total )
+  function sum_square_difference_C16_3d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     implicit none
     complex(dp), dimension(:,:,:), intent(in) :: lhs   !! reference to the left  hand side array to be summed.
     complex(dp), dimension(:,:,:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     complex(dp)                               :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    complex(dp) :: diff
+    integer  :: i1, i2, i3, n1, n2, n3
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(lhs,dim=3), size(rhs,dim=3) )
-    total = ( 0.0_dp, 0.0_dp )
+    n1    = min( size(lhs,DIM=1), size(rhs,DIM=1) )
+    n2    = min( size(lhs,DIM=2), size(rhs,DIM=2) )
+    n3    = min( size(lhs,DIM=3), size(rhs,DIM=3) )
+    total = (0.0d0,0.0d0)
 
-    do i=1,n
-       total = total + sum_square_difference_C16_2d( lhs(:,:,i), rhs(:,:,i) )
+    !$omp parallel private(i1,i2,i3,diff) shared(lhs,rhs,n1,n2,n3)
+    !$omp do reduction (+:total)
+    do i3=1,n3
+       do i2=1,n2
+          do i1=1,n1
+             diff  = lhs(i1,i2,i3) - rhs(i1,i2,i3)
+             total = total + ( diff * conjg(diff) )
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_C16_3d
 
 
   !/ =====================================================================================
-  pure function sum_square_difference_C16_4d( lhs, rhs ) result( total )
+  function sum_square_difference_C16_4d( lhs, rhs ) result( total )
     !/ -----------------------------------------------------------------------------------
     implicit none
     complex(dp), dimension(:,:,:,:), intent(in) :: lhs   !! reference to the left  hand side array to be summed.
     complex(dp), dimension(:,:,:,:), intent(in) :: rhs   !! reference to the right hand side array to be summed.
     complex(dp)                                 :: total !! sum of the square difference.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    complex(dp) :: diff
+    integer  :: i1, i2, i3, i4, n1, n2, n3, n4
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(lhs,dim=4), size(rhs,dim=4) )
-    total = ( 0.0_dp, 0.0_dp )
+    n1    = min( size(lhs,DIM=1), size(rhs,DIM=1) )
+    n2    = min( size(lhs,DIM=2), size(rhs,DIM=2) )
+    n3    = min( size(lhs,DIM=3), size(rhs,DIM=3) )
+    n4    = min( size(lhs,DIM=4), size(rhs,DIM=4) )
+    total = (0.0d0,0.0d0)
 
-    do i=1,n
-       total = total + sum_square_difference_C16_3d( lhs(:,:,:,i), rhs(:,:,:,i) )
+    !$omp parallel private(i1,i2,i3,i4,diff) shared(lhs,rhs,n1,n2,n3,n4)
+    !$omp do reduction (+:total)
+    do i4=1,n4
+       do i3=1,n3
+          do i2=1,n2
+             do i1=1,n1
+                diff  = lhs(i1,i2,i3,i4) - rhs(i1,i2,i3,i4)
+                total = total + ( diff * conjg(diff) )
+             end do
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function sum_square_difference_C16_4d
 
 
 
 
-
-
-
-
   !/ =====================================================================================
-  pure function weighted_sum_R4_1d( W, X ) result( total )
+  function weighted_sum_R4_1d( W, X ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Perform a weighted sum: s = sum(i=1,n) W(i)*X(i)
     !/ -----------------------------------------------------------------------------------
@@ -1035,17 +1323,21 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     n     = min( size(W), size(X) )
-    total = 0.0_sp
-    
+    total = 0.0e0
+
+    !$omp parallel private(i) shared(W,X,n)
+    !$omp do reduction (+:total)
     do i=1,n
        total = total + ( W(i) * X(i) )
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function weighted_sum_R4_1d
 
 
   !/ =====================================================================================
-  pure function weighted_sum_R4_2d( W, X ) result( total )
+  function weighted_sum_R4_2d( W, X ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Perform a weighted sum: s = sum(i=1,n) W(i)*X(i)
     !/ -----------------------------------------------------------------------------------
@@ -1054,21 +1346,28 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(sp), dimension(:,:), intent(in) :: X     !! reference to the value array.
     real(sp)                             :: total !! weighted sum of the elements.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, n1, n2
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(W,dim=2), size(X,dim=2) )
-    total = 0.0_sp
-    
-    do i=1,n
-       total = total + weighted_sum_R4_1d( W(:,i), X(:,i) )
+    n1    = min( size(W,DIM=1), size(X,DIM=1) )
+    n2    = min( size(W,DIM=2), size(X,DIM=2) )
+    total = 0.0e0
+
+    !$omp parallel private(i1,i2) shared(W,X,n1,n2)
+    !$omp do reduction (+:total)
+    do i2=1,n2
+       do i1=1,n1
+          total = total + ( W(i1,i2) * X(i1,i2) )
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function weighted_sum_R4_2d
 
 
   !/ =====================================================================================
-  pure function weighted_sum_R4_3d( W, X ) result( total )
+  function weighted_sum_R4_3d( W, X ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Perform a weighted sum: s = sum(i=1,n) W(i)*X(i)
     !/ -----------------------------------------------------------------------------------
@@ -1077,21 +1376,31 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(sp), dimension(:,:,:), intent(in) :: X     !! reference to the value array.
     real(sp)                               :: total !! weighted sum of the elements.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, n1, n2, n3
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(W,dim=3), size(X,dim=3) )
-    total = 0.0_sp
-    
-    do i=1,n
-       total = total + weighted_sum_R4_2d( W(:,:,i), X(:,:,i) )
+    n1    = min( size(W,DIM=1), size(X,DIM=1) )
+    n2    = min( size(W,DIM=2), size(X,DIM=2) )
+    n3    = min( size(W,DIM=3), size(X,DIM=3) )
+    total = 0.0e0
+
+    !$omp parallel private(i1,i2,i3) shared(W,X,n1,n2,n3)
+    !$omp do reduction (+:total)
+    do i3=1,n3
+       do i2=1,n2
+          do i1=1,n1
+             total = total + ( W(i1,i2,i3) * X(i1,i2,i3) )
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function weighted_sum_R4_3d
 
 
   !/ =====================================================================================
-  pure function weighted_sum_R4_4d( W, X ) result( total )
+  function weighted_sum_R4_4d( W, X ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Perform a weighted sum: s = sum(i=1,n) W(i)*X(i)
     !/ -----------------------------------------------------------------------------------
@@ -1100,15 +1409,28 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(sp), dimension(:,:,:,:), intent(in) :: X     !! reference to the value array.
     real(sp)                                 :: total !! weighted sum of the elements.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, i4, n1, n2, n3, n4
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(W,dim=4), size(X,dim=4) )
-    total = 0.0_sp
-    
-    do i=1,n
-       total = total + weighted_sum_R4_3d( W(:,:,:,i), X(:,:,:,i) )
+    n1    = min( size(W,DIM=1), size(X,DIM=1) )
+    n2    = min( size(W,DIM=2), size(X,DIM=2) )
+    n3    = min( size(W,DIM=3), size(X,DIM=3) )
+    n4    = min( size(W,DIM=4), size(X,DIM=4) )
+    total = 0.0e0
+
+    !$omp parallel private(i1,i2,i3,i4) shared(W,X,n1,n2,n3,n4)
+    !$omp do reduction (+:total)
+    do i4=1,n4
+       do i3=1,n3
+          do i2=1,n2
+             do i1=1,n1
+                total = total + ( W(i1,i2,i3,i4) * X(i1,i2,i3,i4) )
+             end do
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function weighted_sum_R4_4d
 
@@ -1120,7 +1442,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  pure function weighted_sum_R8_1d( W, X ) result( total )
+  function weighted_sum_R8_1d( W, X ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Perform a weighted sum: s = sum(i=1,n) W(i)*X(i)
     !/ -----------------------------------------------------------------------------------
@@ -1133,17 +1455,21 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     n     = min( size(W), size(X) )
-    total = 0.0_dp
-    
+    total = 0.0d0
+
+    !$omp parallel private(i) shared(W,X,n)
+    !$omp do reduction (+:total)
     do i=1,n
        total = total + ( W(i) * X(i) )
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function weighted_sum_R8_1d
 
 
   !/ =====================================================================================
-  pure function weighted_sum_R8_2d( W, X ) result( total )
+  function weighted_sum_R8_2d( W, X ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Perform a weighted sum: s = sum(i=1,n) W(i)*X(i)
     !/ -----------------------------------------------------------------------------------
@@ -1152,21 +1478,28 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(dp), dimension(:,:), intent(in) :: X     !! reference to the value array.
     real(dp)                             :: total !! weighted sum of the elements.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, n1, n2
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(W,dim=2), size(X,dim=2) )
-    total = 0.0_dp
-    
-    do i=1,n
-       total = total + weighted_sum_R8_1d( W(:,i), X(:,i) )
+    n1    = min( size(W,DIM=1), size(X,DIM=1) )
+    n2    = min( size(W,DIM=2), size(X,DIM=2) )
+    total = 0.0d0
+
+    !$omp parallel private(i1,i2) shared(W,X,n1,n2)
+    !$omp do reduction (+:total)
+    do i2=1,n2
+       do i1=1,n1
+          total = total + ( W(i1,i2) * X(i1,i2) )
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function weighted_sum_R8_2d
 
 
   !/ =====================================================================================
-  pure function weighted_sum_R8_3d( W, X ) result( total )
+  function weighted_sum_R8_3d( W, X ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Perform a weighted sum: s = sum(i=1,n) W(i)*X(i)
     !/ -----------------------------------------------------------------------------------
@@ -1175,21 +1508,31 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(dp), dimension(:,:,:), intent(in) :: X     !! reference to the value array.
     real(dp)                               :: total !! weighted sum of the elements.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, n1, n2, n3
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(W,dim=3), size(X,dim=3) )
-    total = 0.0_dp
-    
-    do i=1,n
-       total = total + weighted_sum_R8_2d( W(:,:,i), X(:,:,i) )
+    n1    = min( size(W,DIM=1), size(X,DIM=1) )
+    n2    = min( size(W,DIM=2), size(X,DIM=2) )
+    n3    = min( size(W,DIM=3), size(X,DIM=3) )
+    total = 0.0d0
+
+    !$omp parallel private(i1,i2,i3) shared(W,X,n1,n2,n3)
+    !$omp do reduction (+:total)
+    do i3=1,n3
+       do i2=1,n2
+          do i1=1,n1
+             total = total + ( W(i1,i2,i3) * X(i1,i2,i3) )
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function weighted_sum_R8_3d
 
 
   !/ =====================================================================================
-  pure function weighted_sum_R8_4d( W, X ) result( total )
+  function weighted_sum_R8_4d( W, X ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Perform a weighted sum: s = sum(i=1,n) W(i)*X(i)
     !/ -----------------------------------------------------------------------------------
@@ -1198,27 +1541,36 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(dp), dimension(:,:,:,:), intent(in) :: X     !! reference to the value array.
     real(dp)                                 :: total !! weighted sum of the elements.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, i4, n1, n2, n3, n4
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(W,dim=4), size(X,dim=4) )
-    total = 0.0_dp
-    
-    do i=1,n
-       total = total + weighted_sum_R8_3d( W(:,:,:,i), X(:,:,:,i) )
+    n1    = min( size(W,DIM=1), size(X,DIM=1) )
+    n2    = min( size(W,DIM=2), size(X,DIM=2) )
+    n3    = min( size(W,DIM=3), size(X,DIM=3) )
+    n4    = min( size(W,DIM=4), size(X,DIM=4) )
+    total = 0.0d0
+
+    !$omp parallel private(i1,i2,i3,i4) shared(W,X,n1,n2,n3,n4)
+    !$omp do reduction (+:total)
+    do i4=1,n4
+       do i3=1,n3
+          do i2=1,n2
+             do i1=1,n1
+                total = total + ( W(i1,i2,i3,i4) * X(i1,i2,i3,i4) )
+             end do
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function weighted_sum_R8_4d
 
 
 
 
-
-
-
-
   !/ =====================================================================================
-  pure function weighted_sum_C16_1d( W, X ) result( total )
+  function weighted_sum_C16_1d( W, X ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Perform a weighted sum: s = sum(i=1,n) W(i)*X(i)
     !/ -----------------------------------------------------------------------------------
@@ -1231,17 +1583,21 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     n     = min( size(W), size(X) )
-    total = ( 0.0_dp, 0.0_dp )
-    
+    total = (0.0e0,0.0d0)
+
+    !$omp parallel private(i) shared(W,X,n)
+    !$omp do reduction (+:total)
     do i=1,n
        total = total + ( W(i) * X(i) )
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function weighted_sum_C16_1d
 
 
   !/ =====================================================================================
-  pure function weighted_sum_C16_2d( W, X ) result( total )
+  function weighted_sum_C16_2d( W, X ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Perform a weighted sum: s = sum(i=1,n) W(i)*X(i)
     !/ -----------------------------------------------------------------------------------
@@ -1250,21 +1606,28 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     complex(dp), dimension(:,:), intent(in) :: X     !! reference to the value array.
     complex(dp)                             :: total !! weighted sum of the elements.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, n1, n2
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(W,dim=2), size(X,dim=2) )
-    total = ( 0.0_dp, 0.0_dp )
-    
-    do i=1,n
-       total = total + weighted_sum_C16_1d( W(:,i), X(:,i) )
+    n1    = min( size(W,DIM=1), size(X,DIM=1) )
+    n2    = min( size(W,DIM=2), size(X,DIM=2) )
+    total = (0.0e0,0.0d0)
+
+    !$omp parallel private(i1,i2) shared(W,X,n1,n2)
+    !$omp do reduction (+:total)
+    do i2=1,n2
+       do i1=1,n1
+          total = total + ( W(i1,i2) * X(i1,i2) )
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function weighted_sum_C16_2d
 
 
   !/ =====================================================================================
-  pure function weighted_sum_C16_3d( W, X ) result( total )
+  function weighted_sum_C16_3d( W, X ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Perform a weighted sum: s = sum(i=1,n) W(i)*X(i)
     !/ -----------------------------------------------------------------------------------
@@ -1273,21 +1636,31 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     complex(dp), dimension(:,:,:), intent(in) :: X     !! reference to the value array.
     complex(dp)                               :: total !! weighted sum of the elements.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, n1, n2, n3
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(W,dim=3), size(X,dim=3) )
-    total = ( 0.0_dp, 0.0_dp )
-    
-    do i=1,n
-       total = total + weighted_sum_C16_2d( W(:,:,i), X(:,:,i) )
+    n1    = min( size(W,DIM=1), size(X,DIM=1) )
+    n2    = min( size(W,DIM=2), size(X,DIM=2) )
+    n3    = min( size(W,DIM=3), size(X,DIM=3) )
+    total = (0.0e0,0.0d0)
+
+    !$omp parallel private(i1,i2,i3) shared(W,X,n1,n2,n3)
+    !$omp do reduction (+:total)
+    do i3=1,n3
+       do i2=1,n2
+          do i1=1,n1
+             total = total + ( W(i1,i2,i3) * X(i1,i2,i3) )
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function weighted_sum_C16_3d
 
 
   !/ =====================================================================================
-  pure function weighted_sum_C16_4d( W, X ) result( total )
+  function weighted_sum_C16_4d( W, X ) result( total )
     !/ -----------------------------------------------------------------------------------
     !! Perform a weighted sum: s = sum(i=1,n) W(i)*X(i)
     !/ -----------------------------------------------------------------------------------
@@ -1296,15 +1669,28 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     complex(dp), dimension(:,:,:,:), intent(in) :: X     !! reference to the value array.
     complex(dp)                                 :: total !! weighted sum of the elements.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i1, i2, i3, i4, n1, n2, n3, n4
     !/ -----------------------------------------------------------------------------------
 
-    n     = min( size(W,dim=4), size(X,dim=4) )
-    total = ( 0.0_dp, 0.0_dp )
-    
-    do i=1,n
-       total = total + weighted_sum_C16_3d( W(:,:,:,i), X(:,:,:,i) )
+    n1    = min( size(W,DIM=1), size(X,DIM=1) )
+    n2    = min( size(W,DIM=2), size(X,DIM=2) )
+    n3    = min( size(W,DIM=3), size(X,DIM=3) )
+    n4    = min( size(W,DIM=4), size(X,DIM=4) )
+    total = (0.0e0,0.0d0)
+
+    !$omp parallel private(i1,i2,i3,i4) shared(W,X,n1,n2,n3,n4)
+    !$omp do reduction (+:total)
+    do i4=1,n4
+       do i3=1,n3
+          do i2=1,n2
+             do i1=1,n1
+                total = total + ( W(i1,i2,i3,i4) * X(i1,i2,i3,i4) )
+             end do
+          end do
+       end do
     end do
+    !$omp end do
+    !$omp end parallel
 
   end function weighted_sum_C16_4d
 

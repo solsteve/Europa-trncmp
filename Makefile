@@ -33,7 +33,7 @@
 
 .PHONY: all 
 
-all: debug
+all: release
 
 COMPILERS=-DCMAKE_Fortran_COMPILER=gfortran-8
 XCOMPILERS=-DCMAKE_Fortran_COMPILER=gfortran-8 -DCMAKE_CXX_COMPILER=g++-8 -DCMAKE_CC_COMPILER=gcc-8

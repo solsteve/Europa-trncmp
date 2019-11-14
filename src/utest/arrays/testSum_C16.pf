@@ -153,7 +153,7 @@ contains
 
     complex(dp), parameter :: CONE = ( 1.0d0, 1.0d0 )
     complex(dp), parameter :: CEXT = ( 3.0d0, 2.0d0 )
-    complex(dp), parameter :: CSQR = CEXT * CEXT
+    complex(dp), parameter :: CSQR = CEXT * conjg(CEXT)
 
     idx   = ( 0.0d0, 0.0d0 )
     total = ( 0.0d0, 0.0d0 )
@@ -186,7 +186,7 @@ contains
 
     complex(dp), parameter :: CONE = ( 1.0d0, 1.0d0 )
     complex(dp), parameter :: CEXT = ( 3.0d0, 2.0d0 )
-    complex(dp), parameter :: CSQR = CEXT * CEXT
+    complex(dp), parameter :: CSQR = CEXT * conjg(CEXT)
 
     idx   = ( 0.0d0, 0.0d0 )
     total = ( 0.0d0, 0.0d0 )
@@ -221,7 +221,7 @@ contains
 
     complex(dp), parameter :: CONE = ( 1.0d0, 1.0d0 )
     complex(dp), parameter :: CEXT = ( 3.0d0, 2.0d0 )
-    complex(dp), parameter :: CSQR = CEXT * CEXT
+    complex(dp), parameter :: CSQR = CEXT * conjg(CEXT)
 
     idx   = ( 0.0d0, 0.0d0 )
     total = ( 0.0d0, 0.0d0 )
@@ -258,7 +258,7 @@ contains
 
     complex(dp), parameter :: CONE = ( 1.0d0, 1.0d0 )
     complex(dp), parameter :: CEXT = ( 3.0d0, 2.0d0 )
-    complex(dp), parameter :: CSQR = CEXT * CEXT
+    complex(dp), parameter :: CSQR = CEXT * conjg(CEXT)
 
     idx   = ( 0.0d0, 0.0d0 )
     total = ( 0.0d0, 0.0d0 )

@@ -2,23 +2,25 @@
 !/ **                                  M A T H _ A U X                                  **
 !/ =======================================================================================
 !/ **                                                                                   **
+!/ **  This file is part of the TRNCMP Research Library, `Europa' (Fortran 2018)        **
+!/ **                                                                                   **
 !/ **  Copyright (c) 2015, Stephen W. Soliday                                           **
 !/ **                      stephen.soliday@trncmp.org                                   **
 !/ **                      http://research.trncmp.org                                   **
 !/ **                                                                                   **
 !/ **  -------------------------------------------------------------------------------  **
 !/ **                                                                                   **
-!/ **  This program is free software: you can redistribute it and/or modify it under    **
-!/ **  the terms of the GNU General Public License as published by the Free Software    **
+!/ **  Europa is free software: you can redistribute it and/or modify it under the      **
+!/ **  terms of the GNU General Public License as published by the Free Software        **
 !/ **  Foundation, either version 3 of the License, or (at your option)                 **
 !/ **  any later version.                                                               **
 !/ **                                                                                   **
-!/ **  This program is distributed in the hope that it will be useful, but WITHOUT      **
-!/ **  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS    **
-!/ **  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.   **
+!/ **  Europa is distributed in the hope that it will be useful, but WITHOUT ANY        **
+!/ **  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR    **
+!/ **  A PARTICULAR PURPOSE. See the GNU General Public License for more details.       **
 !/ **                                                                                   **
 !/ **  You should have received a copy of the GNU General Public License along with     **
-!/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
+!/ **  Europa. If not, see <http://www.gnu.org/licenses/>.                              **
 !/ **                                                                                   **
 !/ =======================================================================================
 module math_aux
@@ -68,8 +70,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     !! Sum all integers one to n inclusive.
     !/ -----------------------------------------------------------------------------------
-    integer, intent(in)  :: n !! number to sum to
-    integer              :: s !! resulting sum
+    integer, intent(in) :: n !! number to sum to
+    integer             :: s !! resulting sum
     !/ -----------------------------------------------------------------------------------
     s = n*(n + 1)/2
   end function sum_one_to_n
@@ -80,8 +82,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     !! Sum all squares of integers one to n inclusive.
     !/ -----------------------------------------------------------------------------------
-    integer, intent(in)  :: n !! number to sum to
-    integer              :: s !! resulting sum
+    integer, intent(in) :: n !! number to sum to
+    integer             :: s !! resulting sum
     !/ -----------------------------------------------------------------------------------
     s = n*(n + 1)*(2*n + 1)/6
     !s = n*n*n/3 + n*n/2 + n/6
