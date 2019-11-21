@@ -75,10 +75,6 @@ else ( )
   message ( STATUS "Build Type is ${CMAKE_BUILD_TYPE}" )
 endif ( "${CMAKE_BUILD_TYPE}" STREQUAL "" )
 
-set ( XGARCH "-fverbose-asm -march=corei7 -mtune=corei7 -ffast-math -ftree-vectorizer-verbose=0 -fopt-info-optimized -fopenmp -msse2 -mrdrnd" )
-set ( XGWARN "-Wall -pedantic-errors -Wconversion -Wimplicit-interface -Wunused-parameter -Wcharacter-truncation -Wunderflow -Wno-surprising" )
-set ( XGFORM "-fall-intrinsics -frecursive ${SDSPEC}" )
-
 set ( GARCH "-march=native -mtune=native -fopenmp -mieee-fp -malign-double -ftree-vectorize -ftree-vectorizer-verbose=0 -ffast-math -msse2 -mrdrnd" )
 set ( GWARN "-Wall -Wextra -pedantic-errors -Wampersand -Warray-temporaries -Wcharacter-truncation -Wconversion-extra -Wimplicit-interface -Wimplicit-procedure -Winteger-division -Wintrinsics-std -Wsurprising -Wtabs -Wintrinsic-shadow -Wrealloc-lhs -Wrealloc-lhs-all" )
 set ( GFORM "-std=f2018 -fall-intrinsics -frecursive ${SDSPEC}" )

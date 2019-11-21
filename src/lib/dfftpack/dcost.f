@@ -4,7 +4,10 @@
       NM1 = N-1
       NP1 = N+1
       NS2 = N/2
-      IF (N-2) 106,101,102
+c      IF (N-2) 106,101,102
+      IF (N-2.eq.1) goto 106
+      IF (N-2.eq.2) goto 101
+      IF (N-2.eq.3) goto 102
   101 X1H = X(1)+X(2)
       X(2) = X(1)-X(2)
       X(1) = X1H

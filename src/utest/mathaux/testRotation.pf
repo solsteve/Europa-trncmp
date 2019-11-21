@@ -1,0 +1,104 @@
+module testRotation
+  use pfunit_mod
+  use trncmp_ENV
+  use rotation_mod
+  implicit none
+
+  real(dp), parameter :: TESTIN(3,6) = reshape( [  &
+       &     D_TWO,    D_ZERO,   D_ZERO,  &  ! 1
+       &    -D_TWO,    D_ZERO,   D_ZERO,  &  ! 2
+       &     D_ZERO,   D_TWO,    D_ZERO,  &  ! 3
+       &     D_ZERO,  -D_TWO,    D_ZERO,  &  ! 4
+       &     D_ZERO,   D_ZERO,   D_TWO,   &  ! 5
+       &     D_ZERO,   D_ZERO,  -D_TWO    &  ! 6
+       &  ], [3,6] )
+
+  real(dp), parameter :: R1(3,6) = reshape( [  &
+       &     D_TWO,    D_ZERO,   D_ZERO,  &  ! 1
+       &    -D_TWO,    D_ZERO,   D_ZERO,  &  ! 2
+       &     D_ZERO,   D_SQRT3,  D_ONE,   &  ! 3
+       &     D_ZERO,  -D_SQRT3, -D_ONE,   &  ! 4
+       &     D_ZERO,  -D_ONE,    D_SQRT3, &  ! 5
+       &     D_ZERO,   D_ONE,   -D_SQRT3  &  ! 6
+       &  ], [3,6] )
+
+  real(dp), parameter :: R2(3,6) = reshape( [  &
+       &     D_SQRT3,  D_ZERO,  -D_ONE,   &  ! 1
+       &    -D_SQRT3,  D_ZERO,   D_ONE,   &  ! 2
+       &     D_ZERO,   D_TWO,    D_ZERO,  &  ! 3
+       &     D_ZERO,  -D_TWO,    D_ZERO,  &  ! 4
+       &     D_ONE,    D_ZERO,   D_SQRT3, &  ! 5
+       &    -D_ONE,    D_ZERO,  -D_SQRT3  &  ! 6
+       &  ], [3,6] )
+
+  real(dp), parameter :: R3(3,6) = reshape( [  &
+       &     D_SQRT3,  D_ONE,    D_ZERO,  &  ! 1
+       &    -D_SQRT3, -D_ONE,    D_ZERO,  &  ! 2
+       &    -D_ONE,    D_SQRT3,  D_ZERO,  &  ! 3
+       &     D_ONE,   -D_SQRT3,  D_ZERO,  &  ! 4
+       &     D_ZERO,   D_ZERO,   D_TWO,   &  ! 5
+       &     D_ZERO,   D_ZERO,  -D_TWO    &  ! 6
+       &  ], [3,6] )
+
+contains
+
+  !/ =====================================================================================
+  function testVector( v1, v2 ) result( cmp )
+    !/ ----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: v1(3)
+    real(dp), intent(in) :: v2(3)
+    logical              :: cmp
+    integer :: i, ie
+    do i=1,3
+       if ( v1(i).lt.v2(i) ) then
+          ie = i
+          goto 100
+       end if
+       if ( v1(i).gt.v2(i) ) then
+          ie = i
+          goto 200
+       end if
+    end do
+    cmp = .true.
+    goto 300
+100 continue
+    write( ERROR_UNIT, 1000 ) ie, v1(i), v2(i)
+    cmp = .false.
+    goto 300
+200 continue
+    write( ERROR_UNIT, 2000 ) ie, v1(i), v2(i)
+    cmp = .false.
+300 continue
+1000 format('Vector elements (',I0,'): ',F9.6,' < ',F9.6)
+2000 format('Vector elements (',I0,'): ',F9.6,' > ',F9.6)
+  end function testVector
+
+
+  !/ =====================================================================================
+  function testMatrix( m1, m2 ) result( cmp )
+    !/ ----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: m1(3,3)
+    real(dp), intent(in) :: m2(3,3)
+    logical              :: cmp
+  end function testMatrix
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_rot1
+    !/ ----------------------------------------------------------------------------------
+    type(rotationmatrix) :: R1
+    real(dp) :: xp(3), x(3)
+
+    call R1%reset
+    call R1%add( D_PI_6, 1 )
+
+    call R1%mul( xp, x )
+
+
+  end subroutine test_rot1
+
+
+end module testRotation

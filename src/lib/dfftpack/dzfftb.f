@@ -1,7 +1,10 @@
       SUBROUTINE DZFFTB (N,R,AZERO,A,B,WSAVE)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       DIMENSION       R(*)       ,A(*)       ,B(*)       ,WSAVE(*)
-      IF (N-2) 101,102,103
+c      IF (N-2) 101,102,103
+      IF (N-2.eq.1) goto 101
+      IF (N-2.eq.2) goto 102
+      IF (N-2.eq.3) goto 103
   101 R(1) = AZERO
       RETURN
   102 R(1) = AZERO+A(1)

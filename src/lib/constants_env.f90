@@ -89,6 +89,7 @@ module constants_env
   real(dp), public, parameter :: D_4PI       = D_FOUR*D_PI        !! 4*Pi
   real(dp), public, parameter :: D_PI_2      = acos(D_ZERO)       !! Pi/2
   real(dp), public, parameter :: D_PI_4      = D_HALF*D_PI_2      !! Pi/4
+  real(dp), public, parameter :: D_PI_6      = D_PI_2/D_THREE     !! Pi/6
   real(dp), public, parameter :: D_3PI_2     = D_THREE*D_PI_2     !! 3*Pi/2
   real(dp), public, parameter :: D_3PI_4     = D_THREE*D_PI_4     !! 3*Pi/4
   real(dp), public, parameter :: D_5PI_4     = D_FIVE*D_PI_4      !! 5*Pi/4
@@ -113,10 +114,12 @@ module constants_env
   real(dp), public, parameter :: D_SQRT2     = sqrt(D_TWO)        !! sqrt(2)
   real(dp), public, parameter :: D_1_SQRT2   = D_ONE/D_SQRT2      !! 1/sqrt(2)
   real(dp), public, parameter :: D_2_SQRT2   = D_TWO/D_SQRT2      !! 2/sqrt(2)
+  real(dp), public, parameter :: D_SQRT2_2   = D_HALF*D_SQRT2     !! sqrt(2)/2
 
   real(dp), public, parameter :: D_SQRT3     = sqrt(D_THREE)      !! sqrt(3)
   real(dp), public, parameter :: D_1_SQRT3   = D_ONE/D_SQRT3      !! 1/sqrt(3)
   real(dp), public, parameter :: D_2_SQRT3   = D_TWO/D_SQRT3      !! 2/sqrt(3)
+  real(dp), public, parameter :: D_SQRT3_2   = D_HALF*D_SQRT3     !! sqrt(3)/2
 
   real(dp), public, parameter :: D_180_PI    = 1.8D2/D_PI         !! 180/Pi
   real(dp), public, parameter :: D_PI_180    = D_PI/1.8D2         !! Pi/180

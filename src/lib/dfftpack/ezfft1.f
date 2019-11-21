@@ -7,13 +7,19 @@
       NF = 0
       J = 0
   101 J = J+1
-      IF (J-4) 102,102,103
+c      IF (J-4) 102,102,103
+      IF (J-4.eq.1) goto 102
+      IF (J-4.eq.2) goto 102
+      IF (J-4.eq.3) goto 103
   102 NTRY = NTRYH(J)
       GO TO 104
   103 NTRY = NTRY+2
   104 NQ = NL/NTRY
       NR = NL-NTRY*NQ
-      IF (NR) 101,105,101
+c      IF (NR) 101,105,101
+      IF (NR.eq.1) goto 101
+      IF (NR.eq.2) goto 105
+      IF (NR.eq.3) goto 101
   105 NF = NF+1
       IFAC(NF+2) = NTRY
       NL = NQ

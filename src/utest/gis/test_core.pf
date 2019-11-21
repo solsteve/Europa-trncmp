@@ -1,0 +1,303 @@
+module test_core
+  use trncmp_env
+  use pfunit_mod
+  use gis_mod
+
+  real(dp), parameter :: vtest(7,18) = reshape( [  &
+       &    0.00d+00,  6.378160000000d+06,  1.105746800000d+05,  1.113198900000d+05,  &
+       &    1.00d+02,  1.105764136454d+05,  1.113216353292d+05,                       &
+       &    5.00d+00,  6.377998902283d+06,  1.105831146679d+05,  1.108991038659d+05,  &
+       &    4.00d+02,  1.105900497787d+05,  1.109060587936d+05,                       &
+       &    1.00d+01,  6.377520383493d+06,  1.106081687552d+05,  1.096397570315d+05,  &
+       &    8.00d+02,  1.106220421191d+05,  1.096535089295d+05,                       &
+       &    1.50d+01,  6.376738635947d+06,  1.106490993379d+05,  1.075508740468d+05,  &
+       &    1.00d+03,  1.106664474602d+05,  1.075677364136d+05,                       &
+       &    2.00d+01,  6.375676879918d+06,  1.107046908473d+05,  1.046474612358d+05,  &
+       &    1.00d+02,  1.107064265311d+05,  1.046491019513d+05,                       &
+       &    2.50d+01,  6.374366721461d+06,  1.107732886162d+05,  1.009504522452d+05,  &
+       &    4.00d+02,  1.107802356535d+05,  1.009567832530d+05,                       &
+       &    3.00d+01,  6.372847270170d+06,  1.108528450000d+05,  9.648662687590d+04,  &
+       &    8.00d+02,  1.108667490532d+05,  9.649872900277d+04,                       &
+       &    3.50d+01,  6.371164034503d+06,  1.109409771710d+05,  9.128849869849d+04,  &
+       &    1.00d+03,  1.109583710553d+05,  9.130281136839d+04,                       &
+       &    4.00d+01,  6.369367618307d+06,  1.110350353638d+05,  8.539416627054d+04,  &
+       &    1.00d+02,  1.110367762270d+05,  8.539550512323d+04,                       &
+       &    4.50d+01,  6.367512248671d+06,  1.111321800000d+05,  7.884712250453d+04,  &
+       &    4.00d+02,  1.111391495448d+05,  7.885206732388d+04,                       &
+       &    5.00d+01,  6.365654171867d+06,  1.112294657554d+05,  7.169601693163d+04,  &
+       &    8.00d+02,  1.112434170474d+05,  7.170500962130d+04,                       &
+       &    5.50d+01,  6.363849960693d+06,  1.113239302850d+05,  6.399436628729d+04,  &
+       &    1.00d+03,  1.113413842107d+05,  6.400439964586d+04,                       &
+       &    6.00d+01,  6.362154782426d+06,  1.114126850000d+05,  5.580021000000d+04,  &
+       &    1.00d+02,  1.114144317841d+05,  5.580108486375d+04,                       &
+       &    6.50d+01,  6.360620681369d+06,  1.114930050470d+05,  4.717570875069d+04,  &
+       &    4.00d+02,  1.114999972206d+05,  4.717866732864d+04,                       &
+       &    7.00d+01,  6.359294932955d+06,  1.115624154894d+05,  3.818668620642d+04,  &
+       &    8.00d+02,  1.115764085426d+05,  3.819147588698d+04,                       &
+       &    7.50d+01,  6.358218527159d+06,  1.116187706621d+05,  2.890211620755d+04,  &
+       &    1.00d+03,  1.116362708142d+05,  2.890664762667d+04,                       &
+       &    8.00d+01,  6.357424837014d+06,  1.116603237888d+05,  1.939355996523d+04,  &
+       &    1.00d+02,  1.116620744555d+05,  1.939386402721d+04,                       &
+       &    8.50d+01,  6.356938523246d+06,  1.116857842128d+05,  9.734560053452d+03,  &
+       &    4.00d+02,  1.116927884764d+05,  9.735170546764d+03                        &
+       &  ], [7,18] )
+
+  real(dp), parameter :: GCTV(6,10) = reshape([  &
+       &   -48.518259_dp,  38.920040_dp,  -33.624888_dp,  14.358112_dp,  27.847765_dp,  3.096534233016d+06,  &
+       &    78.128747_dp,  45.321234_dp,   64.828211_dp,  82.874387_dp,  37.772534_dp,  4.200119632425d+06,  &
+       &  -127.874321_dp,  15.444321_dp, -128.473942_dp, -27.887321_dp,  43.335537_dp,  4.818698136156d+06,  &
+       &  -179.321234_dp,  -1.776513_dp,  179.123777_dp,   1.653111_dp,   3.765579_dp,  4.187138466539d+05,  &
+       &  -179.000000_dp,   1.000000_dp,  179.000000_dp,   1.000000_dp,   1.999695_dp,  2.223562673214d+05,  &
+       &   179.000000_dp,   1.000000_dp,  179.000000_dp,  -1.000000_dp,   2.000000_dp,  2.223901418560d+05,  &
+       &   179.000000_dp,  -1.000000_dp, -179.000000_dp,  -1.000000_dp,   1.999695_dp,  2.223562673214d+05,  &
+       &  -179.000000_dp,  -1.000000_dp, -179.000000_dp,   1.000000_dp,   2.000000_dp,  2.223901418560d+05,  &
+       &  -179.000000_dp,  -1.000000_dp,  179.000000_dp,   1.000000_dp,   2.828355_dp,  3.144991706288d+05,  &
+       &  -179.000000_dp,   1.000000_dp,  179.000000_dp,  -1.000000_dp,   2.828355_dp,  3.144991706288d+05  &
+       &  ], [6,10] )
+
+contains
+
+  @test
+  !/ =====================================================================================
+  subroutine test_geocentric
+    !/ -----------------------------------------------------------------------------------
+    !/ geocentric_latitude, and geodetic_latitude
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: lat1 = 5.0d0
+    real(dp), parameter :: dLat = 5.0d0
+    integer,  parameter :: N = 17
+    real(dp) :: gd, gc, rc
+    integer  :: i
+
+    gd = lat1
+    do i=1,N
+       gc = geocentric_latitude( gd )
+       rc = geodetic_latitude( gc )
+       @assertTrue( gd.gt.gc )
+       @assertEqual( gd, rc, 1.0d-12 )
+       gd = gd + dLat
+    end do
+
+  end subroutine test_geocentric
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_auxillary
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: TOL = 1.0d-3
+
+    real(dp), parameter :: V(7,2) = reshape([ &
+         &  39.586667_dp, 4347.667_dp, &
+         &  6386809.073_dp, 6344125.028_dp, 6373858.040_dp, 4925418.782_dp, 4045530.390_dp,  &
+         &  27.125785_dp, 137.321_dp, &
+         &  6382571.911_dp, 6339916.184_dp, 6373865.195_dp, 5680660.390_dp, 2890718.779_dp  &
+         ],[7,2] )
+
+    real(dp) :: C, S, rs, rd, rk
+    integer  :: i,n
+
+    n = size(V,DIM=2)
+
+    do i=1,n
+       call auxillary_constants( V(1,i), C, S, RSITE=rs, RD=rd, RK=rk, HGT=V(2,i) )
+       @assertEqual( V(3,i), C,  TOL )
+       @assertEqual( V(4,i), S,  TOL )
+       @assertEqual( V(5,i), rs, TOL )
+       @assertEqual( V(6,i), rd, TOL )
+       @assertEqual( V(7,i), rk, TOL )
+    end do
+
+  end subroutine test_auxillary
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_ijk
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: TOL = 1.0d-3
+    real(dp), parameter :: V(6,2) = reshape([ &
+         &  -7.906635_dp, 354.597500_dp, 56.000000_dp, 6289892.799_dp, -594846.826_dp, -871570.881_dp,  &
+         &  -38.123456_dp, 77.635241_dp, 431.000000_dp, 1075878.226_dp, 4907766.044_dp, -3916534.926_dp  &
+         &  ],[6,2] )
+
+    integer  :: i,n
+    real(dp) :: ijk(3)
+
+    n = size(V,DIM=2)
+
+    do i=1,n
+       call geodetic_to_rectangle( ijk, V(1,i), V(2,i), HGT=V(3,i) )
+       @assertEqual( V(4,i), ijk(1),  TOL )
+       @assertEqual( V(5,i), ijk(2),  TOL )
+       @assertEqual( V(6,i), ijk(3),  TOL )
+    end do
+
+  end subroutine test_ijk
+  
+
+  @test
+  !/ =====================================================================================
+  subroutine test_radius
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer  :: i, n
+    real(dp) :: erad
+
+    n = size(vtest,DIM=2)
+
+    do i=1,n
+       erad = ellipsoid_radius( vtest(1,i) )
+       @assertEqual(vtest(2,i), erad, 1.0d-5)
+    end do
+
+  end subroutine test_radius
+
+  @test
+  !/ =====================================================================================
+  subroutine test_latitude
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer  :: i, n
+    real(dp) :: mlat
+
+    n = size(vtest,DIM=2)
+
+    do i=1,n
+       mlat = meters_per_degree_latitude( vtest(1,i) )
+       @assertEqual(vtest(3,i), mlat, 1.0d-5)
+       mlat = meters_per_degree_latitude( vtest(1,i), ALT=vtest(5,i) )
+       @assertEqual(vtest(6,i), mlat, 5.0d-1)
+    end do
+
+  end subroutine test_latitude
+
+  @test
+  !/ =====================================================================================
+  subroutine test_longitude
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer  :: i, n
+    real(dp) :: mlon
+
+    n = size(vtest,DIM=2)
+
+    do i=1,n
+       mlon = meters_per_degree_longitude( vtest(1,i) )
+       @assertEqual(vtest(4,i), mlon, 1.0d-5)
+       mlon = meters_per_degree_longitude( vtest(1,i), ALT=vtest(5,i) )
+       @assertEqual(vtest(7,i), mlon, 5.0d-1)
+    end do
+
+  end subroutine test_longitude
+
+  @test
+  !/ =====================================================================================
+  subroutine test_greatcircle
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp) :: d, a
+    integer  :: i, n
+    real(dp), parameter :: ETOL = 1.0d-5
+
+    n = size(GCTV,DIM=2)
+
+    do i=1,n
+       d = great_circle_distance( GCTV(1,i), GCTV(2,i), GCTV(3,i), GCTV(4,i), ANGLE=a )
+       @assertEqual( GCTV(5,i), a, ETOL )
+       @assertEqual( GCTV(6,i), d, ETOL )
+    end do
+
+
+  end subroutine test_greatcircle
+
+
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_one
+    !/ -----------------------------------------------------------------------------------
+    real(dp), parameter :: Xul  = 86.170665_dp
+    real(dp), parameter :: Yul  = 17.067425_dp
+
+    real(dp), parameter :: Xur  = 87.641718_dp
+    real(dp), parameter :: Yur  = 17.063777_dp
+
+    real(dp), parameter :: Xll  = 86.122074_dp
+    real(dp), parameter :: Yll  = 15.899754_dp
+
+    real(dp), parameter :: Xlr  = 87.678481_dp
+    real(dp), parameter :: Ylr  = 15.904475_dp
+
+    real(dp), parameter :: Xmid = 86.903234514548345_dp
+    real(dp), parameter :: Ymid = 16.483857750099464_dp
+
+    real(dp), parameter :: ans_area = 2.087884394127613d10
+    real(dp), parameter :: ans_peri = 5.81724822030394d5
+
+    real(dp), parameter :: ans_a = 156371.74069397303_dp
+    real(dp), parameter :: ans_b = 128968.24900274120_dp
+    real(dp), parameter :: ans_c = 166442.24834931939_dp
+    real(dp), parameter :: ans_d = 129942.58398436038_dp
+    real(dp), parameter :: ans_e = 206319.24075343477_dp
+    real(dp), parameter :: ans_f = 207380.59011143033_dp
+    
+    real(dp) :: a, b, c, d, e, f, a1, p1, mx, my
+
+    a = great_circle_distance( Xul, Yul, Xur, Yur )
+    b = great_circle_distance( Xur, Yur, Xlr, Ylr )
+    c = great_circle_distance( Xlr, Ylr, Xll, Yll )
+    d = great_circle_distance( Xll, Yll, Xul, Yul )
+
+    e = great_circle_distance( Xul, Yul, Xlr, Ylr )
+    f = great_circle_distance( Xur, Yur, Xll, Yll )
+
+    a1 = area( a, b, e ) + area( c, d, e )
+    p1 = a + b + c + d
+    
+    !print *, ''
+
+    !print *, ans_a, a,  ans_a - a
+    !print *, ans_b, b,  ans_b - b
+    !print *, ans_c, c,  ans_c - c
+    !print *, ans_d, d,  ans_d - d
+    !print *, ans_e, e,  ans_e - e
+    !print *, ans_f, f,  ans_f - f
+
+    !print *, ''
+    !print *, ans_area, a1, ans_area - a1
+    !print *, ans_peri, p1, ans_peri - p1
+    
+    @assertEqual( ans_a, a ) 
+    @assertEqual( ans_b, b ) 
+    @assertEqual( ans_c, c ) 
+    @assertEqual( ans_d, d ) 
+    @assertEqual( ans_e, e ) 
+    @assertEqual( ans_f, f ) 
+    
+    @assertEqual( ans_area, a1 ) 
+    @assertEqual( ans_peri, p1 )
+
+    mx = center_degree( [ Xul, Xur, Xll, Xlr ] )
+    my = center_degree( [ Yul, Yur, Yll, Ylr ] )
+
+    !print *, Xmid, mx, Xmid - mx
+    !print *, Ymid, my, Ymid - my
+
+    @assertEqual( Xmid, mx )
+    @assertEqual( Ymid, my )
+
+  end subroutine test_one
+
+
+
+    
+  end module test_core

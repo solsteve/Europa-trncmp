@@ -1,10 +1,10 @@
 #/ ====================================================================== BEGIN FILE =====
-#/ **                                  M A K E F I L E                                  **
+#/ **                      pFUnit Subdirectory - C M A K E L I S T                      **
 #/ =======================================================================================
 #/ **                                                                                   **
 #/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
 #/ **                      stephen.soliday@trncmp.org                                   **
-#/ **                      http://research.trncmp.org                                   **3
+#/ **                      http://research.trncmp.org                                   **
 #/ **                                                                                   **
 #/ **  -------------------------------------------------------------------------------  **
 #/ **                                                                                   **
@@ -20,75 +20,12 @@
 #/ **  You should have received a copy of the GNU General Public License along with     **
 #/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
 #/ **                                                                                   **
-#/ ----- Modification History ------------------------------------------------------------
-#/
-#/ @brief   Controler.
-#/
-#/ @details Provides a wrapper for cmake.
-#/
-#/ @author  Stephen W. Soliday
-#/ @date    2018-04-21
-#/
 #/ =======================================================================================
 
-.PHONY: all 
+project(gis Fortran)
 
-all: release
-
-COMPILERS=-DCMAKE_Fortran_COMPILER=gfortran
-XCOMPILERS=-DCMAKE_Fortran_COMPILER=gfortran -DCMAKE_CXX_COMPILER=g++ -DCMAKE_CC_COMPILER=gcc
-
-#/ ---------------------------------------------------------------------------------------
-
-release: RELEASE
-	make -C $<
-
-RELEASE:
-	mkdir -p $@
-	cd $@; cmake $(COMPILERS) -DCMAKE_BUILD_TYPE=$@ ..
-
-#/ ---------------------------------------------------------------------------------------
-
-debug: DEBUG
-	make -C $<
-
-DEBUG:
-	mkdir -p $@
-	cd $@; cmake $(COMPILERS) -DCMAKE_BUILD_TYPE=$@ ..
-
-#/ ---------------------------------------------------------------------------------------
-
-install: release
-	make -C RELEASE install
-
-#/ ---------------------------------------------------------------------------------------
-
-check: DEBUG
-	make -C $< test
-
-#/ ---------------------------------------------------------------------------------------
-
-pages:
-	make -C docs
+include( ../build_pfunit.cmake )
 
 #/ =======================================================================================
-
-clean:
-	make -C docs   $@
-	make -C papers $@
-
-
-fullclean: clean
-	make -C docs $@
-	rm -rf RELEASE DEBUG
-	find . -name "*~" | xargs rm -f
-	make -C papers $@
-	make -C python $@
-
-distclean: fullclean
-	make -C python $@
-
-
-#/ =======================================================================================
-#/ **                                  M A K E F I L E                                  **
-#/ =========================================================================== END FILE ==
+#/ **                      pFUnit Subdirectory - C M A K E L I S T                      **
+#/ =========================================================================== end FILE ==

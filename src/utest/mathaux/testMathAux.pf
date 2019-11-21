@@ -19,4 +19,83 @@ contains
     @assertEqual(n2sum(127),690880)
   end subroutine testN2Sum
 
+  @test
+  subroutine affine2d
+    real(dp), parameter :: x(*)  = [ D_ONE,  D_ZERO, -D_ONE,   D_ZERO ]
+    real(dp), parameter :: y(*)  = [ D_ZERO, D_ONE,   D_ZERO, -D_ONE  ]
+
+    real(dp), parameter :: xr(*) = [ D_SQRT3_2, -D_HALF,    -D_SQRT3_2,  D_HALF    ]
+    real(dp), parameter :: yr(*) = [ D_HALF,     D_SQRT3_2, -D_HALF,    -D_SQRT3_2 ]
+
+    real(dp) :: xp, yp
+
+    integer :: i, n
+
+    n = size( x, DIM=1 )
+    
+    do i=1,n
+       call rotate( xp, yp, x(i), y(i), D_PI_6 )
+       @assertEqual(xr(i), xp, 1.0d-12)
+       @assertEqual(yr(i), yp, 1.0d-12)
+    end do
+
+  end subroutine affine2d
+    
+  @test
+  subroutine affine2d_array
+    real(dp), parameter :: x(*)  = [ D_ONE,  D_ZERO, -D_ONE,   D_ZERO ]
+    real(dp), parameter :: y(*)  = [ D_ZERO, D_ONE,   D_ZERO, -D_ONE  ]
+
+    real(dp), parameter :: xr(*) = [ D_SQRT3_2, -D_HALF,    -D_SQRT3_2,  D_HALF    ]
+    real(dp), parameter :: yr(*) = [ D_HALF,     D_SQRT3_2, -D_HALF,    -D_SQRT3_2 ]
+
+    real(dp), allocatable :: xp(:), yp(:)
+
+    integer :: i, n
+
+    n = size( x, DIM=1 )
+
+    allocate( xp(n) )
+    allocate( yp(n) )
+    
+    call rotate( xp, yp, x, y, D_PI_6 )
+
+    do i=1,n
+       @assertEqual(xr(i), xp(i), 1.0d-12)
+       @assertEqual(yr(i), yp(i), 1.0d-12)
+    end do
+
+    deallocate( xp )
+    deallocate( yp )
+
+  end subroutine affine2d_array
+
+
+  @test
+  subroutine area_test1
+    integer, parameter :: ia(*) = [ 10, 15, 7, 32, 18 ]
+    integer, parameter :: ix(*) = [  6,  9, 5, 24,  6 ]
+    integer, parameter :: ih(*) = [  3,  7, 2, 11,  8 ]
+
+    integer :: i, n
+    real(dp) :: a, b, c, a1, a2, h, ar1, ar2
+    
+    n = size(ia)
+
+    do i=1,n
+       a  = real(ia(i), dp)
+       a1 = real(ix(i), dp)
+       a2 = a - a1
+       h  = real(ih(i), dp)
+       b  = sqrt(a1*a1 + h*h)
+       c  = sqrt(a2*a2 + h*h)
+
+       ar1 = D_HALF*h*a
+       ar2 = area( a, b, c )
+
+       @assertEqual( ar1, ar2, 1.0d-12 )
+    end do
+
+  end subroutine area_test1
+    
 end module testMathAux

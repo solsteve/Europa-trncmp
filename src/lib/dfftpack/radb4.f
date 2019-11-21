@@ -13,7 +13,10 @@
          CH(1,K,3) = TR2-TR3
          CH(1,K,4) = TR1+TR4
   101 CONTINUE
-      IF (IDO-2) 107,105,102
+c      IF (IDO-2) 107,105,102
+      IF (IDO-2.eq.1) goto 107
+      IF (IDO-2.eq.2) goto 105
+      IF (IDO-2.eq.3) goto 102
   102 IDP2 = IDO+2
       DO 104 K=1,L1
          DO 103 I=3,IDO,2

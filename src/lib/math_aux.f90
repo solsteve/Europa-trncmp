@@ -39,7 +39,7 @@ module math_aux
   use constants_env
   implicit none
 
-  public :: nsum, n2sum
+  public :: nsum, n2sum, rotate
 
   private :: sum_one_to_n, sumsq_one_to_n
 
@@ -55,6 +55,20 @@ module math_aux
      module procedure :: sumsq_one_to_n
   end interface n2sum
 
+  !/ -------------------------------------------------------------------------------------
+  interface rotate
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: rotate_2d
+     module procedure :: rotate_2d_array
+  end interface rotate
+
+
+  !/ -------------------------------------------------------------------------------------
+  interface area
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: area_triangle
+  end interface area
+
 
 
   
@@ -63,13 +77,124 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
 
 
+  !/ =====================================================================================
+  function area_triangle( a, b, c ) result( x )
+    !/ -----------------------------------------------------------------------------------
+    !! Area of an arbitrary triangle where the length of all three sides in known.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: a  !! length of the first  side
+    real(dp), intent(in) :: b  !! length of the second side
+    real(dp), intent(in) :: c  !! length of the third  side
+    real(dp)             :: x  !! area
+    !/ -----------------------------------------------------------------------------------
+    real(dp) :: s  !! semiperimeter of the triangle
+    !/ -----------------------------------------------------------------------------------
+    s = D_HALF*(a+b+c)
+    x = sqrt(s*(s-a)*(s-b)*(s-c))
+  end function area_triangle
 
+  
+  !/ =====================================================================================
+  function center_radian( rad ) result( mid )
+    !/ -----------------------------------------------------------------------------------
+    !/ Find the mean angle using radians.
+    !/ -----------------------------------------------------------------------------------
+    real(dp), optional, intent(in) :: rad(:)  !! radians
+    real(dp)                       :: mid     !! mid
+    !/ -----------------------------------------------------------------------------------
+    real(dp) :: C, S
+    integer  :: i, n
+    !/ -----------------------------------------------------------------------------------
+    C=D_ZERO
+    S=D_ZERO
+    n=size(rad)
+    do i=1,n
+       C = C + cos(rad(i))
+       S = S + sin(rad(i))
+    end do
+    mid = atan( S / C )
+  end function center_radian
+
+
+  !/ =====================================================================================
+  function center_degree( deg ) result( mid )
+    !/ -----------------------------------------------------------------------------------
+    !/ Find the mean angle using degrees.
+    !/ -----------------------------------------------------------------------------------
+    real(dp), optional, intent(in) :: deg(:)  !! degrees
+    real(dp)                       :: mid     !! mid
+    !/ -----------------------------------------------------------------------------------
+    real(dp) :: C, S
+    integer  :: i, n
+    !/ -----------------------------------------------------------------------------------
+    C=D_ZERO
+    S=D_ZERO
+    n=size(deg)
+    do i=1,n
+       C = C + cos(deg(i) * DEG2RAD)
+       S = S + sin(deg(i) * DEG2RAD)
+    end do
+    mid = atan( S / C ) * RAD2DEG
+  end function center_degree
+
+
+  !/ =====================================================================================
+  subroutine rotate_2d( xr, yr, x, y, theta )
+    !/ -----------------------------------------------------------------------------------
+    !! Two dimensional affine rotation from positive x towards positive y 
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(out) :: xr  !! rotated  x coordinate
+    real(dp), intent(out) :: yr  !! rotated  y coordinate
+    real(dp), intent(in)  :: x   !! original x coordinate
+    real(dp), intent(in)  :: y   !! original y coordinate
+    real(dp), intent(in)  :: theta !! rotation angle in radians from positive x to positive y
+    !/ -----------------------------------------------------------------------------------
+    real(dp) :: C, S
+    !/ -----------------------------------------------------------------------------------
+    C  = cos(theta)
+    S  = sin(theta)
+    xr = C*x - S*y
+    yr = S*x + C*y
+  end subroutine rotate_2d
+
+  
+  !/ =====================================================================================
+  subroutine rotate_2d_array( xr, yr, x, y, theta )
+    !/ -----------------------------------------------------------------------------------
+    !! Two dimensional affine rotation from positive x towards positive y 
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(out) :: xr(:)  !! rotated  x coordinate
+    real(dp), intent(out) :: yr(:)  !! rotated  y coordinate
+    real(dp), intent(in)  :: x(:)   !! original x coordinate
+    real(dp), intent(in)  :: y(:)   !! original y coordinate
+    real(dp), intent(in)  :: theta  !! rotation angle in radians from positive x to positive y
+    !/ -----------------------------------------------------------------------------------
+    real(dp) :: C, S
+    integer  :: i, n
+    !/ -----------------------------------------------------------------------------------
+    C  = cos(theta)
+    S  = sin(theta)
+
+    n = size(x)
+
+    do concurrent (i=1:n)
+       xr(i) = C*x(i) - S*y(i)
+       yr(i) = S*x(i) + C*y(i)
+    end do
+    
+  end subroutine rotate_2d_array
+
+  
   
   !/ =====================================================================================
   pure function sum_one_to_n( n ) result( s )
     !/ -----------------------------------------------------------------------------------
     !! Sum all integers one to n inclusive.
     !/ -----------------------------------------------------------------------------------
+    implicit none
     integer, intent(in) :: n !! number to sum to
     integer             :: s !! resulting sum
     !/ -----------------------------------------------------------------------------------
@@ -82,6 +207,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     !! Sum all squares of integers one to n inclusive.
     !/ -----------------------------------------------------------------------------------
+    implicit none
     integer, intent(in) :: n !! number to sum to
     integer             :: s !! resulting sum
     !/ -----------------------------------------------------------------------------------

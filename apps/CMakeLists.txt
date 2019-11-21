@@ -28,6 +28,7 @@ project ( Tools Fortran )
 
 add_subdirectory ( ttt_matchbox )
 add_subdirectory ( solve_kepler )
+add_subdirectory ( GIS )
 
 #/ =======================================================================================
 #/ **                             Tools - C M A K E L I S T                             **
