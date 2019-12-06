@@ -1,0 +1,64 @@
+module test_histogram
+    use pfunit_mod
+    use statistics_mod
+    use entropy_mod
+    use stopwatch_class
+    implicit none
+
+    real(dp), parameter :: TOLL = 1.0d-12
+  
+contains
+  
+  @test
+  !/ =====================================================================================
+  subroutine test_hist_construct
+    !/ -----------------------------------------------------------------------------------
+    real(dp), parameter :: parts(*) = [ 0.0d0, 2.5d-1, 5.0d-1, 7.5d-1, 1.0d0 ]
+    real(dp), parameter :: ctrs(*)  = [ 1.0d0, 3.0d0,  5.0d0,  7.0d0,  9.0d0 ]
+    integer,  parameter :: ns      = size(ctrs)
+    type(histogram) :: H1, H2, H3
+    integer         :: i
+
+    call H1%init(NUMBER=ns)
+    call H2%init(LOWER=1.0d0, UPPER=9.0d0, NUMBER=ns)
+    call H3%init(CENTERS=ctrs)
+
+    @assertEqual( ns, size(H1) )
+    @assertEqual( ns, size(H2) )
+    @assertEqual( ns, size(H3) )
+
+    do i=1,ns
+       @assertEqual( parts(i), H1%center(i) )
+       @assertEqual( ctrs(i),  H2%center(i) )
+       @assertEqual( ctrs(i),  H3%center(i) )
+    end do
+
+  end subroutine test_hist_construct
+
+  
+  @test
+  !/ =====================================================================================
+  subroutine test_hist_add
+    !/ -----------------------------------------------------------------------------------
+    real(dp), parameter :: dat(*) = [ 7.0d0, 5.8d0, 6.1d0, 8.9d0, 2.1d0, 3.9d0, 4.3d0, &
+         &                            0.8d0, 1.1d0, 4.5d0, 5.2d0, 7.9d0, 1.3d0 ]
+    integer,  parameter :: ns     = size(dat)
+
+    integer,  parameter :: count(*) = [ 3, 2, 4, 3, 1 ]
+    integer,  parameter :: nc       = size(count)
+
+    integer         :: i
+    type(histogram) :: H
+    
+    call H%init(LOWER=1.0d0, UPPER=9.0d0, NUMBER=nc)
+
+    call H%reset
+    call H%add( dat )
+
+    do i=1,nc
+       @assertEqual( count(i), H%bin(i) )
+    end do
+    
+  end subroutine test_hist_add
+  
+end module test_histogram

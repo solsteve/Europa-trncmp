@@ -1,0 +1,464 @@
+module test_mat
+    use pfunit_mod
+    use matrix_mod
+
+  integer, parameter :: nc_p(2) = [ 37, 21 ]
+  integer, parameter :: nr_p(2) = [ MIN_M_PAR/2, 2*MIN_M_PAR ]
+
+
+contains
+
+
+
+  !/ =====================================================================================
+  subroutine showit( i, s )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer,      intent(in) :: i
+    character(*), intent(in) :: s
+    !/ -----------------------------------------------------------------------------------
+    if ( 1.eq.i ) then
+       write( *, 10 ) s
+    else
+       write( *, 20 ) s
+    end if
+10  format( 'Vectorize ',A )
+20  format( 'OpenMP    ',A )
+  end subroutine showit
+
+
+  !/ =====================================================================================
+  pure function fill_A( i, j ) result( x )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer, intent(in) :: i
+    integer, intent(in) :: j
+    real(dp)            :: x
+    !/ -----------------------------------------------------------------------------------
+    x = sin(real(2*i+3*j-i*j,dp))*1.0d-1
+  end function fill_A
+
+  !/ =====================================================================================
+  pure function fill_B( i, j ) result( x )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer, intent(in) :: i
+    integer, intent(in) :: j
+    real(dp)            :: x
+    !/ -----------------------------------------------------------------------------------
+    x = cos(real(3*i-2*j+4*i*j,dp))*1.0d-1
+  end function fill_B
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_matrix_add
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer :: r, c, k, nr, nc
+    real(dp), allocatable :: tml(:,:), tmr(:,:), tmm(:,:), tms(:,:), tsm(:,:)
+    real(dp), allocatable :: fmm(:,:), fms(:,:), fsm(:,:)
+    real(dp) :: sl, sr, a, b
+
+    sl = 3.7d0
+    sr = 2.9d0
+
+    do k=1,2
+       call showit(k,'Add')
+       nr = nr_p(k)
+       nc = nc_p(k)
+
+       allocate( tml(nr,nc) )
+       allocate( tmr(nr,nc) )
+       allocate( tmm(nr,nc) )
+       allocate( tms(nr,nc) )
+       allocate( tsm(nr,nc) )
+       allocate( fmm(nr,nc) )
+       allocate( fms(nr,nc) )
+       allocate( fsm(nr,nc) )
+
+       do r=1,nr
+       do c=1,nc
+          a = fill_A(r,c)
+          b = fill_B(r,c)
+          tml(r,c) = a
+          tmr(r,c) = b
+          tmm(r,c) = a  + b
+          tms(r,c) = a  + sr
+          tsm(r,c) = sl + b
+       end do
+       end do
+
+       call add( fmm, tml, tmr )  !  m = m + m
+       call add( fms, tml, sr  )  !  m = m + s
+       call add( fsm, sl,  tmr )  !  m = s + m
+
+       @assertEqual( tmm, fmm )
+       @assertEqual( tms, fms )
+       @assertEqual( tsm, fsm )
+
+       call copy( fmm, tml )
+       call copy( fms, tml )
+       call add(  fmm, tmr )  !  m += m
+       call add(  fms, sr  )  !  m += m
+
+       @assertEqual( tmm, fmm )
+       @assertEqual( tms, fms )
+
+       deallocate( tml )
+       deallocate( tmr )
+       deallocate( tmm )
+       deallocate( tms )
+       deallocate( tsm )
+       deallocate( fmm )
+       deallocate( fms )
+       deallocate( fsm )
+
+    end do
+
+  end subroutine test_matrix_add
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_matrix_sub
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer :: r, c, k, nr, nc
+    real(dp), allocatable :: tml(:,:), tmr(:,:), tmm(:,:), tms(:,:), tsm(:,:)
+    real(dp), allocatable :: fmm(:,:), fms(:,:), fsm(:,:)
+    real(dp) :: sl, sr, a, b
+
+    sl = 3.7d0
+    sr = 2.9d0
+
+    do k=1,2
+       call showit(k,'Sub')
+       nr = nr_p(k)
+       nc = nc_p(k)
+
+       allocate( tml(nr,nc) )
+       allocate( tmr(nr,nc) )
+       allocate( tmm(nr,nc) )
+       allocate( tms(nr,nc) )
+       allocate( tsm(nr,nc) )
+       allocate( fmm(nr,nc) )
+       allocate( fms(nr,nc) )
+       allocate( fsm(nr,nc) )
+
+       do r=1,nr
+       do c=1,nc
+          a = fill_A(r,c)
+          b = fill_B(r,c)
+          tml(r,c) = a
+          tmr(r,c) = b
+          tmm(r,c) = a  - b
+          tms(r,c) = a  - sr
+          tsm(r,c) = sl - b
+       end do
+       end do
+
+       call sub( fmm, tml, tmr )  !  m = m - m
+       call sub( fms, tml, sr  )  !  m = m - s
+       call sub( fsm, sl,  tmr )  !  m = s - m
+
+       @assertEqual( tmm, fmm )
+       @assertEqual( tms, fms )
+       @assertEqual( tsm, fsm )
+
+       call copy( fmm, tml )
+       call copy( fms, tml )
+       call sub(  fmm, tmr )  !  m -= m
+       call sub(  fms, sr  )  !  m -= m
+
+       @assertEqual( tmm, fmm )
+       @assertEqual( tms, fms )
+
+       deallocate( tml )
+       deallocate( tmr )
+       deallocate( tmm )
+       deallocate( tms )
+       deallocate( tsm )
+       deallocate( fmm )
+       deallocate( fms )
+       deallocate( fsm )
+
+    end do
+
+  end subroutine test_matrix_sub
+
+
+  
+
+  @test
+  !/ =====================================================================================
+  subroutine test_matrix_mul
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer :: r, c, k, nr, nc
+    real(dp), allocatable :: tml(:,:), tmr(:,:), tmm(:,:), tms(:,:), tsm(:,:)
+    real(dp), allocatable :: fmm(:,:), fms(:,:), fsm(:,:)
+    real(dp) :: sl, sr, a, b
+
+    sl = 3.7d0
+    sr = 2.9d0
+
+    do k=1,2
+       call showit(k,'Mul')
+       nr = nr_p(k)
+       nc = nc_p(k)
+
+       allocate( tml(nr,nc) )
+       allocate( tmr(nr,nc) )
+       allocate( tmm(nr,nc) )
+       allocate( tms(nr,nc) )
+       allocate( tsm(nr,nc) )
+       allocate( fmm(nr,nc) )
+       allocate( fms(nr,nc) )
+       allocate( fsm(nr,nc) )
+
+       do r=1,nr
+       do c=1,nc
+          a = fill_A(r,c)
+          b = fill_B(r,c)
+          tml(r,c) = a
+          tmr(r,c) = b
+          tmm(r,c) = a  * b
+          tms(r,c) = a  * sr
+          tsm(r,c) = sl * b
+       end do
+       end do
+
+       call mul( fmm, tml, tmr )  !  m = m * m
+       call mul( fms, tml, sr  )  !  m = m * s
+       call mul( fsm, sl,  tmr )  !  m = s * m
+
+       @assertEqual( tmm, fmm )
+       @assertEqual( tms, fms )
+       @assertEqual( tsm, fsm )
+
+       call copy( fmm, tml )
+       call copy( fms, tml )
+       call mul(  fmm, tmr )  !  m *= m
+       call mul(  fms, sr  )  !  m *= m
+
+       @assertEqual( tmm, fmm )
+       @assertEqual( tms, fms )
+
+       deallocate( tml )
+       deallocate( tmr )
+       deallocate( tmm )
+       deallocate( tms )
+       deallocate( tsm )
+       deallocate( fmm )
+       deallocate( fms )
+       deallocate( fsm )
+
+    end do
+
+  end subroutine test_matrix_mul
+
+
+
+
+
+  
+
+  @test
+  !/ =====================================================================================
+  subroutine test_matrix_div
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer :: r, c, k, nr, nc
+    real(dp), allocatable :: tml(:,:), tmr(:,:), tmm(:,:), tms(:,:), tsm(:,:)
+    real(dp), allocatable :: fmm(:,:), fms(:,:), fsm(:,:)
+    real(dp) :: sl, sr, a, b
+
+    sl = 3.7d0
+    sr = 2.9d0
+
+    do k=1,2
+       call showit(k,'Div')
+       nr = nr_p(k)
+       nc = nc_p(k)
+
+       allocate( tml(nr,nc) )
+       allocate( tmr(nr,nc) )
+       allocate( tmm(nr,nc) )
+       allocate( tms(nr,nc) )
+       allocate( tsm(nr,nc) )
+       allocate( fmm(nr,nc) )
+       allocate( fms(nr,nc) )
+       allocate( fsm(nr,nc) )
+
+       do r=1,nr
+       do c=1,nc
+          a = fill_A(r,c)
+          b = fill_B(r,c)
+          tml(r,c) = a
+          tmr(r,c) = b
+          tmm(r,c) = a  / b
+          tms(r,c) = a  / sr
+          tsm(r,c) = sl / b
+       end do
+       end do
+
+       call div( fmm, tml, tmr )  !  m = m / m
+       call div( fms, tml, sr  )  !  m = m / s
+       call div( fsm, sl,  tmr )  !  m = s / m
+
+       @assertEqual( tmm, fmm, 1.0d-10 )
+       @assertEqual( tms, fms, 1.0d-10 )
+       @assertEqual( tsm, fsm, 1.0d-10 )
+
+       call copy( fmm, tml )
+       call copy( fms, tml )
+       call div(  fmm, tmr )  !  m /= m
+       call div(  fms, sr  )  !  m /= m
+
+       @assertEqual( tmm, fmm, 1.0d-10 )
+       @assertEqual( tms, fms, 1.0d-10 )
+
+       deallocate( tml )
+       deallocate( tmr )
+       deallocate( tmm )
+       deallocate( tms )
+       deallocate( tsm )
+       deallocate( fmm )
+       deallocate( fms )
+       deallocate( fsm )
+
+    end do
+
+  end subroutine test_matrix_div
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_matrix_swap
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), allocatable :: M1(:,:), M2(:,:), A1(:,:), A2(:,:)
+    real(dp) :: x1, x2
+    integer  :: r, c, k, nr, nc
+
+    do k=1,2
+       nr = nr_p(k)
+       nc = nc_p(k)
+       call showit( k, 'Swap' )
+
+       allocate( M1(nr,nc) )
+       allocate( M2(nr,nc) )
+       allocate( A1(nr,nc) )
+       allocate( A2(nr,nc) )
+       
+       do concurrent(r=1:nr,c=1:nc)
+          x1 = fill_A( r, c )
+          x2 = fill_B( r, c )
+          M1(r,c) = x1
+          A1(r,c) = x1
+          M2(r,c) = x2
+          A2(r,c) = x2
+       end do
+       
+       @assertEqual( M1, A1 )
+       @assertEqual( M2, A2 )
+       
+       call swap( A1, A2 )
+       
+       @assertEqual( M1, A2 )
+       @assertEqual( M2, A1 )
+       
+       deallocate( M1 )
+       deallocate( M2 )
+       deallocate( A1 )
+       deallocate( A2 )
+    end do
+    
+  end subroutine test_matrix_swap
+
+
+
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_matrix_dot
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: DTEST_ML(3,5) = reshape([  &
+        &   9.1d0, -3.8d0, -8.3d0,  &
+        &   2.9d0, -6.6d0, -1.2d0,  &
+        &   5.2d0, -4.4d0,  1.6d0,  &
+        &  -1.2d0,  7.7d0,  2.3d0,  &
+        &   2.6d0,  1.5d0, -5.1d0  &
+        &  ],[3,5])
+
+    real(dp), parameter :: DTEST_MR(5,4) = reshape([  &
+        &  -5.7d0,  4.5d0,  8.3d0,  5.6d0,  5.8d0,    &
+        &   4.7d0, -7.5d0,  3.4d0,  4.3d0, -2.7d0,    &
+        &   6.7d0,  9.8d0,  2.4d0, -1.5d0,  7.8d0,    &
+        &  -2.4d0,  1.8d0, -6.9d0,  2.1d0,  4.2d0     &
+        &  ],[5,4])
+
+    real(dp), parameter :: DTEST_VL(5) = [  2.6d0, -5.1d0,  4.9d0,  3.3d0,  1.2d0 ]
+
+    real(dp), parameter :: DTEST_VR(5) = [  7.3d0, -3.6d0,  5.3d0, -8.1d0,  2.9d0 ]
+
+    real(dp), parameter :: TEST_MM(3,4) = reshape([  &
+        &    12.70d0,    7.26d0,   38.49d0,  &
+        &    26.52d0,   45.74d0,   -0.91d0,  &
+        &   123.95d0, -100.55d0, -106.76d0,  &
+        &   -44.10d0,   50.07d0,   -9.87d0   &
+        &  ],[3,4])
+
+    real(dp), parameter :: TEST_MV(3) = [  100.81d0,  -85.32d0,  -81.21d0 ]
+
+    real(dp), parameter :: TEST_VM(4) = [   28.34d0,   78.08d0,  -16.39d0,  -37.26d0 ]
+
+    real(dp), allocatable :: c1(:,:), c2(:), c3(:)
+    
+    allocate( c1(3,4) )
+    allocate( c2(3) )
+    allocate( c3(4) )
+
+    call dot( c1, DTEST_ML, DTEST_MR )
+    call dot( c2, DTEST_ML, DTEST_VR )
+    call dot( c3, DTEST_VL, DTEST_MR )
+
+    @assertEqual( TEST_MM, c1, 1.0d-12 )
+    @assertEqual( TEST_MV, c2, 1.0d-12 )
+    @assertEqual( TEST_VM, c3, 1.0d-12 )
+
+deallocate( c1 )
+deallocate( c2 )
+deallocate( c3 )
+
+end subroutine test_matrix_dot
+
+
+@test
+!/ =====================================================================================
+subroutine test_matrix_det2
+  !/ -----------------------------------------------------------------------------------
+  implicit none
+
+
+  
+end subroutine test_matrix_det2
+
+
+end module test_mat

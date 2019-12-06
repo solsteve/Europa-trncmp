@@ -29,7 +29,8 @@ add_subdirectory ( container )
 add_subdirectory ( mathaux )
 add_subdirectory ( strings )
 add_subdirectory ( gis )
-add_subdirectory ( random )
+add_subdirectory ( stats )
+add_subdirectory ( linalg )
 
 set ( CMAKE_Fortran_MODULE_DIRECTORY "" )
 

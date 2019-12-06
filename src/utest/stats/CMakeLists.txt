@@ -22,7 +22,7 @@
 #/ **                                                                                   **
 #/ =======================================================================================
 
-project(random Fortran)
+project(stats Fortran)
 
 include( ../build_pfunit.cmake )
 

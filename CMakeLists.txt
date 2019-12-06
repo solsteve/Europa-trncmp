@@ -79,9 +79,8 @@ set ( GARCH "-march=native -mtune=native -fopenmp -mieee-fp -malign-double -ftre
 set ( GWARN "-Wall -Wextra -pedantic-errors -Wampersand -Warray-temporaries -Wcharacter-truncation -Wconversion-extra -Wimplicit-interface -Wimplicit-procedure -Winteger-division -Wintrinsics-std -Wsurprising -Wtabs -Wintrinsic-shadow -Wrealloc-lhs -Wrealloc-lhs-all" )
 set ( GFORM "-std=f2018 -fall-intrinsics -frecursive ${SDSPEC}" )
 
-
 set ( CMAKE_Fortran_FLAGS_RELEASE "-Ofast -fopt-info ${GWARN} ${GARCH} ${GFORM}" )
-set ( CMAKE_Fortran_FLAGS_DEBUG   "-O1 -g -fopt-info -fverbose-asm -fbacktrace -fcheck=all ${GWARN} ${GARCH} ${GFORM}" )
+set ( CMAKE_Fortran_FLAGS_DEBUG   "-g -fverbose-asm -fbacktrace -fcheck=all ${GWARN} ${GARCH} ${GFORM}" )
 
 
 #/ =======================================================================================
@@ -121,7 +120,7 @@ if ( IS_DIRECTORY ${PFUNIT_DIR} )
   
   if ( ${CMAKE_BUILD_TYPE} MATCHES "DEBUG" )
     message ( STATUS "Adding compile options -fprofile-arcs -ftest-coverage" )
-    set ( CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage" )
+    set ( CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} -fprofile-arcs" )
   endif ( )
   
 endif ( IS_DIRECTORY ${PFUNIT_DIR} )

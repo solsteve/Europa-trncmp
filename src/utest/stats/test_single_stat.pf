@@ -1,0 +1,59 @@
+module test_single_stat
+    use pfunit_mod
+    use statistics_mod
+    use entropy_mod
+    use stopwatch_class
+    implicit none
+
+    real(dp), parameter :: TOLL = 1.0d-12
+  
+contains
+  
+  @test
+  !/ =====================================================================================
+  subroutine test_single_complete
+    !/ -----------------------------------------------------------------------------------
+    integer, parameter :: ns = 50000
+    type(single_stats) :: SS
+    type(stopwatch)    :: SW
+    real(dp), allocatable :: dat(:)
+    integer :: i
+    real(dp) :: s1, s2, z1, z2, elp
+    type(entropy_source) :: ent
+
+    allocate( dat(ns) )
+    
+    call ent%seed_set
+
+    call SW%reset
+    do i=1,ns,2
+       s2 = ent%R64()
+100    continue
+       s1 = ent%R64()
+       if ( s1.lt.TOLL ) goto 100
+
+       z1 = sqrt(-D_TWO*log(s1))*cos(D_2PI*s2)
+       z2 = sqrt(-D_TWO*log(s1))*sin(D_2PI*s2)
+       dat(i)   = z1
+       dat(i+1) = z2
+    end do
+    elp = SW%check()
+
+    call SS%init
+
+    call SS%compile(dat)
+    call SS%extra(dat)
+
+    deallocate(dat)
+
+    write( OUTPUT_UNIT, * )
+    write( OUTPUT_UNIT, * ) 'elapsed time =', elp, 'seconds'
+    write( OUTPUT_UNIT, * ) 'rate =', 1.0d8 / elp, 'numbers per seconds'
+    call SS%report( UNIT=OUTPUT_UNIT, FMT='F9.6' )
+
+
+  end subroutine test_single_complete
+
+  
+end module test_single_stat
+

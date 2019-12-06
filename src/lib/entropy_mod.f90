@@ -58,12 +58,28 @@ module entropy_mod
   end interface seed_map
 
 
-  
+
+
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
 
   
+
+
+  !/ =====================================================================================
+  subroutine system_entropy_source( buffer )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer, intent(out) :: buffer(:)
+    integer :: un, istat
+    open(newunit=un, file="/dev/urandom", access="stream",  &
+         &           form="unformatted", action="read", status="old", iostat=istat)
+    if (istat == 0) then
+       read(un) buffer
+       close(un)
+    end if
+  end subroutine system_entropy_source
 
 
   !/ =====================================================================================
@@ -117,7 +133,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     implicit none
     class(entropy_source), intent(in) :: dts  !! reference this entropy_source
     !/ -----------------------------------------------------------------------------------
-    call random_seed
+    integer :: n
+    integer, allocatable :: seed(:)
+    !/ -----------------------------------------------------------------------------------
+    call random_seed( SIZE=n )
+    allocate( seed( n ) )
+    call system_entropy_source( seed )
+    call random_seed( PUT=seed )
+    deallocate( seed )
   end subroutine set_seed_system_source
 
 

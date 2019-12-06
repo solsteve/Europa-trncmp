@@ -1,0 +1,49 @@
+module test_running_stat
+    use pfunit_mod
+    use statistics_mod
+    use entropy_mod
+    use stopwatch_class
+    implicit none
+
+    real(dp), parameter :: TOLL = 1.0d-12
+  
+contains
+  
+  @test
+  !/ =====================================================================================
+  subroutine test_running_basic
+    !/ -----------------------------------------------------------------------------------
+    type(running_stats) :: RS
+    type(stopwatch) :: SW
+    integer :: i
+    real(dp) :: s1, s2, z1, z2, elp
+    type(entropy_source) :: ent
+    
+    call ent%seed_set
+
+    call RS%reset()
+
+    call SW%reset
+    do i=1,500000
+       s2 = ent%R64()
+100    continue
+       s1 = ent%R64()
+       if ( s1.lt.TOLL ) goto 100
+
+       z1 = sqrt(-D_TWO*log(s1))*cos(D_2PI*s2)
+       z2 = sqrt(-D_TWO*log(s1))*sin(D_2PI*s2)
+       call RS%sample( z1 )
+       call RS%sample( z2 )
+    end do
+    elp = SW%check()
+
+    write( OUTPUT_UNIT, * )
+    write( OUTPUT_UNIT, * ) 'elapsed time =', elp, 'seconds'
+    write( OUTPUT_UNIT, * ) 'rate =', 1.0d8 / elp, 'numbers per seconds'
+    call RS%report( UNIT=OUTPUT_UNIT, FMT='F9.6' )
+
+
+  end subroutine test_running_basic
+  
+  
+end module test_running_stat

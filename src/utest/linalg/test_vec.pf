@@ -1,0 +1,515 @@
+module test_vec
+  use pfunit_mod
+  use vector_mod
+
+
+  integer, parameter :: np(2) = [ MIN_V_PAR/2, 2*MIN_V_PAR ]
+
+
+contains
+
+  !/ =====================================================================================
+  subroutine showit( i, s )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer,      intent(in) :: i
+    character(*), intent(in) :: s
+    !/ -----------------------------------------------------------------------------------
+    if ( 1.eq.i ) then
+       write( *, 10 ) s
+    else
+       write( *, 20 ) s
+    end if
+10  format( 'Vectorize ',A )
+20  format( 'OpenMP    ',A )
+  end subroutine showit
+
+
+  !/ =====================================================================================
+  pure function fill_A( i ) result( x )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer, intent(in) :: i
+    real(dp)            :: x
+    !/ -----------------------------------------------------------------------------------
+    x = sin(real(2*i+1,dp)*1.0d-3)
+  end function fill_A
+
+  !/ =====================================================================================
+  pure function fill_B( i ) result( x )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer, intent(in) :: i
+    real(dp)            :: x
+    !/ -----------------------------------------------------------------------------------
+    x = cos(real(3*i+2,dp)*1.0d-4)
+  end function fill_B
+
+
+
+
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_vector_add
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer :: i, j, n
+    real(dp), allocatable :: tvl(:), tvr(:), tvv(:), tvs(:), tsv(:)
+    real(dp), allocatable :: fvv(:), fvs(:), fsv(:)
+    real(dp) :: sl, sr, a, b
+
+    sl = 3.7d0
+    sr = 2.9d0
+
+    do j=1,2
+       call showit(j,'Add')
+       n = np(j)
+
+       allocate( tvl(n) )
+       allocate( tvr(n) )
+       allocate( tvv(n) )
+       allocate( tvs(n) )
+       allocate( tsv(n) )
+       allocate( fvv(n) )
+       allocate( fvs(n) )
+       allocate( fsv(n) )
+
+       do i=1,n
+          a = fill_A(i)
+          b = fill_B(i)
+          tvl(i) = a
+          tvr(i) = b
+          tvv(i) = a  + b
+          tvs(i) = a  + sr
+          tsv(i) = sl + b
+       end do
+
+       call add( fvv, tvl, tvr )  !  v = v + v
+       call add( fvs, tvl, sr  )  !  v = v + s
+       call add( fsv, sl,  tvr )  !  v = s + v
+
+       @assertEqual( tvv, fvv )
+       @assertEqual( tvs, fvs )
+       @assertEqual( tsv, fsv )
+
+       call copy( fvv, tvl )
+       call copy( fvs, tvl )
+       call add(  fvv, tvr )  !  v += v
+       call add(  fvs, sr  )  !  v += s
+
+       @assertEqual( tvv, fvv )
+       @assertEqual( tvs, fvs )
+
+       deallocate( tvl )
+       deallocate( tvr )
+       deallocate( tvv )
+       deallocate( tvs )
+       deallocate( tsv )
+       deallocate( fvv )
+       deallocate( fvs )
+       deallocate( fsv )
+
+    end do
+
+  end subroutine test_vector_add
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_vector_sub
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer :: i, j, n
+    real(dp), allocatable :: tvl(:), tvr(:), tvv(:), tvs(:), tsv(:)
+    real(dp), allocatable :: fvv(:), fvs(:), fsv(:)
+    real(dp) :: sl, sr, a, b
+
+    sl = 3.7d0
+    sr = 2.9d0
+
+    do j=1,2
+       call showit(j,'Sub')
+       n = np(j)
+
+       allocate( tvl(n) )
+       allocate( tvr(n) )
+       allocate( tvv(n) )
+       allocate( tvs(n) )
+       allocate( tsv(n) )
+       allocate( fvv(n) )
+       allocate( fvs(n) )
+       allocate( fsv(n) )
+
+       do i=1,n
+          a = fill_A(i)
+          b = fill_B(i)
+          tvl(i) = a
+          tvr(i) = b
+          tvv(i) = a  - b
+          tvs(i) = a  - sr
+          tsv(i) = sl - b
+       end do
+
+       call sub( fvv, tvl, tvr )  !  v = v - v
+       call sub( fvs, tvl, sr  )  !  v = v - s
+       call sub( fsv, sl,  tvr )  !  v = s - v
+
+       @assertEqual( tvv, fvv )
+       @assertEqual( tvs, fvs )
+       @assertEqual( tsv, fsv )
+
+       call copy( fvv, tvl )
+       call copy( fvs, tvl )
+       call sub(  fvv, tvr )  !  v -= v
+       call sub(  fvs, sr  )  !  v -= s
+
+       @assertEqual( tvv, fvv )
+       @assertEqual( tvs, fvs )
+
+       deallocate( tvl )
+       deallocate( tvr )
+       deallocate( tvv )
+       deallocate( tvs )
+       deallocate( tsv )
+       deallocate( fvv )
+       deallocate( fvs )
+       deallocate( fsv )
+
+    end do
+
+  end subroutine test_vector_sub
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_vector_mul
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer :: i, j, n
+    real(dp), allocatable :: tvl(:), tvr(:), tvv(:), tvs(:), tsv(:)
+    real(dp), allocatable :: fvv(:), fvs(:), fsv(:)
+    real(dp) :: sl, sr, a, b
+
+    sl = 3.7d0
+    sr = 2.9d0
+
+    do j=1,2
+       call showit(j,'Mul')
+       n = np(j)
+
+       allocate( tvl(n) )
+       allocate( tvr(n) )
+       allocate( tvv(n) )
+       allocate( tvs(n) )
+       allocate( tsv(n) )
+       allocate( fvv(n) )
+       allocate( fvs(n) )
+       allocate( fsv(n) )
+
+       do i=1,n
+          a = fill_A(i)
+          b = fill_B(i)
+          tvl(i) = a
+          tvr(i) = b
+          tvv(i) = a  * b
+          tvs(i) = a  * sr
+          tsv(i) = sl * b
+       end do
+
+       call mul( fvv, tvl, tvr )  !  v = v * v
+       call mul( fvs, tvl, sr  )  !  v = v * s
+       call mul( fsv, sl,  tvr )  !  v = s * v
+
+       @assertEqual( tvv, fvv )
+       @assertEqual( tvs, fvs )
+       @assertEqual( tsv, fsv )
+
+       call copy( fvv, tvl )
+       call copy( fvs, tvl )
+       call mul(  fvv, tvr )  !  v *= v
+       call mul(  fvs, sr  )  !  v *= s
+
+       @assertEqual( tvv, fvv )
+       @assertEqual( tvs, fvs )
+
+       deallocate( tvl )
+       deallocate( tvr )
+       deallocate( tvv )
+       deallocate( tvs )
+       deallocate( tsv )
+       deallocate( fvv )
+       deallocate( fvs )
+       deallocate( fsv )
+
+    end do
+
+  end subroutine test_vector_mul
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_vector_div
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer :: i, j, n
+    real(dp), allocatable :: tvl(:), tvr(:), tvv(:), tvs(:), tsv(:)
+    real(dp), allocatable :: fvv(:), fvs(:), fsv(:)
+    real(dp) :: sl, sr, a, b
+
+    sl = 3.7d0
+    sr = 2.9d0
+
+    do j=1,2
+       call showit(j,'Div')
+       n = np(j)
+
+       allocate( tvl(n) )
+       allocate( tvr(n) )
+       allocate( tvv(n) )
+       allocate( tvs(n) )
+       allocate( tsv(n) )
+       allocate( fvv(n) )
+       allocate( fvs(n) )
+       allocate( fsv(n) )
+
+       do i=1,n
+          a = fill_A(i)
+          b = fill_B(i)
+          tvl(i) = a
+          tvr(i) = b
+          tvv(i) = a  / b
+          tvs(i) = a  / sr
+          tsv(i) = sl / b
+       end do
+
+       call div( fvv, tvl, tvr )  !  v = v / v
+       call div( fvs, tvl, sr  )  !  v = v / s
+       call div( fsv, sl,  tvr )  !  v = s / v
+
+       @assertEqual( tvv, fvv )
+       @assertEqual( tvs, fvs )
+       @assertEqual( tsv, fsv )
+
+       call copy( fvv, tvl )
+       call copy( fvs, tvl )
+       call div(  fvv, tvr )  !  v /= v
+       call div(  fvs, sr  )  !  v /= s
+
+       @assertEqual( tvv, fvv )
+       @assertEqual( tvs, fvs )
+
+       deallocate( tvl )
+       deallocate( tvr )
+       deallocate( tvv )
+       deallocate( tvs )
+       deallocate( tsv )
+       deallocate( fvv )
+       deallocate( fvs )
+       deallocate( fsv )
+
+    end do
+
+  end subroutine test_vector_div
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_vector_swap
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer  :: i,j,n
+    real(dp), allocatable :: T1(:), T2(:)
+    real(dp), allocatable :: A1(:), A2(:)
+
+    do j=1,2
+       call showit(j,'Swap')
+       n = np(j)
+       allocate( T1(n) )
+       allocate( T2(n) )
+       allocate( A1(n) )
+       allocate( A2(n) )
+
+       do concurrent(i=1:n)
+          T1(i) = fill_A(i)
+          T2(i) = fill_B(i)
+          A1(i) = T1(i)
+          A2(i) = T2(i)
+       end do
+
+       @assertEqual( T1, A1 )
+       @assertEqual( T2, A2 )
+
+       call swap( A1, A2 )
+
+       @assertEqual( T1, A2 )
+       @assertEqual( T2, A1 )
+
+       deallocate( T1 )
+       deallocate( T2 )
+       deallocate( A1 )
+       deallocate( A2 )
+    end do
+
+  end subroutine test_vector_swap
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_vector_dot
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), allocatable :: VL(:)
+    real(dp), allocatable :: VR(:)
+
+    real(dp) :: a, b, s1, s2, x1, x2
+    integer  :: i, j, n
+
+    do j=1,2
+       call showit(j,'Inner')
+       n = np(j)
+       allocate(VL(n))
+       allocate(VR(n))
+
+       s1 = D_ZERO
+       s2 = D_ZERO
+       do i=1,n
+          a = fill_A(i)
+          b = fill_B(i)
+          VL(i) = a
+          VR(i) = b
+          s1 = s1 + (a*b)
+          s2 = s2 + (a*a)
+       end do
+
+       x1 = inner( VL, VR )
+       x2 = inner( VL )
+
+       @assertEqual( s1, x1, 1.0d-12 )
+       @assertEqual( s2, x2, 1.0d-12 )
+
+       deallocate( VL )
+       deallocate( VR )
+    end do
+
+  end subroutine test_vector_dot
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_vector_Pnorm
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), allocatable :: V(:)
+
+    integer  :: i, j, n
+    real(dp) :: a, d, s1, s2, s3, s4, x1, x2, x3, x4, q1, q2, q3, q4
+
+    do j=1,2
+       call showit(j,'P Norm')
+       n = np(j)
+       allocate(V(n))
+
+       s1 = D_ZERO
+       s2 = D_ZERO
+       s3 = D_ZERO
+       s4 = D_ZERO
+       do i=1,n
+          a = fill_A(i)
+          V(i) = a
+          d = Abs(a)
+          s1 = s1 + d
+          s2 = s2 + d*d
+          s3 = s3 + d*d*d
+          s4 = s4 + d*d*d*d
+       end do
+
+       q1 =       s1
+       q2 = sqrt( s2 )
+       q3 = exp( log( s3 ) / D_THREE )
+       q4 = sqrt( sqrt( s4 ) )
+
+       x1 = PNorm( 1, V )
+       x2 = PNorm( 2, V )
+       x3 = PNorm( 3, V )
+       x4 = PNorm( 4, V )
+
+       @assertEqual( q1, x1, 1.0d-12 )
+       @assertEqual( q2, x2, 1.0d-12 )
+       @assertEqual( q3, x3, 1.0d-12 )
+       @assertEqual( q4, x4, 1.0d-12 )
+
+       deallocate( V )
+    end do
+
+  end subroutine test_vector_Pnorm
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_vector_Pnorm_diff
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), allocatable :: V1(:)
+    real(dp), allocatable :: V2(:)
+
+    integer  :: i, j, n
+    real(dp) :: a, b, d, s1, s2, s3, s4, x1, x2, x3, x4, q1, q2, q3, q4
+
+    do j=1,2
+       call showit(j,'P Norm')
+       n = np(j)
+       allocate(V1(n))
+       allocate(V2(n))
+
+       s1 = D_ZERO
+       s2 = D_ZERO
+       s3 = D_ZERO
+       s4 = D_ZERO
+       do i=1,n
+          a = fill_A(i)
+          b = fill_B(i)
+          V1(i) = a
+          V2(i) = b
+          d = Abs(a-b)
+          s1 = s1 + d
+          s2 = s2 + d*d
+          s3 = s3 + d*d*d
+          s4 = s4 + d*d*d*d
+       end do
+
+       q1 =       s1
+       q2 = sqrt( s2 )
+       q3 = exp( log( s3 ) / D_THREE )
+       q4 = sqrt( sqrt( s4 ) )
+
+       x1 = PNorm( 1, V1, V2 )
+       x2 = PNorm( 2, V1, V2 )
+       x3 = PNorm( 3, V1, V2 )
+       x4 = PNorm( 4, V1, V2 )
+
+       @assertEqual( q1, x1, 1.0d-12 )
+       @assertEqual( q2, x2, 1.0d-12 )
+       @assertEqual( q3, x3, 1.0d-12 )
+       @assertEqual( q4, x4, 1.0d-12 )
+
+       deallocate( V1 )
+       deallocate( V2 )
+    end do
+
+  end subroutine test_vector_Pnorm_diff
+
+
+
+end module test_vec
