@@ -1,0 +1,308 @@
+module test_fset
+  use pfunit_mod
+  use trncmp_env
+  use fuzzy_set_mod
+  implicit none
+
+contains
+
+  @test
+  !/ =====================================================================================
+  subroutine test_init_create
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(LeftTrapezoidSet)  :: LT
+    type(TriangleSet)       :: TR
+    type(RightTrapezoidSet) :: RT
+
+    @assertEqual(-D_HALF, LT%getLeft())
+    @assertEqual( D_ZERO, LT%getCenter())
+    @assertEqual( D_ONE,  LT%getRight())
+
+    @assertEqual(-D_ONE,  TR%getLeft())
+    @assertEqual( D_ZERO, TR%getCenter())
+    @assertEqual( D_ONE,  TR%getRight())
+
+    @assertEqual(-D_ONE,  RT%getLeft())
+    @assertEqual( D_ZERO, RT%getCenter())
+    @assertEqual( D_HALF, RT%getRight())
+
+  end subroutine test_init_create
+
+  @test
+  !/ =====================================================================================
+  subroutine test_init_set
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(LeftTrapezoidSet)  :: LT
+    type(TriangleSet)       :: TR
+    type(RightTrapezoidSet) :: RT
+
+    call LT%set( 3.0d0, 5.0d0 )
+    call TR%set( 4.0d0, 6.0d0, 9.0d0 )
+    call RT%set( 8.0d0, 1.2d1 )
+
+    @assertEqual( 2.0d0, LT%getLeft())
+    @assertEqual( 3.0d0, LT%getCenter())
+    @assertEqual( 5.0d0, LT%getRight())
+
+    @assertEqual( 4.0d0, TR%getLeft())
+    @assertEqual( 6.0d0, TR%getCenter())
+    @assertEqual( 9.0d0, TR%getRight())
+
+    @assertEqual( 8.0d0, RT%getLeft())
+    @assertEqual( 1.2d1, RT%getCenter())
+    @assertEqual( 1.4d1, RT%getRight())
+
+  end subroutine test_init_set
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_left_mu
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: X(7) = [ 1.0d0, 2.0d0, 3.0d0, 4.0d0, 5.0d0, 6.0d0, 7.0d0 ]
+    real(dp), parameter :: M(7) = [ 1.0d0, 1.0d0, 7.5d-1, 5.0d-1, 2.5d-1, 0.0d0, 0.0d0 ]
+    integer :: i
+    type(LeftTrapezoidSet) :: LT
+
+    call LT%set( X(2), X(6) )
+
+    do i=1,7
+       @assertEqual( M(i), LT%mu(X(i)) )
+    end do
+
+  end subroutine test_left_mu
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_triangle_mu
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: X(11) = [ 1.0d0, 2.0d0, 3.0d0, 4.0d0, 5.0d0, 6.0d0, 8.0d0, &
+         &                           1.0d1, 1.2d1, 1.4d1, 1.6d1 ]
+    real(dp), parameter :: M(11) = [ 0.0d0, 0.0d0, 2.5d-1, 5.0d-1, 7.5d-1, 1.0d0, &
+         &                           7.5d-1, 5.0d-1, 2.5d-1, 0.0d0, 0.0d0 ]
+    integer           :: i
+    type(TriangleSet) :: TR
+
+    call TR%set( 2.0d0, 6.0d0, 1.4d1 )
+
+    do i=1,11
+       @assertEqual( M(i), TR%mu(X(i)) )
+    end do
+
+  end subroutine test_triangle_mu
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_right_mu
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: X(7) = [ 1.0d0, 2.0d0, 3.0d0, 4.0d0, 5.0d0, 6.0d0, 7.0d0 ]
+    real(dp), parameter :: M(7) = [ 0.0d0, 0.0d0, 2.5d-1, 5.0d-1, 7.5d-1, 1.0d0, 1.0d0 ]
+    integer :: i
+    type(RightTrapezoidSet) :: RT
+
+    call RT%set( X(2), X(6) )
+
+    do i=1,7
+       @assertEqual( M(i), RT%mu(X(i)) )
+    end do
+
+  end subroutine test_right_mu
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_left_area
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: X(5) = [ 1.000_dp, 0.750_dp, 0.500_dp, 0.250_dp, 0.000_dp ]
+    real(dp), parameter :: M(5) = [ 4.000_dp, 3.375_dp, 2.500_dp, 1.375_dp, 0.000_dp ]
+    integer :: i
+    type(LeftTrapezoidSet) :: LT
+
+    call LT%set( 5.0_dp, 9.0_dp )
+
+    do i=1,5
+       @assertEqual( M(i), LT%area(X(i)) )
+    end do
+
+  end subroutine test_left_area
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_triangle_area
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: X(5) = [ 1.000_dp, 0.750_dp, 0.500_dp, 0.250_dp, 0.000_dp ]
+    real(dp), parameter :: M(5) = [ 6.000_dp, 5.625_dp, 4.500_dp, 2.625_dp, 0.000_dp ]
+    integer :: i
+    type(TriangleSet) :: TR
+
+    call TR%set( 3.0_dp, 11.0_dp, 15.0_dp )
+
+    do i=1,5
+       @assertEqual( M(i), TR%area(X(i)) )
+    end do
+
+  end subroutine test_triangle_area
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_right_area
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: X(5) = [ 1.00_dp, 0.75_dp, 0.50_dp, 0.25_dp, 0.00_dp ]
+    real(dp), parameter :: M(5) = [ 8.00_dp, 6.75_dp, 5.00_dp, 2.75_dp, 0.00_dp ]
+    integer :: i
+    type(RightTrapezoidSet) :: RT
+
+    call RT%set( 7.0_dp, 15.0_dp )
+
+    do i=1,5
+       @assertEqual( M(i), RT%area(X(i)) )
+    end do
+
+  end subroutine test_right_area
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_left_coa
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: D(5)  = [  1.00_dp, 0.75_dp,  0.50_dp,  0.25_dp, 0.00_dp ]
+    real(dp), parameter :: Cn(5) = [ 13.00_dp, 7.00_dp, 38.00_dp, 91.00_dp, 3.00_dp ]
+    real(dp), parameter :: Cd(5) = [  6.00_dp, 3.00_dp, 15.00_dp, 33.00_dp, 1.00_dp ]
+    integer :: i
+    type(LeftTrapezoidSet) :: LT
+
+    call LT%set( 2.0_dp, 6.0_dp )
+
+    do i=1,5
+       @assertEqual( Cn(i)/Cd(i), LT%coa(D(i)), 1.0d-12 )
+    end do
+
+  end subroutine test_left_coa
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_triangle_coa
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: D(5)  = [  1.00_dp,  0.75_dp,  0.50_dp,   0.25_dp, 0.00_dp ]
+    real(dp), parameter :: Cn(5) = [ 17.00_dp, 57.00_dp, 52.00_dp, 247.00_dp, 6.00_dp ]
+    real(dp), parameter :: Cd(5) = [  3.00_dp, 10.00_dp,  9.00_dp,  42.00_dp, 1.00_dp ]
+    integer :: i
+    type(TriangleSet) :: TR
+
+    call TR%set( 3.0_dp, 5.0_dp, 9.0_dp )
+
+    do i=1,5
+       @assertEqual( Cn(i)/Cd(i), TR%coa(D(i)), 1.0d-12 )
+    end do
+
+  end subroutine test_triangle_coa
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_right_coa
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: D(5)  = [  1.00_dp,  0.75_dp,  0.50_dp,   0.25_dp, 0.00_dp ]
+    real(dp), parameter :: Cn(5) = [ 41.00_dp, 20.00_dp, 97.00_dp, 206.00_dp, 6.00_dp ]
+    real(dp), parameter :: Cd(5) = [  6.00_dp,  3.00_dp, 15.00_dp,  33.00_dp, 1.00_dp ]
+    integer :: i
+    type(RightTrapezoidSet) :: RT
+
+    call RT%set( 3.0_dp, 7.0_dp )
+
+    do i=1,5
+       @assertEqual( Cn(i)/Cd(i), RT%coa(D(i)), 1.0d-12 )
+    end do
+
+  end subroutine test_right_coa
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_load_store
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(LeftTrapezoidSet)  :: L1, L2
+    type(TriangleSet)       :: T1, T2
+    type(RightTrapezoidSet) :: R1, R2
+
+    real(dp), parameter :: check(7) = [ 7.0_dp, 11.0_dp, 7.0_dp, 11.0_dp, 15.0_dp, 11.0_dp, 15.0_dp ]
+    real(dp) :: buffer(10)
+    integer :: i, idx
+
+    call L1%set( 7.0_dp, 11.0_dp )
+    call T1%set( 7.0_dp, 11.0_dp, 15.0_dp )
+    call R1%set(         11.0_dp, 15.0_dp )
+
+    do i=1,10
+       buffer(i) = real(i,dp)
+    end do
+
+    idx = 1
+
+    idx = L1%store( buffer, idx )
+    idx = T1%store( buffer, idx )
+    idx = R1%store( buffer, idx )
+
+    @assertEqual( 8, idx )
+
+    do i=1,7
+       @assertEqual( check(i), buffer(i) )
+    end do
+
+    idx = 1
+
+    idx = L2%load( buffer, idx )
+    idx = T2%load( buffer, idx )
+    idx = R2%load( buffer, idx )
+
+    @assertEqual( L1%getCenter(), L2%getCenter() )
+    @assertEqual( L1%getRight(),  L2%getRight() )
+
+    @assertEqual( T1%getLeft(),   T2%getLeft() )
+    @assertEqual( T1%getCenter(), T2%getCenter() )
+    @assertEqual( T1%getRight(),  T2%getRight() )
+
+    @assertEqual( R1%getLeft(),   R2%getLeft() )
+    @assertEqual( R1%getCenter(), R2%getCenter() )
+
+  end subroutine test_load_store
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_string
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(LeftTrapezoidSet)  :: LT
+    type(TriangleSet)       :: TR
+    type(RightTrapezoidSet) :: RT
+
+    call LT%set( 7.0_dp, 11.0_dp )
+    call TR%set( 7.0_dp, 11.0_dp, 15.0_dp )
+    call RT%set(         11.0_dp, 15.0_dp )
+
+    @assertEqual( 'L( 7.0,11.0)',      LT%toString( 'F4.1' ) )
+    @assertEqual( 'T( 7.0,11.0,15.0)', TR%toString( 'F4.1' ) )
+    @assertEqual( 'R(11.0,15.0)',      RT%toString( 'F4.1' ) )
+
+  end subroutine test_string
+
+end module test_fset

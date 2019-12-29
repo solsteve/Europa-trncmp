@@ -30,7 +30,7 @@ module ftest_construct
   type, public :: record
      private
      real(dp)               :: age_value = 20.0
-     real(dp)               :: gpa_value = 3.5
+     real(dp)               :: gpa_value =  3.5
      character, allocatable :: name_value
      integer                :: sat_score = 1000
    contains

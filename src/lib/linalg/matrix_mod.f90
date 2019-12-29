@@ -42,7 +42,7 @@ module matrix_mod
 
   !/ -------------------------------------------------------------------------------------
   interface add
-     !/ -------------------------------------------------------------------------------------
+     !/ ----------------------------------------------------------------------------------
      module procedure :: add_ms_R8
      module procedure :: add_sm_R8
      module procedure :: add_ms_R8_inplace
@@ -53,7 +53,7 @@ module matrix_mod
 
   !/ -------------------------------------------------------------------------------------
   interface sub
-     !/ -------------------------------------------------------------------------------------
+     !/ ----------------------------------------------------------------------------------
      module procedure :: sub_ms_R8
      module procedure :: sub_sm_R8
      module procedure :: sub_ms_R8_inplace
@@ -64,7 +64,7 @@ module matrix_mod
 
   !/ -------------------------------------------------------------------------------------
   interface mul
-     !/ -------------------------------------------------------------------------------------
+     !/ ----------------------------------------------------------------------------------
      module procedure :: mul_ms_R8
      module procedure :: mul_sm_R8
      module procedure :: mul_ms_R8_inplace
@@ -75,7 +75,7 @@ module matrix_mod
 
   !/ -------------------------------------------------------------------------------------
   interface div
-     !/ -------------------------------------------------------------------------------------
+     !/ ----------------------------------------------------------------------------------
      module procedure :: div_ms_R8
      module procedure :: div_sm_R8
      module procedure :: div_ms_R8_inplace
@@ -86,7 +86,7 @@ module matrix_mod
 
   !/ -------------------------------------------------------------------------------------
   interface dot
-     !/ -------------------------------------------------------------------------------------
+     !/ ----------------------------------------------------------------------------------
      module procedure :: dot_mm_R8
      module procedure :: dot_mv_R8
      module procedure :: dot_vm_R8
@@ -95,42 +95,52 @@ module matrix_mod
 
   !/ -------------------------------------------------------------------------------------
   interface swap
-     !/ -------------------------------------------------------------------------------------
+     !/ ----------------------------------------------------------------------------------
      module procedure :: swap_mm_R8
   end interface swap
 
 
   !/ -------------------------------------------------------------------------------------
   interface diagonal
-     !/ -------------------------------------------------------------------------------------
+     !/ -----------------------------------------------------------------------------------
      module procedure :: diagonal_R8
   end interface diagonal
 
+
   !/ -------------------------------------------------------------------------------------
   interface identity
-     !/ -------------------------------------------------------------------------------------
+     !/ ----------------------------------------------------------------------------------
      module procedure :: identity_R8
   end interface identity
 
 
   !/ -------------------------------------------------------------------------------------
   interface equals
-     !/ -------------------------------------------------------------------------------------
+     !/ ----------------------------------------------------------------------------------
      module procedure :: matrix_equals_R8
   end interface equals
 
 
+  !/ -------------------------------------------------------------------------------------
+  interface det
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: det_n_R8
+  end interface det
+
+
+  !/ -------------------------------------------------------------------------------------
+  interface inverse
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: inverse_n_R8
+  end interface inverse
 
 
 
-
-
-
-  
 
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
+
 
 
 
@@ -164,7 +174,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-subroutine identity_R8( mat )
+  subroutine identity_R8( mat )
     !/ -----------------------------------------------------------------------------------
     !! Identity Matrix.
     !/ -----------------------------------------------------------------------------------
@@ -187,6 +197,10 @@ subroutine identity_R8( mat )
 
 
 
+
+
+
+
   !/ =====================================================================================
   function matrix_equals_R8( ml, mr ) result( eq )
     !/ -----------------------------------------------------------------------------------
@@ -195,27 +209,31 @@ subroutine identity_R8( mat )
     real(dp), intent(in) :: mr(:,:)  !!  matrix
     logical              :: eq
     !/ -----------------------------------------------------------------------------------
-     integer :: r, c, nr, nc
-     !/ -----------------------------------------------------------------------------------
-     nr = size(ml,DIM=1)
-     nc = size(mr,DIM=2)
-     if ( nr.ne.size(mr,DIM=1) ) goto 800
-     if ( nc.ne.size(mr,DIM=2) ) goto 800
-     do c=1,nc
-        do r=1,nr
-           if ( ml(r,c).lt.mr(r,c) ) goto 800
-           if ( ml(r,c).gt.mr(r,c) ) goto 800
-        end do
-     end do
-     eq=.true.
-     goto 999
-800  continue
-     eq=.false.
-999  continue
-   end function matrix_equals_R8
+    integer :: r, c, nr, nc
+    !/ -----------------------------------------------------------------------------------
+    nr = size(ml,DIM=1)
+    nc = size(mr,DIM=2)
+    if ( nr.ne.size(mr,DIM=1) ) goto 800
+    if ( nc.ne.size(mr,DIM=2) ) goto 800
+    do c=1,nc
+       do r=1,nr
+          if ( ml(r,c).lt.mr(r,c) ) goto 800
+          if ( ml(r,c).gt.mr(r,c) ) goto 800
+       end do
+    end do
+    eq=.true.
+    goto 999
+800 continue
+    eq=.false.
+999 continue
+  end function matrix_equals_R8
 
 
-   
+
+
+
+
+
 
   !/ =====================================================================================
   subroutine add_ms_R8( mc, ml, sr )
@@ -832,6 +850,7 @@ subroutine identity_R8( mat )
 
 
 
+
   !/ =====================================================================================
   subroutine swap_mm_R8( a, b )
     !/ -----------------------------------------------------------------------------------
@@ -865,6 +884,11 @@ subroutine identity_R8( mat )
        !$omp end parallel do
     end if
   end subroutine swap_mm_R8
+
+
+
+
+
 
 
 
@@ -909,7 +933,6 @@ subroutine identity_R8( mat )
   end subroutine dot_mm_R8
 
 
-
   !/ =====================================================================================
   subroutine dot_mv_R8( vc, ml, vr )
     !/ -----------------------------------------------------------------------------------
@@ -946,8 +969,6 @@ subroutine identity_R8( mat )
        !$omp end parallel
     end if
   end subroutine dot_mv_R8
-
-
 
 
   !/ =====================================================================================
@@ -991,6 +1012,9 @@ subroutine identity_R8( mat )
 
 
 
+
+
+
   !/ =====================================================================================
   function det_2_R8( mat ) result( d )
     !/ -----------------------------------------------------------------------------------
@@ -1019,6 +1043,56 @@ subroutine identity_R8( mat )
   end function det_3_R8
 
 
+  !/ =====================================================================================
+  function det_4_R8( mat ) result( d )
+    !/ -----------------------------------------------------------------------------------
+    !! Calculate the determinant of a 4x4 Matrix directly.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: mat(:,:)    
+    real(dp)             :: d
+    !/ -----------------------------------------------------------------------------------
+    d =     ((mat(1,4)*mat(2,3) - mat(1,3)*mat(2,4))*mat(3,2) +            &
+         &   (mat(1,2)*mat(2,4) - mat(1,4)*mat(2,2))*mat(3,3) +            &
+         &   (mat(1,3)*mat(2,2) - mat(1,2)*mat(2,3))*mat(3,4))*mat(4,1) +  &
+         &  ((mat(1,3)*mat(2,4) - mat(1,4)*mat(2,3))*mat(3,1) +            &
+         &   (mat(1,4)*mat(2,1) - mat(1,1)*mat(2,4))*mat(3,3) +            &
+         &   (mat(1,1)*mat(2,3) - mat(1,3)*mat(2,1))*mat(3,4))*mat(4,2) +  &
+         &  ((mat(1,4)*mat(2,2) - mat(1,2)*mat(2,4))*mat(3,1) +            &
+         &   (mat(1,1)*mat(2,4) - mat(1,4)*mat(2,1))*mat(3,2) +            &
+         &   (mat(1,2)*mat(2,1) - mat(1,1)*mat(2,2))*mat(3,4))*mat(4,3) +  &
+         &  ((mat(1,2)*mat(2,3) - mat(1,3)*mat(2,2))*mat(3,1) +            &
+         &   (mat(1,3)*mat(2,1) - mat(1,1)*mat(2,3))*mat(3,2) +            &
+         &   (mat(1,1)*mat(2,2) - mat(1,2)*mat(2,1))*mat(3,3))*mat(4,4)
+  end function det_4_R8
+
+
+  !/ =====================================================================================
+  function det_n_R8( mat ) result( d )
+    !/ -----------------------------------------------------------------------------------
+    !! Calculate the determinant of a 4x4 Matrix directly.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: mat(:,:)    
+    real(dp)             :: d
+    !/ -----------------------------------------------------------------------------------
+    integer :: n
+    !/ -----------------------------------------------------------------------------------
+    n = size(mat,DIM=1)
+    if ( 1.eq.n ) then
+       d = 0.0d0
+    elseif ( 2.eq.n ) then
+       d = det_2_R8( mat )
+    elseif ( 3.eq.n ) then
+       d = det_3_R8( mat )
+    elseif ( 4.eq.n ) then
+       d = det_4_R8( mat )
+    else
+       write( ERROR_UNIT, * ) 'Determinant: rank > 4 not yet implemented'
+       stop
+    end if
+
+  end function det_n_R8
 
 
 
@@ -1027,9 +1101,237 @@ subroutine identity_R8( mat )
 
 
 
+  !/ =====================================================================================
+  subroutine inverse_2_R8( inv, mat, D )
+    !/ -----------------------------------------------------------------------------------
+    !! Calculate the inverse of a 2x2 Matrix directly.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp),           intent(inout) :: inv(:,:)  !! inverse of mat.
+    real(dp),           intent(in)    :: mat(:,:)  !! matrix.
+    real(dp), optional, intent(out)   :: D         !! determinant of mat.
+    !/ -----------------------------------------------------------------------------------
+    real(dp) :: md
+    !/ -----------------------------------------------------------------------------------
+    md = det_2_R8( mat )
+
+    if ( isZero( md ) ) goto 900
+
+    inv(1,1) =  mat(2,2) / md
+    inv(2,1) = -mat(2,1) / md
+    inv(1,2) = -mat(1,2) / md
+    inv(2,2) =  mat(1,1) / md
+
+    goto 999
+
+900 continue
+
+    md = 0.0d0
+
+999 continue
+
+    if ( present( D ) ) D = md
+
+  end subroutine inverse_2_R8
+
+
+  !/ =====================================================================================
+  subroutine inverse_3_R8( inv, mat, D )
+    !/ -----------------------------------------------------------------------------------
+    !! Calculate the inverse of a 3x3 Matrix directly.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp),           intent(inout) :: inv(:,:)  !! inverse of mat.
+    real(dp),           intent(in)    :: mat(:,:)  !! matrix.
+    real(dp), optional, intent(out)   :: D         !! determinant of mat.
+    !/ -----------------------------------------------------------------------------------
+    real(dp) :: md
+    !/ -----------------------------------------------------------------------------------
+    md = det_3_R8( mat )
+
+    if ( isZero( md ) ) goto 900
+
+    inv(1,1) = ( mat(2,2)*mat(3,3) - mat(2,3)*mat(3,2) ) / md
+    inv(1,2) = ( mat(1,3)*mat(3,2) - mat(1,2)*mat(3,3) ) / md
+    inv(1,3) = ( mat(1,2)*mat(2,3) - mat(1,3)*mat(2,2) ) / md
+
+    inv(2,1) = ( mat(2,3)*mat(3,1) - mat(2,1)*mat(3,3) ) / md
+    inv(2,2) = ( mat(1,1)*mat(3,3) - mat(1,3)*mat(3,1) ) / md
+    inv(2,3) = ( mat(1,3)*mat(2,1) - mat(1,1)*mat(2,3) ) / md
+
+    inv(3,1) = ( mat(2,1)*mat(3,2) - mat(2,2)*mat(3,1) ) / md
+    inv(3,2) = ( mat(1,2)*mat(3,1) - mat(1,1)*mat(3,2) ) / md
+    inv(3,3) = ( mat(1,1)*mat(2,2) - mat(1,2)*mat(2,1) ) / md
+
+    goto 999
+
+900 continue
+
+    md = 0.0d0
+
+999 continue
+
+    if ( present( D ) ) D = md
+
+  end subroutine inverse_3_R8
+
+
+  !/ =====================================================================================
+  subroutine inverse_4_R8( inv, mat, D )
+    !/ -----------------------------------------------------------------------------------
+    !! Calculate the inverse of a 4x4 Matrix directly.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp),           intent(inout) :: inv(:,:)  !! inverse of mat.
+    real(dp),           intent(in)    :: mat(:,:)  !! matrix.
+    real(dp), optional, intent(out)   :: D         !! determinant of mat.
+    !/ -----------------------------------------------------------------------------------
+    real(dp) :: md
+    !/ -----------------------------------------------------------------------------------
+    md = det_4_R8( mat )
+
+    if ( isZero( md ) ) goto 900
+
+    inv(1,1) = ( (mat(2,3)*mat(3,4) - mat(2,4)*mat(3,3))*mat(4,2) +        &
+         &       (mat(2,4)*mat(3,2) - mat(2,2)*mat(3,4))*mat(4,3) +        &
+         &       (mat(2,2)*mat(3,3) - mat(2,3)*mat(3,2))*mat(4,4) ) / md
+
+    inv(1,2) = ( (mat(1,4)*mat(3,3) - mat(1,3)*mat(3,4))*mat(4,2) +        &
+         &       (mat(1,2)*mat(3,4) - mat(1,4)*mat(3,2))*mat(4,3) +        &
+         &       (mat(1,3)*mat(3,2) - mat(1,2)*mat(3,3))*mat(4,4) ) / md
+
+    inv(1,3) = ( (mat(1,3)*mat(2,4) - mat(1,4)*mat(2,3))*mat(4,2) +        &
+         &       (mat(1,4)*mat(2,2) - mat(1,2)*mat(2,4))*mat(4,3) +        &
+         &       (mat(1,2)*mat(2,3) - mat(1,3)*mat(2,2))*mat(4,4) ) / md
+
+    inv(1,4) = ( (mat(1,4)*mat(2,3) - mat(1,3)*mat(2,4))*mat(3,2) +        &
+         &       (mat(1,2)*mat(2,4) - mat(1,4)*mat(2,2))*mat(3,3) +        &
+         &       (mat(1,3)*mat(2,2) - mat(1,2)*mat(2,3))*mat(3,4) ) / md
+
+
+    inv(2,1) = ( (mat(2,4)*mat(3,3) - mat(2,3)*mat(3,4))*mat(4,1) +        &
+         &       (mat(2,1)*mat(3,4) - mat(2,4)*mat(3,1))*mat(4,3) +        &
+         &       (mat(2,3)*mat(3,1) - mat(2,1)*mat(3,3))*mat(4,4) ) / md
+
+    inv(2,2) = ( (mat(1,3)*mat(3,4) - mat(1,4)*mat(3,3))*mat(4,1) +        &
+         &       (mat(1,4)*mat(3,1) - mat(1,1)*mat(3,4))*mat(4,3) +        &
+         &       (mat(1,1)*mat(3,3) - mat(1,3)*mat(3,1))*mat(4,4) ) / md
+
+    inv(2,3) = ( (mat(1,4)*mat(2,3) - mat(1,3)*mat(2,4))*mat(4,1) +        &
+         &       (mat(1,1)*mat(2,4) - mat(1,4)*mat(2,1))*mat(4,3) +        &
+         &       (mat(1,3)*mat(2,1) - mat(1,1)*mat(2,3))*mat(4,4) ) / md
+
+    inv(2,4) = ( (mat(1,3)*mat(2,4) - mat(1,4)*mat(2,3))*mat(3,1) +        &
+         &       (mat(1,4)*mat(2,1) - mat(1,1)*mat(2,4))*mat(3,3) +        &
+         &       (mat(1,1)*mat(2,3) - mat(1,3)*mat(2,1))*mat(3,4) ) / md
+
+
+    inv(3,1) = ( (mat(2,2)*mat(3,4) - mat(2,4)*mat(3,2))*mat(4,1) +        &
+         &       (mat(2,4)*mat(3,1) - mat(2,1)*mat(3,4))*mat(4,2) +        &
+         &       (mat(2,1)*mat(3,2) - mat(2,2)*mat(3,1))*mat(4,4) ) / md
+
+    inv(3,2) = ( (mat(1,4)*mat(3,2) - mat(1,2)*mat(3,4))*mat(4,1) +        &
+         &       (mat(1,1)*mat(3,4) - mat(1,4)*mat(3,1))*mat(4,2) +        &
+         &       (mat(1,2)*mat(3,1) - mat(1,1)*mat(3,2))*mat(4,4) ) / md
+
+    inv(3,3) = ( (mat(1,2)*mat(2,4) - mat(1,4)*mat(2,2))*mat(4,1) +        &
+         &       (mat(1,4)*mat(2,1) - mat(1,1)*mat(2,4))*mat(4,2) +        &
+         &       (mat(1,1)*mat(2,2) - mat(1,2)*mat(2,1))*mat(4,4) ) / md
+
+    inv(3,4) = ( (mat(1,4)*mat(2,2) - mat(1,2)*mat(2,4))*mat(3,1) +        &
+         &       (mat(1,1)*mat(2,4) - mat(1,4)*mat(2,1))*mat(3,2) +        &
+         &       (mat(1,2)*mat(2,1) - mat(1,1)*mat(2,2))*mat(3,4) ) / md
+
+
+    inv(4,1) = ( (mat(2,3)*mat(3,2) - mat(2,2)*mat(3,3))*mat(4,1) +        &
+         &       (mat(2,1)*mat(3,3) - mat(2,3)*mat(3,1))*mat(4,2) +        &
+         &       (mat(2,2)*mat(3,1) - mat(2,1)*mat(3,2))*mat(4,3) ) / md
+
+    inv(4,2) = ( (mat(1,2)*mat(3,3) - mat(1,3)*mat(3,2))*mat(4,1) +        &
+         &       (mat(1,3)*mat(3,1) - mat(1,1)*mat(3,3))*mat(4,2) +        &
+         &       (mat(1,1)*mat(3,2) - mat(1,2)*mat(3,1))*mat(4,3) ) / md
+
+    inv(4,3) = ( (mat(1,3)*mat(2,2) - mat(1,2)*mat(2,3))*mat(4,1) +        &
+         &       (mat(1,1)*mat(2,3) - mat(1,3)*mat(2,1))*mat(4,2) +        &
+         &       (mat(1,2)*mat(2,1) - mat(1,1)*mat(2,2))*mat(4,3) ) / md
+
+    inv(4,4) = ( (mat(1,2)*mat(2,3) - mat(1,3)*mat(2,2))*mat(3,1) +        &
+         &       (mat(1,3)*mat(2,1) - mat(1,1)*mat(2,3))*mat(3,2) +        &
+         &       (mat(1,1)*mat(2,2) - mat(1,2)*mat(2,1))*mat(3,3) ) / md
+
+    goto 999
+
+900 continue
+
+    md = 0.0d0
+
+999 continue
+
+    if ( present( D ) ) D = md
+
+  end subroutine inverse_4_R8
+
+
+  !/ =====================================================================================
+  subroutine inverse_n_R8( inv, mat, D )
+    !/ -----------------------------------------------------------------------------------
+    !! Calculate the inverse of a NxN Matrix directly.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp),           intent(inout) :: inv(:,:)  !! inverse of mat.
+    real(dp),           intent(in)    :: mat(:,:)  !! matrix.
+    real(dp), optional, intent(out)   :: D         !! determinant of mat.
+    !/ -----------------------------------------------------------------------------------
+    integer :: n
+    !/ -----------------------------------------------------------------------------------
+    n = size(mat,DIM=1)
+    if ( 1.eq.n ) then
+       d = 1.0d0 / mat(1,1)
+    elseif ( 2.eq.n ) then
+       call inverse_2_R8( inv, mat, D )
+    elseif ( 3.eq.n ) then
+       call inverse_3_R8( inv, mat, D )
+    elseif ( 4.eq.n ) then
+       call inverse_4_R8( inv, mat, D )
+    else
+       write( ERROR_UNIT, * ) 'Inverse: rank > 4 not yet implemented'
+       stop
+    end if
+
+  end subroutine inverse_n_R8
+
+
+
+  subroutine eigen_value_2_R8( eval, ieval, mat )
+    implicit none
+    real(dp), intent(out) ::  eval(2)
+    real(dp), intent(out) :: ieval(2)
+    real(dp), intent(in)  :: mat(:,:)
+
+    real(dp) :: q, a, b
+
+    q = (mat(1,1) - mat(2,2))**2
+
+    a = (mat(1,1) + mat(2,2)) / D_TWO
+
+    if ( q.lt.D_ZERO ) then
+       b = sqrt(-q) / D_TWO
+       eval(1)  =  a
+       eval(2)  =  a
+       ieval(1) = -b
+       ieval(2) =  b
+    else
+       b = sqrt(q) / D_TWO
+       eval(1)  = a-b
+       eval(2)  = a+b
+       ieval(1) = D_ZERO
+       ieval(2) = D_ZERO
+    end if
+  end subroutine eigen_value_2_R8
+
+    
 
   
-
 
 end module matrix_mod
 

@@ -1,0 +1,185 @@
+module test_dice
+  use pfunit_mod
+  use dice_mod
+  use statistics_mod
+  implicit none
+
+integer, parameter :: TEST_SEED(33) = [ 1545851416,  182630460,    8517431,  540168778,  &
+     &                                    40922477,  779694341,  888359956, 2084829499,  &
+     &                                     7659445,     389667,  197169707,   76211461,  &
+     &                                  1234192118,  224826381, 1971886144,  384994482,  &
+     &                                  1554205163,    3488135,   10718736,    9315241,  &
+     &                                   436512019, 1278991853,  451082708,  488844496,  &
+     &                                  1273335769,  172896463,     711182, 2086825278,  &
+     &                                   123105001, 1945684391,   71156190, 1689286241,  &
+     &                                   814913252 ]
+
+contains
+
+  @test
+  !/ =====================================================================================
+  subroutine test_dice_roll
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    type(Dice) :: dd
+    integer :: i, x
+    type(running_stats) :: RS
+
+    print*, 'Dice'
+
+    call dd%seed_set( TEST_SEED )
+
+    do i=1,100000
+       x = dd%roll( NUM=3, SIDE=6, BONUS=2 )
+       call RS%sample( x )
+    end do
+
+    !call RS%report( UNIT=OUTPUT_UNIT, FMT='F9.6' )
+    @assertEqual(  5, int( RS%minv() ) )
+    @assertEqual( 20, int( RS%maxv() ) )
+    @assertEqual( 1.25d1, RS%mean(), 1.0d-1 )
+    
+  end subroutine test_dice_roll
+
+  @test
+  !/ =====================================================================================
+  subroutine test_dice_index
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    type(Dice) :: dd
+    integer :: i, x
+    type(running_stats) :: RS
+
+    print*, 'Index'
+
+    call dd%seed_set( TEST_SEED )
+
+    do i=1,100000
+       x = dd%index( 10000 )
+       call RS%sample( x )
+    end do
+
+    !call RS%report( UNIT=OUTPUT_UNIT, FMT='F10.4' )
+    @assertTrue( 2.gt.int( RS%minv() ) )
+    @assertTrue( 9998.lt.int( RS%maxv() ) )
+    @assertTrue( 6.lt.int(abs(RS%mean())) )
+    
+  end subroutine test_dice_index
+
+  @test
+  !/ =====================================================================================
+  subroutine test_dice_uniform
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    type(Dice) :: dd
+    integer :: i, n
+    real(dp) :: x
+    type(running_stats) :: RS
+
+    print*, 'Uniform'
+
+    call dd%seed_set( TEST_SEED )
+
+    do i=1,100000
+       x = dd%uniform()
+       call RS%sample( x )
+    end do
+
+    !call RS%report( UNIT=OUTPUT_UNIT, FMT='F9.6' )
+    @assertEqual( D_ZERO, RS%minv(), 1.0d-2 )
+    @assertEqual( D_ONE,  RS%maxv(), 1.0d-2 )
+    @assertEqual( D_HALF, RS%mean(), 1.0d-2 )
+
+  end subroutine test_dice_uniform
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_dice_normal
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    type(Dice) :: dd
+    integer :: i, n
+    real(dp) :: x
+    type(running_stats) :: RS
+
+    print*, 'Normal'
+
+    call dd%seed_set( TEST_SEED )
+
+    do i=1,100000
+       x = dd%normal()
+       call RS%sample( x )
+    end do
+
+    !call RS%report( UNIT=OUTPUT_UNIT, FMT='F9.6' )
+    @assertTrue( -D_FOUR.gt.RS%minv() )
+    @assertTrue(  D_FOUR.lt.RS%maxv() )
+    @assertEqual( D_ZERO, RS%mean(), 1.0d-1 )
+
+  end subroutine test_dice_normal
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_dice_logical
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(Dice)          :: dd
+    integer             :: i, n, tcount, fcount
+    type(running_stats) :: RS
+
+    print*, 'Logical'
+
+    call dd%seed_set( TEST_SEED )
+
+    tcount = 0
+    fcount = 0
+    
+    do i=1,100000
+       if ( dd%boolean(0.27d0) ) then
+          tcount = tcount + 1
+       else
+          fcount = fcount + 1
+       end if
+    end do
+
+    @assertTrue( 27500.gt.tcount )
+    @assertTrue( 26500.lt.tcount )
+
+    !print *
+    !print *,'TRUE  =',tcount
+    !print *,'FALSE =',fcount
+
+  end subroutine test_dice_logical
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_dice_shuffle
+    !/ -----------------------------------------------------------------------------------
+    type(Dice) :: dd
+    integer    :: array(10)
+    integer    :: i, n
+
+    n = size(array)
+
+    do i=1,n
+       array(i) = i
+    end do
+
+    print *, array
+    
+    call dd%shuffle( array )
+
+    print *, array
+    
+
+  end subroutine test_dice_shuffle
+
+  
+end module test_dice

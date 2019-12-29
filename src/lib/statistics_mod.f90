@@ -67,9 +67,22 @@ module statistics_mod
 
      procedure, private :: running_sample_single_real8
      procedure, private :: running_sample_list_real8
+     procedure, private :: running_sample_single_real4
+     procedure, private :: running_sample_list_real4
+     procedure, private :: running_sample_single_int32
+     procedure, private :: running_sample_list_int32
+     procedure, private :: running_sample_single_int16
+     procedure, private :: running_sample_list_int16
 
      generic   :: sample => running_sample_single_real8, &
-          &                 running_sample_list_real8
+          &                 running_sample_list_real8,   &
+          &                 running_sample_single_real4, &
+          &                 running_sample_list_real4,   &
+          &                 running_sample_single_int32, &
+          &                 running_sample_list_int32,   &
+          &                 running_sample_single_int16, &
+          &                 running_sample_list_int16
+
 
   end type running_stats
 
@@ -426,6 +439,58 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end if
   end subroutine running_sample_single_real8
 
+
+
+
+
+  !/ =====================================================================================
+  subroutine running_sample_single_real4( dts, samp )
+    !/ -----------------------------------------------------------------------------------
+    !! Sample.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(running_stats), intent(inout) :: dts !! reference to this running_stats object
+    real(sp), intent(in)                :: samp  !! sample value.
+    !/ -----------------------------------------------------------------------------------
+    call dts%running_sample_single_real8( real(samp,dp) )
+  end subroutine running_sample_single_real4
+
+
+  !/ =====================================================================================
+  subroutine running_sample_single_int32( dts, samp )
+    !/ -----------------------------------------------------------------------------------
+    !! Sample.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(running_stats), intent(inout) :: dts !! reference to this running_stats object
+    integer(int32), intent(in)                :: samp  !! sample value.
+    !/ -----------------------------------------------------------------------------------
+    call dts%running_sample_single_real8( real(samp,dp) )
+  end subroutine running_sample_single_int32
+
+
+  !/ =====================================================================================
+  subroutine running_sample_single_int16( dts, samp )
+    !/ -----------------------------------------------------------------------------------
+    !! Sample.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(running_stats), intent(inout) :: dts !! reference to this running_stats object
+    integer(int16), intent(in)                :: samp  !! sample value.
+    !/ -----------------------------------------------------------------------------------
+    call dts%running_sample_single_real8( real(samp,dp) )
+  end subroutine running_sample_single_int16
+
+
+
+
+
+
+
+
+
+
+  
   !/ =====================================================================================
   subroutine running_sample_list_real8( dts, list )
     !/ -----------------------------------------------------------------------------------
@@ -445,6 +510,69 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end do
 
   end subroutine running_sample_list_real8
+
+
+  !/ =====================================================================================
+  subroutine running_sample_list_real4( dts, list )
+    !/ -----------------------------------------------------------------------------------
+    !! Batch sample a list of values.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(running_stats), intent(inout) :: dts !! reference to this running_stats object
+    real(sp), intent(in) :: list(:)
+    !/ -----------------------------------------------------------------------------------
+    integer :: i,n
+    !/ -----------------------------------------------------------------------------------
+
+    n = size(list)
+
+    do i=1,n
+       call dts%running_sample_single_real8( real(list(i),dp) )
+    end do
+
+  end subroutine running_sample_list_real4
+
+
+  !/ =====================================================================================
+  subroutine running_sample_list_int32( dts, list )
+    !/ -----------------------------------------------------------------------------------
+    !! Batch sample a list of values.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(running_stats), intent(inout) :: dts !! reference to this running_stats object
+    integer(int32), intent(in) :: list(:)
+    !/ -----------------------------------------------------------------------------------
+    integer :: i,n
+    !/ -----------------------------------------------------------------------------------
+
+    n = size(list)
+
+    do i=1,n
+       call dts%running_sample_single_real8( real(list(i),dp) )
+    end do
+
+  end subroutine running_sample_list_int32
+
+
+  !/ =====================================================================================
+  subroutine running_sample_list_int16( dts, list )
+    !/ -----------------------------------------------------------------------------------
+    !! Batch sample a list of values.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(running_stats), intent(inout) :: dts !! reference to this running_stats object
+    integer(int16), intent(in) :: list(:)
+    !/ -----------------------------------------------------------------------------------
+    integer :: i,n
+    !/ -----------------------------------------------------------------------------------
+
+    n = size(list)
+
+    do i=1,n
+       call dts%running_sample_single_real8( real(list(i),dp) )
+    end do
+
+  end subroutine running_sample_list_int16
 
 
 

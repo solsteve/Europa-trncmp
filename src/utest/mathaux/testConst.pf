@@ -1,0 +1,94 @@
+module testConst
+  use pfunit_mod
+  use trncmp_ENV
+  implicit none
+
+
+contains
+
+  @test
+  !/ =====================================================================================
+  subroutine test_constants
+    !/ ----------------------------------------------------------------------------------
+
+    @assertEqual( 0.0d0,  D_ZERO )
+    @assertEqual( 1.0d0,  D_ONE )
+    @assertEqual( 2.0d0,  D_TWO )
+    @assertEqual( 3.0d0,  D_THREE )
+    @assertEqual( 4.0d0,  D_FOUR )
+    @assertEqual( 5.0d0,  D_FIVE )
+    @assertEqual( 6.0d0,  D_SIX )
+    @assertEqual( 7.0d0,  D_SEVEN )
+    @assertEqual( 8.0d0,  D_EIGHT )
+    @assertEqual( 9.0d0,  D_NINE )
+    @assertEqual( 1.0d1,  D_TEN )
+    @assertEqual( 5.0d-1, D_HALF )
+
+    @assertEqual( 2.718281828459045d0,    D_E )
+    @assertEqual( 3.141592653589793d0,    D_PI )
+
+    @assertEqual( 6.9314718055994529d-01, D_LN_2 )
+    @assertEqual( 2.3025850929940459d+00, D_LN_10 )
+    @assertEqual( 1.1447298858494002d+00, D_LN_PI )
+
+    @assertEqual( 3.0102999566398114d-01, D_LOG_2,      1.0d-15 )
+    @assertEqual( 4.3429448190325176d-01, D_LOG_E,      1.0d-15 )
+    @assertEqual( 4.9714987269413380d-01, D_LOG_PI,     1.0d-15 )
+
+    @assertEqual( 3.3219280948873626d+00, D_L2_10 )
+    @assertEqual( 1.4426950408889634d+00, D_L2_E )
+    @assertEqual( 1.6514961294723187d+00, D_L2_PI,      1.0d-15 )
+
+    @assertEqual( 6.055115613982801d-01,  D_LPI_2 )
+    @assertEqual( 2.0114658675880612d+00, D_LPI_10 )
+    @assertEqual( 8.7356852683023190d-01, D_LPI_E )
+
+    @assertEqual( 6.283185307179586d+00,  D_2PI )
+    @assertEqual( 9.424777960769379d+00,  D_3PI )
+    @assertEqual( 1.2566370614359172d+01, D_4PI )
+    @assertEqual( 1.5707963267948966d+00, D_PI_2 )
+    @assertEqual( 7.8539816339744828d-01, D_PI_4 )
+    @assertEqual( 5.235987755982988d-01,  D_PI_6 )
+    @assertEqual( 4.7123889803846897d+00, D_3PI_2 )
+    @assertEqual( 2.3561944901923448d+00, D_3PI_4 )
+    @assertEqual( 3.9269908169872414d+00, D_5PI_4 )
+    @assertEqual( 5.4977871437821380d+00, D_7PI_4 )
+
+    @assertEqual( 9.8696044010893580d+00, D_PI2 )
+    @assertEqual( 3.1830988618379069d-01, D_1_PI )
+    @assertEqual( 6.3661977236758138d-01, D_2_PI )
+
+    @assertEqual( 1.7724538509055159d+00, D_SQRTPI )
+    @assertEqual( 2.5066282746310007d+00, D_SQRT2PI,    1.0d-15 )
+    @assertEqual( 5.6418958354775628d-01, D_1_SQRTPI )
+    @assertEqual( 3.9894228040143270d-01, D_1_SQRT2PI)
+    @assertEqual( 1.1283791670955126d+00, D_2_SQRTPI )
+
+
+    @assertEqual( 1.2533141373155003d+00, D_SQRT_PI_2,  1.0d-15 )
+    @assertEqual( 8.862269254527579d-01,  D_SQRT_PI_4 )
+    @assertEqual( 1.6487212707001282d+00, D_SQRTE )
+    @assertEqual( 6.065306597126334d-01,  D_1_SQRTE )
+
+    @assertEqual( 1.4142135623730951d+00, D_SQRT2   )
+    @assertEqual( 7.0710678118654757d-01, D_1_SQRT2,    1.0d-15 )
+    @assertEqual( 1.4142135623730951d+00, D_2_SQRT2,    1.0d-15 )
+    @assertEqual( 7.0710678118654757d-01, D_SQRT2_2 )
+
+    @assertEqual( 1.7320508075688772d+00, D_SQRT3 )
+    @assertEqual( 5.773502691896257d-01,  D_1_SQRT3,    1.0d-15 )
+    @assertEqual( 1.1547005383792515d+00, D_2_SQRT3,    1.0d-15 )
+    @assertEqual( 8.6602540378443860d-01, D_SQRT3_2 )
+
+    @assertEqual( 5.729577951308232d+01,  D_180_PI )
+    @assertEqual( 1.7453292519943295d-02, D_PI_180 )
+
+    @assertEqual( 5.729577951308232d+01,  RAD2DEG )
+    @assertEqual( 1.7453292519943295d-02, DEG2RAD )
+
+    @assertEqual( 5.7721566490153286d-1,  D_EULER )
+
+  end subroutine test_constants
+
+
+end module testConst

@@ -66,15 +66,15 @@ module string_tools
   !/ -------------------------------------------------------------------------------------
   interface toString
      !/ ----------------------------------------------------------------------------------
-     procedure :: to_string_integer
+     procedure :: to_string_int32
+     procedure :: to_string_int16
      procedure :: to_string_real4
      procedure :: to_string_real8
-     procedure :: to_string_integer_vec
+     procedure :: to_string_int32_vec
+     procedure :: to_string_int16_vec
      procedure :: to_string_real4_vec
      procedure :: to_string_real8_vec
   end interface toString
-
-
 
 
   !/ =====================================================================================
@@ -480,12 +480,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function to_string_integer( num, fmt ) result( str )
+  function to_string_int32( num, fmt ) result( str )
     !/ -----------------------------------------------------------------------------------
-    !! Convert single precision to string.
+    !! Convert 32 bit integer to string.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    integer,                intent(in) :: num !! number to convert.
+    integer(int32),         intent(in) :: num !! number to convert.
     character(*), optional, intent(in) :: fmt !! edit descriptor.
     character(len=:),      allocatable :: str !! formated string.
     !/ -----------------------------------------------------------------------------------
@@ -499,7 +499,30 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     write(work,trim(work)) num
     str = trim(work)
     
-  end function to_string_integer
+  end function to_string_int32
+
+
+  !/ =====================================================================================
+  function to_string_int16( num, fmt ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Convert 16 bit integer to string.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer(int16),         intent(in) :: num !! number to convert.
+    character(*), optional, intent(in) :: fmt !! edit descriptor.
+    character(len=:),      allocatable :: str !! formated string.
+    !/ -----------------------------------------------------------------------------------
+    character(len=64) :: work
+    !/ -----------------------------------------------------------------------------------
+    
+    work = '(I0)'
+    if ( present( fmt ) ) then
+       write( work, "('(',A,')')" ) fmt
+    end if
+    write(work,trim(work)) num
+    str = trim(work)
+    
+  end function to_string_int16
 
 
   !/ =====================================================================================
@@ -549,12 +572,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function to_string_integer_vec( ary, fmt ) result( str )
+  function to_string_int32_vec( ary, fmt ) result( str )
     !/ -----------------------------------------------------------------------------------
-    !! Convert a vector of integers into a list formatted string.
+    !! Convert a vector of 32 bit integers into a list formatted string.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    integer,                intent(in) :: ary(:) !! ary array of numbers to convert.
+    integer(int32),         intent(in) :: ary(:) !! ary array of numbers to convert.
     character(*), optional, intent(in) :: fmt    !! fmt output format.
     character(len=:),      allocatable :: str    !! list representation.
     !/ -----------------------------------------------------------------------------------
@@ -577,7 +600,39 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     str = str // ']'
     
-  end function to_string_integer_vec
+  end function to_string_int32_vec
+
+
+  !/ =====================================================================================
+  function to_string_int16_vec( ary, fmt ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Convert a vector of 16 bit integers into a list formatted string.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer(int16),         intent(in) :: ary(:) !! ary array of numbers to convert.
+    character(*), optional, intent(in) :: fmt    !! fmt output format.
+    character(len=:),      allocatable :: str    !! list representation.
+    !/ -----------------------------------------------------------------------------------
+    integer :: i, n
+    character(len=:), allocatable :: sfmt
+    !/ -----------------------------------------------------------------------------------
+
+    sfmt = 'I0'
+    if ( present( fmt ) ) then
+       sfmt = fmt
+    end if
+
+    str = '[' // toString( ary(1), sfmt )
+
+    n = size(ary)
+    
+    do i=2,n
+       str = str // ',' // toString( ary(i), sfmt )
+    end do
+
+    str = str // ']'
+    
+  end function to_string_int16_vec
 
 
   !/ =====================================================================================

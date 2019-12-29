@@ -1,0 +1,99 @@
+module testVstring
+    use pfunit_mod
+    use iso_varying_string
+    
+contains
+
+  !/ =====================================================================================
+  @test
+  subroutine test_vstring_length
+    !! -----------------------------------------------------------------------------------
+    implicit none
+    type(varying_string) :: ts
+    integer :: n
+
+    ts%chars = 'Heather'
+
+    n = len(ts)
+
+    @assertEqual( 7, n )
+
+  end subroutine test_vstring_length
+
+  !/ =====================================================================================
+  @test
+  subroutine test_vstring_external_copy
+    !! -----------------------------------------------------------------------------------
+    implicit none
+
+    character(*), parameter :: src_str = 'Heather'
+    character(len=:), allocatable :: astr
+    
+    type(varying_string) :: ts1, ts2
+
+    ts1  = src_str
+    ts2  = ts1
+    astr = ts2
+
+    @assertTrue( ( src_str == ts1%chars ) )
+    @assertTrue( ( src_str == ts2%chars ) )
+
+  end subroutine test_vstring_external_copy
+
+
+  !/ =====================================================================================
+  @test
+  subroutine test_vstring_at
+    !! -----------------------------------------------------------------------------------
+    implicit none
+    character(*), parameter :: src_str = 'Heather'
+    type(varying_string) :: ts
+    character(1) :: c
+    ts = src_str
+
+    c = extract(ts,3)
+
+    @assertEqual( 'a', c )
+    
+  end subroutine test_vstring_at
+
+
+
+
+
+  !/ =====================================================================================
+  @test
+  subroutine test_vstring_cat
+    !! -----------------------------------------------------------------------------------
+    implicit none
+    character(*), parameter :: C1 = 'Rebekah'
+    character(*), parameter :: C2 = 'Marie'
+
+    type(varying_string) :: S1, S2
+    type(varying_string) :: T1, T2, T3
+
+    S1 = C1
+    S2 = C2
+
+    T1 = S1 // S2
+
+    T2 = S1 // C2
+
+    T3 = C1 // S2
+    
+    write(*,*) '----------------------'
+    write(*,*) C1
+    write(*,*) C2
+    write(*,*) '----------------------'
+    write(*,*) S1%chars
+    write(*,*) S2%chars
+    write(*,*) '----------------------'
+    write(*,*) T1%chars
+    write(*,*) T2%chars
+    write(*,*) T3%chars
+    write(*,*) '----------------------'
+
+  end subroutine test_vstring_cat
+
+    
+end module testVstring

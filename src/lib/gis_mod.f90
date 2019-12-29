@@ -28,7 +28,7 @@ module gis_mod
   !! Provides a collection of tools for geographical information services.
   !!
   !! author:  Stephen W. Soliday
-  !! date:    20198-11-15
+  !! date:    2019-11-15
   !! license: GPL
   !! -------------------------------------------------------------------------------------
   use trncmp_env

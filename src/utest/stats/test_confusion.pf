@@ -1,0 +1,112 @@
+module test_confusion
+    use pfunit_mod
+    use confusion_mod
+    implicit none
+
+  
+contains
+  
+  !/ =====================================================================================
+  @test
+  subroutine test_conf_title
+    !/ -----------------------------------------------------------------------------------
+
+    character(*), parameter :: TEST_TITLE = 'Classifier Test'
+
+    type(confusion_matrix) :: CM
+
+    call CM%set_title( TEST_TITLE )
+
+    @assertEqual( 'Classifier Test', CM%title%chars )
+
+  end subroutine test_conf_title
+
+
+  !/ =====================================================================================
+  @test
+  subroutine test_conf_short
+    !/ -----------------------------------------------------------------------------------
+
+    character(3), parameter :: TEST_SHORT(3) = [ 'TGT', 'NEU', 'CLU' ]
+
+    type(confusion_matrix) :: CM
+
+    call CM%set_shortname( TEST_SHORT )
+
+    @assertEqual( 'TGT', CM%short_name(1)%chars )
+    @assertEqual( 'NEU', CM%short_name(2)%chars )
+    @assertEqual( 'CLU', CM%short_name(3)%chars )
+
+  end subroutine test_conf_short
+
+
+  !/ =====================================================================================
+  @test
+  subroutine test_conf_long
+    !/ -----------------------------------------------------------------------------------
+
+    type(varying_string) :: TEST_LONG(3)
+    type(confusion_matrix) :: CM
+
+    TEST_LONG(1) = 'Target'
+    TEST_LONG(2) = 'Neutral'
+    TEST_LONG(3) = 'Clutter'
+
+    call CM%set_longname( TEST_LONG )
+
+    @assertEqual( 'Target',  CM%long_name(1)%chars )
+    @assertEqual( 'Neutral', CM%long_name(2)%chars )
+    @assertEqual( 'Clutter', CM%long_name(3)%chars )
+
+  end subroutine test_conf_long
+
+  
+  !/ =====================================================================================
+  @test
+  subroutine test_conf_load_int
+    !/ -----------------------------------------------------------------------------------
+    integer, parameter :: A(18) = [1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2]
+    integer, parameter :: P(18) = [1,1,1,1,2,1,2,2,2,1,1,1,2,2,2,2,2,2]
+    type(confusion_matrix) :: CM
+
+    write(*,*)
+    call CM%load( A, P, NCLS=2 )
+    call CM%show_matrix(UNIT=OUTPUT_UNIT)
+    write(*,*)
+    
+  end subroutine test_conf_load_int
+
+    
+  !/ =====================================================================================
+  @test
+  subroutine test_conf_load_char
+    !/ -----------------------------------------------------------------------------------
+    character(1), parameter :: A(27) = [ 'k', 'k', 'k', 'k', 'b', 'b', 'b', 'b',  &
+         &                               'b', 't', 't', 't', 't', 't', 't', 'k',  &
+         &                               'k', 'k', 'b', 'b', 'b', 'b', 't', 't',  &
+         &                               'x', 'x', 't' ]
+    character(1), parameter :: P(27) = [ 'k', 'k', 'k', 'k', 'b', 'b', 'b', 'b',  &
+         &                               'b', 't', 't', 't', 't', 't', 't', 'b',  &
+         &                               'b', 't', 'k', 't', 't', 't', 'k', 'k',  &
+         &                               'v', 'g', 'y' ]
+
+    character(1), parameter :: L(3) = [ 'k','b','t' ]
+    
+    type(confusion_matrix) :: CM
+
+    call CM%set_title( 'Classifier vs. Adjudication' )
+    call CM%set_longname( ['Target ','Neutral','Clutter'] )
+    call CM%set_shortname( ['TGT','NEU','CLU'] )
+
+    write(*,*)
+    call CM%load( A, P, LABELS=L )
+
+     call CM%show_matrix(UNIT=OUTPUT_UNIT)
+    write(*,*)
+     call CM%show_metrics(UNIT=OUTPUT_UNIT)
+    write(*,*)
+
+  end subroutine test_conf_load_char
+
+
+end module test_confusion

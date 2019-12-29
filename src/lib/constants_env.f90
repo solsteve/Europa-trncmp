@@ -62,8 +62,8 @@ module constants_env
   real(dp), public, parameter :: D_FIVE      = 5.0d0              !! 5
   real(dp), public, parameter :: D_SIX       = 6.0d0              !! 6
   real(dp), public, parameter :: D_SEVEN     = 7.0d0              !! 7
-  real(dp), public, parameter :: D_EIGHT     = 8.0d1              !! 8
-  real(dp), public, parameter :: D_NINE      = 9.0d1              !! 9
+  real(dp), public, parameter :: D_EIGHT     = 8.0d0              !! 8
+  real(dp), public, parameter :: D_NINE      = 9.0d0              !! 9
   real(dp), public, parameter :: D_TEN       = 1.0d1              !! 10
   real(dp), public, parameter :: D_E         = exp(D_ONE)         !! E (Napier)
   real(dp), public, parameter :: D_PI        = acos(-D_ONE)       !! Pi

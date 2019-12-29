@@ -101,7 +101,7 @@ contains
     !! Push a generic object onto the head of the deque.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(deque),             intent(inout) :: queue  !! reference to this deque class.
+    type(deque),           intent(inout) :: queue  !! reference to this deque class.
     class(my_obj), target, intent(in) :: obj
     !/ -----------------------------------------------------------------------------------
     class(*), pointer :: P

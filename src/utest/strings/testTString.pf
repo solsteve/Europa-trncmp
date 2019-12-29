@@ -1,0 +1,168 @@
+module testTString
+    use pfunit_mod
+use string_mod
+
+contains
+
+  !/ =====================================================================================
+  @test
+  subroutine test_tstring_length
+    !! -----------------------------------------------------------------------------------
+    implicit none
+    type(TString) :: ts
+    integer :: n
+
+    ts%cstr = 'Heather'
+
+    n = size(ts)
+
+    @assertEqual( 7, n )
+
+  end subroutine test_tstring_length
+
+  !/ =====================================================================================
+  @test
+  subroutine test_tstring_internal_copy
+    !! -----------------------------------------------------------------------------------
+    implicit none
+
+    character(*), parameter :: src_str = 'Heather'
+    
+    type(TString) :: ts1, ts2
+
+    call ts1%copy( src_str )
+
+    @assertTrue( LEQ( src_str, ts1%cstr ) )
+
+    call ts2%copy( ts1 )
+
+    @assertTrue( LEQ( src_str, ts2%cstr ) )
+
+
+  end subroutine test_tstring_internal_copy
+
+
+  !/ =====================================================================================
+  @test
+  subroutine test_tstring_external_copy
+    !! -----------------------------------------------------------------------------------
+    implicit none
+
+    character(*), parameter :: src_str = 'Heather'
+    character(len=:), allocatable :: astr
+    
+    type(TString) :: ts1, ts2
+
+    ts1  = src_str
+    ts2  = ts1
+    astr = ts2
+
+    @assertTrue( LEQ( src_str, ts1%cstr ) )
+    @assertTrue( LEQ( src_str, ts2%cstr ) )
+    @assertTrue( LEQ( src_str, astr ) )
+
+  end subroutine test_tstring_external_copy
+
+
+  !/ =====================================================================================
+  @test
+  subroutine test_tstring_clear
+    !! -----------------------------------------------------------------------------------
+    implicit none
+    character(*), parameter :: src_str = 'Heather'
+    type(TString) :: ts
+    integer :: n
+    n = size(ts)
+    @assertEqual( 0, n )
+
+    ts = src_str
+    n = size(ts)
+    @assertEqual( 7, n )
+
+    call ts%clear
+     n = size(ts)
+    @assertEqual( 0, n )
+
+  end subroutine test_tstring_clear
+    
+  !/ =====================================================================================
+  @test
+  subroutine test_tstring_empty
+    !! -----------------------------------------------------------------------------------
+    implicit none
+    character(*), parameter :: src_str = 'Heather'
+    type(TString) :: ts
+
+    @assertTrue( ts%empty() )
+
+    ts = src_str
+    @assertFalse( ts%empty() )
+
+    call ts%clear
+    @assertTrue( ts%empty() )
+
+  end subroutine test_tstring_empty
+
+  !/ =====================================================================================
+  @test
+  subroutine test_tstring_at
+    !! -----------------------------------------------------------------------------------
+    implicit none
+    character(*), parameter :: src_str = 'Heather'
+    type(TString) :: ts
+    character(1) :: c
+    ts = src_str
+
+    c = ts%at(3)
+
+    @assertEqual( 'a', c )
+
+    c = ts%at(0)
+
+    write(*,10) c
+    10 format( '[',A,']' )
+
+
+    
+  end subroutine test_tstring_at
+
+
+
+
+
+  !/ =====================================================================================
+  @test
+  subroutine test_tstring_cat
+    !! -----------------------------------------------------------------------------------
+    implicit none
+    character(*), parameter :: C1 = 'Heather'
+    character(*), parameter :: C2 = 'Marie'
+
+    type(TString) :: S1, S2
+    type(TString) :: T1, T2, T3
+
+    S1 = C1
+    S2 = C2
+
+    T1 = S1 // S2
+
+    T2 = S1 // C2
+
+    T3 = C1 // S2
+    
+    write(*,*) '----------------------'
+    write(*,*) C1
+    write(*,*) C2
+    write(*,*) '----------------------'
+    write(*,*) S1%cstr
+    write(*,*) S2%cstr
+    write(*,*) '----------------------'
+    write(*,*) T1%cstr
+    write(*,*) T2%cstr
+    write(*,*) T3%cstr
+    write(*,*) '----------------------'
+
+  end subroutine test_tstring_cat
+
+    
+  end module testTString

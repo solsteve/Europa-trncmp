@@ -510,6 +510,5 @@ contains
 
   end subroutine test_vector_Pnorm_diff
 
-
-
+  
 end module test_vec

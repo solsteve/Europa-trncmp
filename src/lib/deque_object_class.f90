@@ -43,12 +43,10 @@ module deque_object_class
      
      class(*),          pointer :: object => null() !! node object
      class(deque_node), pointer :: prev   => null() !! pointer to the previous node in
-     !!                                               the deque
+     !!                                                the deque
      class(deque_node), pointer :: next   => null() !! pointer to the next node in the deque
 
-
    contains
-
 
      procedure, public :: delete => deque_node_delete
 
@@ -277,7 +275,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(Deque),      intent(inout) :: self !! reference to this deque class.
-    class(*), pointer, intent(in) :: obj  !! deque data.
+    class(*), pointer, intent(in)    :: obj  !! deque data.
     !/ -----------------------------------------------------------------------------------
     class(deque_node), pointer :: new_node
     !/ -----------------------------------------------------------------------------------

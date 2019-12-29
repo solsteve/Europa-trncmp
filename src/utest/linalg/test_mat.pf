@@ -456,9 +456,174 @@ subroutine test_matrix_det2
   !/ -----------------------------------------------------------------------------------
   implicit none
 
+  real(dp), parameter :: M2(2,2) = reshape( [7.0d0, 8.0d0, -3.0d0, 1.0d0], [2,2] )
 
+  real(dp) :: d2
+  
+  d2 = det(M2)
+
+  @assertEqual( 3.1d1, d2 )
   
 end subroutine test_matrix_det2
+
+@test
+!/ =====================================================================================
+subroutine test_matrix_det3
+  !/ -----------------------------------------------------------------------------------
+  implicit none
+
+  real(dp), parameter :: M3(3,3) = reshape([  &
+       &      7.0d0, 8.0d0, 1.0d0,  &
+       &     -3.0d0, 1.0d0, 6.0d0,  &
+       &     11.0d0, -5.0d0, 4.0d0  &
+       &], [3,3] )
+
+  real(dp) :: d3
+  
+  d3 = det(M3)
+
+  @assertEqual( 8.66d2, d3 )
+  
+end subroutine test_matrix_det3
+
+@test
+!/ =====================================================================================
+subroutine test_matrix_det4
+  !/ -----------------------------------------------------------------------------------
+  implicit none
+
+  real(dp), parameter :: M4(4,4) = reshape([  &
+       &    -7.4d0,  8.3d0, -1.2d0,  3.1d0,   &
+       &     6.5d0, -2.5d0,  4.1d0, -3.2d0,   &
+       &    -6.1d0,  8.3d0, -8.9d0,  3.6d0,   &
+       &     3.5d0, -9.5d0,  2.4d0, -7.2d0    &
+       &], [4,4] )
+
+  real(dp) :: d4
+  
+  d4 = det(M4)
+
+  @assertEqual( -1.7435446d3, d4 )
+  
+end subroutine test_matrix_det4
+
+
+@test
+!/ =====================================================================================
+subroutine test_matrix_inv2
+  !/ -----------------------------------------------------------------------------------
+  implicit none
+
+  real(dp), parameter :: A(2,2) = reshape( [7.0d0, 8.0d0, -3.0d0, 1.0d0], [2,2] )
+
+  real(dp) :: B(2,2), C1(2,2), C2(2,2)
+  real(dp) :: dt
+
+  integer :: i, j
+  
+  call inverse_2_R8( B, A, D=dt )
+
+  @assertEqual( 3.1d1, dt )
+
+  call dot( C1, A, B )
+  call dot( C2, B, A )
+
+  do i=1,2
+     do j=1,2
+        if ( i.eq.j ) then
+           @assertEqual( 1.0d0, C1(i,j), 1.0d-12 )
+           @assertEqual( 1.0d0, C2(i,j), 1.0d-12 )
+        else
+           @assertEqual( 0.0d0, C1(i,j), 1.0d-12 )
+           @assertEqual( 0.0d0, C2(i,j), 1.0d-12 )
+        end if
+     end do
+  end do
+  
+end subroutine test_matrix_inv2
+
+
+
+@test
+!/ =====================================================================================
+subroutine test_matrix_inv3
+  !/ -----------------------------------------------------------------------------------
+  implicit none
+
+  real(dp), parameter :: A(3,3) = reshape( [ &
+       &      7.0d0, 8.0d0, 1.0d0,  &
+       &     -3.0d0, 1.0d0, 6.0d0,  &
+       &     11.0d0, -5.0d0, 4.0d0  &
+       &  ], [3,3] )
+
+  real(dp) :: B(3,3), C1(3,3), C2(3,3)
+  real(dp) :: dt
+
+  integer :: i, j
+  
+  call inverse_3_R8( B, A, D=dt )
+
+  @assertEqual( 8.66d2, dt )
+
+  call dot( C1, A, B )
+  call dot( C2, B, A )
+
+  do i=1,3
+     do j=1,3
+        if ( i.eq.j ) then
+           @assertEqual( 1.0d0, C1(i,j), 1.0d-12 )
+           @assertEqual( 1.0d0, C2(i,j), 1.0d-12 )
+        else
+           @assertEqual( 0.0d0, C1(i,j), 1.0d-12 )
+           @assertEqual( 0.0d0, C2(i,j), 1.0d-12 )
+        end if
+     end do
+  end do
+  
+end subroutine test_matrix_inv3
+
+
+
+
+
+@test
+!/ =====================================================================================
+subroutine test_matrix_inv4
+  !/ -----------------------------------------------------------------------------------
+  implicit none
+
+  real(dp), parameter :: A(4,4) = reshape( [ &
+       &    -7.4d0,  8.3d0, -1.2d0,  3.1d0,   &
+       &     6.5d0, -2.5d0,  4.1d0, -3.2d0,   &
+       &    -6.1d0,  8.3d0, -8.9d0,  3.6d0,   &
+       &     3.5d0, -9.5d0,  2.4d0, -7.2d0    &
+       &  ], [4,4] )
+
+  real(dp) :: B(4,4), C1(4,4), C2(4,4)
+  real(dp) :: dt
+
+  integer :: i, j
+
+  call inverse_4_R8( B, A, D=dt )
+
+  @assertEqual( -1.7435446d3, dt )
+
+  call dot( C1, A, B )
+  call dot( C2, B, A )
+
+  do i=1,4
+     do j=1,4
+        if ( i.eq.j ) then
+           @assertEqual( 1.0d0, C1(i,j), 1.0d-12 )
+           @assertEqual( 1.0d0, C2(i,j), 1.0d-12 )
+        else
+           @assertEqual( 0.0d0, C1(i,j), 1.0d-12 )
+           @assertEqual( 0.0d0, C2(i,j), 1.0d-12 )
+        end if
+     end do
+  end do
+
+end subroutine test_matrix_inv4
 
 
 end module test_mat

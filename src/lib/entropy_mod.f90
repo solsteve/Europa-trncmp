@@ -70,8 +70,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine system_entropy_source( buffer )
     !/ -----------------------------------------------------------------------------------
+    !! Retrieve entropy from /dev/urandom
+   !/ -----------------------------------------------------------------------------------
     implicit none
     integer, intent(out) :: buffer(:)
+   !/ -----------------------------------------------------------------------------------
     integer :: un, istat
     open(newunit=un, file="/dev/urandom", access="stream",  &
          &           form="unformatted", action="read", status="old", iostat=istat)
