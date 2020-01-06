@@ -1,0 +1,605 @@
+module test_fpart
+  use pfunit_mod
+  use trncmp_env
+  use fuzzy_partition_mod
+  implicit none
+
+contains
+
+  @test
+  !/ =====================================================================================
+  subroutine test_part_create_empty_one
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(FuzzyPartition)  :: P0, P1, P2, P3
+    real(dp), parameter :: dat(1) = [ 7.0d0 ]
+
+    class(FuzzySet), pointer :: FS
+
+    !/ -----------------------------------------------------------------------------------
+    @assertEqual( 1, P0%nIn()  )
+    @assertEqual( 0, P0%nOut() )
+    @assertEqual( 0, P0%size() )
+
+    !/ -----------------------------------------------------------------------------------
+    call P1%init(1)
+
+    @assertEqual( 1, P1%nIn()  )
+    @assertEqual( 1, P1%nOut() )
+    @assertEqual( 1, P1%size() )
+
+    FS => P1%set(1)
+
+    @assertEqual( -1.0d0, FS%getLeft()   )
+    @assertEqual(  0.0d0, FS%getCenter() )
+    @assertEqual(  1.0d0, FS%getRight()  )
+
+    !/ -----------------------------------------------------------------------------------
+    call P2%init( 1, 3.0d0, 7.0d0 )
+
+    @assertEqual( 1, P2%nIn()  )
+    @assertEqual( 1, P2%nOut() )
+    @assertEqual( 1, P2%size() )
+
+    FS => P2%set(1)
+
+    @assertEqual( 3.0d0, FS%getLeft()   )
+    @assertEqual( 5.0d0, FS%getCenter() )
+    @assertEqual( 7.0d0, FS%getRight()  )
+
+    !/ -----------------------------------------------------------------------------------
+    call P3%init( dat )
+
+    @assertEqual( 1, P3%nIn()  )
+    @assertEqual( 1, P3%nOut() )
+    @assertEqual( 1, P3%size() )
+
+    FS => P3%set(1)
+
+    @assertEqual( 6.0d0, FS%getLeft()   )
+    @assertEqual( 7.0d0, FS%getCenter() )
+    @assertEqual( 8.0d0, FS%getRight()  )
+
+  end subroutine test_part_create_empty_one
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_part_create_empty_two
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(FuzzyPartition)  :: P0, P1, P2, P3
+    real(dp), parameter :: dat(2) = [ 7.0d0, 9.0d0 ]
+
+    class(FuzzySet), pointer :: FS1, FS2
+
+    !/ -----------------------------------------------------------------------------------
+    @assertEqual( 1, P0%nIn()  )
+    @assertEqual( 0, P0%nOut() )
+    @assertEqual( 0, P0%size() )
+
+    !/ -----------------------------------------------------------------------------------
+    call P1%init(2)
+
+    @assertEqual( 1, P1%nIn()  )
+    @assertEqual( 2, P1%nOut() )
+    @assertEqual( 2, P1%size() )
+
+    FS1 => P1%set(1)
+    FS2 => P1%set(2)
+
+    @assertEqual( -2.0d0, FS1%getLeft()   )
+    @assertEqual( -1.0d0, FS1%getCenter() )
+    @assertEqual(  1.0d0, FS1%getRight()  )
+
+    @assertEqual( -1.0d0, FS2%getLeft()   )
+    @assertEqual(  1.0d0, FS2%getCenter() )
+    @assertEqual(  2.0d0, FS2%getRight() )
+
+    !/ -----------------------------------------------------------------------------------
+    call P2%init( 2, 3.0d0, 7.0d0 )
+
+    @assertEqual( 1, P2%nIn()  )
+    @assertEqual( 2, P2%nOut() )
+    @assertEqual( 2, P2%size() )
+
+    FS1 => P2%set(1)
+    FS2 => P2%set(2)
+
+    @assertEqual( 1.0d0, FS1%getLeft()   )
+    @assertEqual( 3.0d0, FS1%getCenter() )
+    @assertEqual( 7.0d0, FS1%getRight()  )
+
+    @assertEqual( 3.0d0, FS2%getLeft()   )
+    @assertEqual( 7.0d0, FS2%getCenter() )
+    @assertEqual( 9.0d0, FS2%getRight()  )
+
+    !/ -----------------------------------------------------------------------------------
+    call P3%init( dat )
+
+    @assertEqual( 1, P3%nIn()  )
+    @assertEqual( 2, P3%nOut() )
+    @assertEqual( 2, P3%size() )
+
+    FS1 => P3%set(1)
+    FS2 => P3%set(2)
+
+    @assertEqual( 6.0d0, FS1%getLeft()   )
+    @assertEqual( 7.0d0, FS1%getCenter() )
+    @assertEqual( 9.0d0, FS1%getRight()  )
+
+    @assertEqual( 7.0d0, FS2%getLeft()   )
+    @assertEqual( 9.0d0, FS2%getCenter() )
+    @assertEqual( 1.0d1, FS2%getRight()  )
+
+  end subroutine test_part_create_empty_two
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_part_create_empty_three
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(FuzzyPartition)  :: P0, P1, P2, P3
+    real(dp), parameter :: dat(3) = [ 3.0d0, 5.0d0, 9.0d0 ]
+
+    class(FuzzySet), pointer :: FS1, FS2, FS3
+
+    !/ -----------------------------------------------------------------------------------
+    @assertEqual( 1, P0%nIn()  )
+    @assertEqual( 0, P0%nOut() )
+    @assertEqual( 0, P0%size() )
+
+    !/ -----------------------------------------------------------------------------------
+    call P1%init(3)
+
+    @assertEqual( 1, P1%nIn()  )
+    @assertEqual( 3, P1%nOut() )
+    @assertEqual( 3, P1%size() )
+
+    FS1 => P1%set(1)
+    FS2 => P1%set(2)
+    FS3 => P1%set(3)
+
+    @assertEqual( -1.5d0, FS1%getLeft()   )
+    @assertEqual( -1.0d0, FS1%getCenter() )
+    @assertEqual(  0.0d0, FS1%getRight()  )
+
+    @assertEqual( -1.0d0, FS2%getLeft()   )
+    @assertEqual(  0.0d0, FS2%getCenter() )
+    @assertEqual(  1.0d0, FS2%getRight()  )
+
+    @assertEqual(  0.0d0, FS3%getLeft()   )
+    @assertEqual(  1.0d0, FS3%getCenter() )
+    @assertEqual(  1.5d0, FS3%getRight()  )
+
+    !/ -----------------------------------------------------------------------------------
+    call P2%init( 3, 6.0d0, 1.0d1 )
+
+    @assertEqual( 1, P2%nIn()  )
+    @assertEqual( 3, P2%nOut() )
+    @assertEqual( 3, P2%size() )
+
+    FS1 => P2%set(1)
+    FS2 => P2%set(2)
+    FS3 => P2%set(3)
+
+    @assertEqual( 5.0d0, FS1%getLeft()   )
+    @assertEqual( 6.0d0, FS1%getCenter() )
+    @assertEqual( 8.0d0, FS1%getRight()  )
+
+    @assertEqual( 6.0d0, FS2%getLeft()   )
+    @assertEqual( 8.0d0, FS2%getCenter() )
+    @assertEqual( 1.0d1, FS2%getRight()  )
+
+    @assertEqual( 8.0d0, FS3%getLeft()   )
+    @assertEqual( 1.0d1, FS3%getCenter() )
+    @assertEqual( 1.1d1, FS3%getRight()  )
+
+    !/ -----------------------------------------------------------------------------------
+    call P3%init( dat )
+
+    @assertEqual( 1, P3%nIn()  )
+    @assertEqual( 3, P3%nOut() )
+    @assertEqual( 3, P3%size() )
+
+    FS1 => P3%set(1)
+    FS2 => P3%set(2)
+    FS3 => P3%set(3)
+
+    @assertEqual( 2.0d0, FS1%getLeft() )
+    @assertEqual( 3.0d0, FS1%getCenter() )
+    @assertEqual( 5.0d0, FS1%getRight()  )
+
+    @assertEqual( 3.0d0, FS2%getLeft()   )
+    @assertEqual( 5.0d0, FS2%getCenter() )
+    @assertEqual( 9.0d0, FS2%getRight()  )
+
+    @assertEqual( 5.0d0, FS3%getLeft()   )
+    @assertEqual( 9.0d0, FS3%getCenter() )
+    @assertEqual( 1.1d1, FS3%getRight() )
+
+  end subroutine test_part_create_empty_three
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_part_create_empty_five
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(FuzzyPartition)  :: P0, P1, P2, P3
+    real(dp), parameter :: dat(5) = [ 3.0d0, 5.0d0, 8.0d0, 1.2d1, 1.3d1 ]
+
+    class(FuzzySet), pointer :: FS1, FS2, FS3, FS4, FS5
+
+    !/ -----------------------------------------------------------------------------------
+    @assertEqual( 1, P0%nIn()  )
+    @assertEqual( 0, P0%nOut() )
+    @assertEqual( 0, P0%size() )
+
+    !/ -----------------------------------------------------------------------------------
+    call P1%init(5)
+
+    @assertEqual( 1, P1%nIn()  )
+    @assertEqual( 5, P1%nOut() )
+    @assertEqual( 5, P1%size() )
+
+    FS1 => P1%set(1)
+    FS2 => P1%set(2)
+    FS3 => P1%set(3)
+    FS4 => P1%set(4)
+    FS5 => P1%set(5)
+
+    @assertEqual( -1.25d0, FS1%getLeft()   )
+    @assertEqual( -1.0d0,  FS1%getCenter() )
+    @assertEqual( -0.5d0,  FS1%getRight()  )
+
+    @assertEqual( -1.0d0,  FS2%getLeft()   )
+    @assertEqual( -0.5d0,  FS2%getCenter() )
+    @assertEqual(  0.0d0,  FS2%getRight()  )
+
+    @assertEqual( -0.5d0,  FS3%getLeft()   )
+    @assertEqual(  0.0d0,  FS3%getCenter() )
+    @assertEqual(  0.5d0,  FS3%getRight()  )
+
+    @assertEqual(  0.0d0,  FS4%getLeft()   )
+    @assertEqual(  0.5d0,  FS4%getCenter() )
+    @assertEqual(  1.0d0,  FS4%getRight()  )
+
+    @assertEqual(  0.5d0,  FS5%getLeft()   )
+    @assertEqual(  1.0d0,  FS5%getCenter() )
+    @assertEqual(  1.25d0, FS5%getRight()  )
+
+    !/ -----------------------------------------------------------------------------------
+    call P2%init( 5, 6.0d0, 1.4d1 )
+
+    @assertEqual( 1, P2%nIn()  )
+    @assertEqual( 5, P2%nOut() )
+    @assertEqual( 5, P2%size() )
+
+    FS1 => P2%set(1)
+    FS2 => P2%set(2)
+    FS3 => P2%set(3)
+    FS4 => P2%set(4)
+    FS5 => P2%set(5)
+
+    @assertEqual( 5.0d0, FS1%getLeft()   )
+    @assertEqual( 6.0d0, FS1%getCenter() )
+    @assertEqual( 8.0d0, FS1%getRight()  )
+
+    @assertEqual( 6.0d0, FS2%getLeft()   )
+    @assertEqual( 8.0d0, FS2%getCenter() )
+    @assertEqual( 1.0d1, FS2%getRight()  )
+
+    @assertEqual( 8.0d0, FS3%getLeft()   )
+    @assertEqual( 1.0d1, FS3%getCenter() )
+    @assertEqual( 1.2d1, FS3%getRight()  )
+
+    @assertEqual( 1.0d1, FS4%getLeft()   )
+    @assertEqual( 1.2d1, FS4%getCenter() )
+    @assertEqual( 1.4d1, FS4%getRight()  )
+
+    @assertEqual( 1.2d1, FS5%getLeft()   )
+    @assertEqual( 1.4d1, FS5%getCenter() )
+    @assertEqual( 1.5d1, FS5%getRight()  )
+
+    !/ -----------------------------------------------------------------------------------
+    call P3%init( dat )
+
+    @assertEqual( 1, P3%nIn()  )
+    @assertEqual( 5, P3%nOut() )
+    @assertEqual( 5, P3%size() )
+
+    FS1 => P3%set(1)
+    FS2 => P3%set(2)
+    FS3 => P3%set(3)
+    FS4 => P3%set(4)
+    FS5 => P3%set(5)
+
+    @assertEqual( 2.0d0,  FS1%getLeft()   )
+    @assertEqual( 3.0d0,  FS1%getCenter() )
+    @assertEqual( 5.0d0,  FS1%getRight()  )
+
+    @assertEqual( 3.0d0,  FS2%getLeft()   )
+    @assertEqual( 5.0d0,  FS2%getCenter() )
+    @assertEqual( 8.0d0,  FS2%getRight()  )
+
+    @assertEqual( 5.0d0,  FS3%getLeft()   )
+    @assertEqual( 8.0d0,  FS3%getCenter() )
+    @assertEqual( 1.2d1,  FS3%getRight()  )
+
+    @assertEqual( 8.0d0,  FS4%getLeft()   )
+    @assertEqual( 1.2d1,  FS4%getCenter() )
+    @assertEqual( 1.3d1,  FS4%getRight()  )
+
+    @assertEqual( 1.2d1,  FS5%getLeft()   )
+    @assertEqual( 1.3d1,  FS5%getCenter() )
+    @assertEqual( 1.35d1, FS5%getRight()  )
+
+  end subroutine test_part_create_empty_five
+
+  
+  @test
+  !/ =====================================================================================
+  subroutine test_part_mu
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: ctrs(3) = [ 7.0d0, 1.1d1, 1.9d1 ]
+
+    real(dp), parameter :: X(11) = [ 6.0d0, 7.0d0, 8.0d0, 9.0d0, 1.0d1, 1.1d1, &
+         &                           1.3d1, 1.5d1, 1.7d1, 1.9d1, 2.0d1 ]
+
+    real(dp), parameter :: M(11,3) = reshape( [ 1.0d0,   1.0d0,  0.75d0,  0.5d0,  0.25d0, 0.0d0,  &
+         &                                      0.0d0,   0.0d0,  0.0d0,   0.0d0,  0.0d0,          &
+         &                                      0.0d0,   0.0d0,  0.25d0,  0.5d0,  0.75d0, 1.0d0,  &
+         &                                      0.75d0,  0.5d0,  0.25d0,  0.0d0,  0.0d0,          &
+         &                                      0.0d0,   0.0d0,  0.0d0,   0.0d0,  0.0d0,  0.0d0,  &
+         &                                      0.25d0,  0.5d0,  0.75d0,  1.0d0,  1.0d0 ],        &
+         &                                      [ 11, 3 ] )
+
+    !/ -----------------------------------------------------------------------------------
+    integer              :: i, j, n_samp
+    type(FuzzyPartition) :: P
+    real(dp)             :: mu(3)
+    !/ -----------------------------------------------------------------------------------
+
+    n_samp = 11
+
+    call P%init( ctrs )
+
+    do i=1,n_samp
+       call P%mu( mu, X(i) )
+       do j=1,3
+          @assertEqual( M(i,j), mu(j) )
+       end do
+    end do
+
+  end subroutine test_part_mu
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_part_area
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer, parameter :: nd = 5
+
+    real(dp), parameter :: tD(nd) = [1.0d0, 0.75d0, 0.5d0, 0.25d0, 0.0d0 ]
+
+    real(dp), parameter :: ctrs(3) = [ 7.0d0, 1.1d1, 1.9d1 ]
+
+    real(dp), parameter :: test(nd,nd,nd) = reshape( [ &
+         &      18.000d0, 16.750d0, 15.000d0, 12.750d0, 10.000d0,  &
+         &      17.625d0, 16.375d0, 14.625d0, 12.375d0,  9.625d0,  &
+         &      16.500d0, 15.250d0, 13.500d0, 11.250d0,  8.500d0,  &
+         &      14.625d0, 13.375d0, 11.625d0,  9.375d0,  6.625d0,  &
+         &      12.000d0, 10.750d0,  9.000d0,  6.750d0,  4.000d0,  &
+         
+         &      17.375d0, 16.125d0, 14.375d0, 12.125d0,  9.375d0,  &
+         &      17.000d0, 15.750d0, 14.000d0, 11.750d0,  9.000d0,  &
+         &      15.875d0, 14.625d0, 12.875d0, 10.625d0,  7.875d0,  &
+         &      14.000d0, 12.750d0, 11.000d0,  8.750d0,  6.000d0,  &
+         &      11.375d0, 10.125d0,  8.375d0,  6.125d0,  3.375d0,  &
+         
+         &      16.500d0, 15.250d0, 13.500d0, 11.250d0,  8.500d0,  &
+         &      16.125d0, 14.875d0, 13.125d0, 10.875d0,  8.125d0,  &
+         &      15.000d0, 13.750d0, 12.000d0,  9.750d0,  7.000d0,  &
+         &      13.125d0, 11.875d0, 10.125d0,  7.875d0,  5.125d0,  &
+         &      10.500d0,  9.250d0,  7.500d0,  5.250d0,  2.500d0,  &
+         
+         &      15.375d0, 14.125d0, 12.375d0, 10.125d0,  7.375d0,  &
+         &      15.000d0, 13.750d0, 12.000d0,  9.750d0,  7.000d0,  &
+         &      13.875d0, 12.625d0, 10.875d0,  8.625d0,  5.875d0,  &
+         &      12.000d0, 10.750d0,  9.000d0,  6.750d0,  4.000d0,  &
+         &       9.375d0,  8.125d0,  6.375d0,  4.125d0,  1.375d0,  &
+         
+         &      14.000d0, 12.750d0, 11.000d0,  8.750d0,  6.000d0,  &
+         &      13.625d0, 12.375d0, 10.625d0,  8.375d0,  5.625d0,  &
+         &      12.500d0, 11.250d0,  9.500d0,  7.250d0,  4.500d0,  &
+         &      10.625d0,  9.375d0,  7.625d0,  5.375d0,  2.625d0,  &
+         &       8.000d0,  6.750d0,  5.000d0,  2.750d0,  0.000d0 ], [nd,nd,nd] )
+
+    real(dp) :: D(3)
+    real(dp) :: area
+    integer  :: a,b,c
+    type(FuzzyPartition) :: P
+
+    call P%init( ctrs )
+
+    do a=1,nd
+       D(1) = tD(a)
+       do b=1,nd
+          D(2) = tD(b)
+          do c=1,nd
+             D(3) = tD(c)
+             @assertEqual( test(c,b,a), P%area(D) )
+          end do
+       end do
+    end do
+
+  end subroutine test_part_area
+
+    
+  @test
+  !/ =====================================================================================
+  subroutine test_part_coa
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer, parameter :: nd = 5
+
+    real(dp), parameter :: tD(nd) = [1.0d0, 0.75d0, 0.5d0, 0.25d0, 0.0d0 ]
+
+    real(dp), parameter :: ctrs(3) = [ 7.0d0, 1.1d1, 1.9d1 ]
+
+    real(dp), parameter :: test(nd,nd,nd) = reshape( [ &
+         &  14.000000000000_dp, 13.517412935323_dp, 12.822222222222_dp, 11.823529411765_dp, 10.266666666667_dp,  &
+         &  14.056737588652_dp, 13.567430025445_dp, 12.860398860399_dp, 11.838383838384_dp, 10.225108225108_dp,  &
+         &  14.212121212121_dp, 13.699453551913_dp, 12.950617283951_dp, 11.844444444444_dp, 10.019607843137_dp,  &
+         &  14.461538461538_dp, 13.900311526480_dp, 13.060931899642_dp, 11.760000000000_dp,  9.383647798742_dp,  &
+         &  14.833333333333_dp, 14.178294573643_dp, 13.148148148148_dp, 11.370370370370_dp,  7.166666666667_dp,  &
+         
+         &  14.278177458034_dp, 13.798449612403_dp, 13.107246376812_dp, 12.109965635739_dp, 10.533333333333_dp,  &
+         &  14.343137254902_dp, 13.857142857143_dp, 13.154761904762_dp, 12.134751773050_dp, 10.500000000000_dp,  &
+         &  14.524934383202_dp, 14.017094017094_dp, 13.275080906149_dp, 12.172549019608_dp, 10.317460317460_dp,  &
+         &  14.827380952381_dp, 14.274509803922_dp, 13.446969696970_dp, 12.152380952381_dp,  9.708333333333_dp,  &
+         &  15.304029304029_dp, 14.666666666667_dp, 13.661691542289_dp, 11.891156462585_dp,  7.333333333333_dp,  &
+         
+         &  14.676767676768_dp, 14.202185792350_dp, 13.518518518519_dp, 12.525925925926_dp, 10.921568627451_dp,  &
+         &  14.754521963824_dp, 14.274509803922_dp, 13.580952380952_dp, 12.567049808429_dp, 10.902564102564_dp,  &
+         &  14.977777777778_dp, 14.478787878788_dp, 13.750000000000_dp, 12.658119658120_dp, 10.761904761905_dp,  &
+         &  15.365079365079_dp, 14.828070175439_dp, 14.024691358025_dp, 12.751322751323_dp, 10.211382113821_dp,  &
+         &  16.015873015873_dp, 15.414414414414_dp, 14.466666666667_dp, 12.746031746032_dp,  7.533333333333_dp,  &
+         
+         &  15.219512195122_dp, 14.755162241888_dp, 14.087542087542_dp, 13.111111111111_dp, 11.480225988701_dp,  &
+         &  15.316666666667_dp, 14.848484848485_dp, 14.173611111111_dp, 13.179487179487_dp, 11.488095238095_dp,  &
+         &  15.603603603604_dp, 15.122112211221_dp, 14.421455938697_dp, 13.362318840580_dp, 11.432624113475_dp,  &
+         &  16.125000000000_dp, 15.620155038760_dp, 14.870370370370_dp, 13.666666666667_dp, 11.041666666667_dp,  &
+         &  17.066666666667_dp, 16.543589743590_dp, 15.738562091503_dp, 14.242424242424_dp,  7.757575757576_dp,  &
+         
+         &  15.952380952381_dp, 15.509803921569_dp, 14.878787878788_dp, 13.952380952381_dp, 12.333333333333_dp,  &
+         &  16.079510703364_dp, 15.636363636364_dp, 15.003921568627_dp, 14.069651741294_dp, 12.400000000000_dp,  &
+         &  16.466666666667_dp, 16.022222222222_dp, 15.385964912281_dp, 14.425287356322_dp, 12.555555555556_dp,  &
+         &  17.207843137255_dp, 16.773333333333_dp, 16.153005464481_dp, 15.178294573643_dp, 12.761904761905_dp,  &
+         &  18.666666666667_dp, 18.333333333333_dp, 17.933333333333_dp, 17.484848484848_dp,  1.000000000000_dp  &
+         &  ], [nd,nd,nd] )
+
+    real(dp) :: D(3)
+    real(dp) :: area
+    integer  :: a,b,c
+    type(FuzzyPartition) :: P
+
+    call P%init( ctrs )
+
+    do a=1,nd
+       D(1) = tD(a)
+       do b=1,nd
+          D(2) = tD(b)
+          do c=1,nd
+             D(3) = tD(c)
+             @assertEqual( test(c,b,a), P%coa(D), 1.0d-12 )
+          end do
+       end do
+    end do
+
+  end subroutine test_part_coa
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_part_load_store
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer,  parameter :: nc = 6
+    real(dp), parameter :: ctrs1(nc) = [ 7.0d0, 1.1d1, 1.9d1, 2.2d1, 2.5d1, 3.3d1 ]
+    real(dp), parameter :: ctrs2(nc) = [ 1.0d0, 2.0d0, 3.0d0, 4.0d0, 5.0d0, 6.0d0 ]
+
+    type(FuzzyPartition)     :: P1, P2
+    class(FuzzySet), pointer :: F1, F2
+
+    integer :: i
+    real(dp) :: buffer(nc)
+    call P1%init( ctrs1 )
+    call P2%init( ctrs2 )
+
+    do i=1,nc
+       F1 => P1%set(i)
+       F2 => P2%set(i)
+       @assertEqual( ctrs1(i), F1%getCenter() )
+       @assertEqual( ctrs2(i), F2%getCenter() )
+    end do
+
+    i = P1%store( buffer, 1 )
+    @assertEqual( 7, i )
+
+    i = P2%load( buffer, 1 )
+    @assertEqual( 7, i )
+
+    do i=1,nc
+       F1 => P1%set(i)
+       F2 => P2%set(i)
+       @assertEqual(  F1%getCenter(), F2%getCenter() )
+    end do
+
+  end subroutine test_part_load_store
+
+  
+   @test
+  !/ =====================================================================================
+  subroutine test_part_write_read
+    !/ -----------------------------------------------------------------------------------
+    use file_tools, only : WriteUnit
+    use file_tools, only : ReadUnit
+    implicit none
+
+    real(dp), parameter :: ctrs1(6) = [ 7.0d0, 1.1d1, 1.9d1, 2.2d1, 2.5d1, 3.3d1 ]
+    real(dp), parameter :: ctrs2(4) = [ 1.0d0, 2.0d0, 3.0d0, 4.0d0 ]
+
+    type(FuzzyPartition)     :: P1, P2
+    class(FuzzySet), pointer :: F1, F2
+
+    integer :: i, n1, n2, un
+    !/ -----------------------------------------------------------------------------------
+
+    call P1%init( ctrs1 )
+    call P2%init( ctrs2 )
+
+    n1 = P1%size()
+    n2 = P2%size()
+
+    @assertEqual( 6, n1 )
+    @assertEqual( 4, n2 )
+
+    do i=1,n1
+       F1 => P1%set(i)
+       @assertEqual( ctrs1(i), F1%getCenter() )
+    end do
+
+    do i=1,n2
+       F2 => P2%set(i)
+       @assertEqual( ctrs2(i), F2%getCenter() )
+    end do
+
+    un = WriteUnit( '/tmp/wxyz.txt' )
+    call P1%write( un, FMT='F7.3' )
+    close( un )
+    
+    un = ReadUnit( '/tmp/wxyz.txt' )
+    call P2%read( un )
+    close( un )
+    
+    n2 = P2%size()
+    @assertEqual( 6, n2 )
+
+    do i=1,n2
+       F2 => P2%set(i)
+       @assertEqual( ctrs1(i), F2%getCenter() )
+    end do
+
+  end subroutine test_part_write_read
+   
+end module test_fpart
+

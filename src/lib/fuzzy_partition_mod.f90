@@ -39,13 +39,6 @@ module fuzzy_partition_mod
 
 
   !/ =====================================================================================
-  type :: FuzzySet_ptr
-     !/ ----------------------------------------------------------------------------------
-     class(FuzzySet), pointer :: ptr => null()
-  end type FuzzySet_ptr
-
-
-  !/ =====================================================================================
   type :: FuzzyPartition
      !/ ----------------------------------------------------------------------------------
      ! Provides the interface for a fuzzy partition.  R -> R^n
@@ -92,7 +85,17 @@ module fuzzy_partition_mod
 
      generic :: init => fp_init_default, fp_init_left_right, fp_init_params
 
+     final :: fp_final
+
   end type FuzzyPartition
+
+
+  !/ =====================================================================================
+  type :: FuzzyPartition_ptr
+     !/ ----------------------------------------------------------------------------------
+     class(FuzzyPartition), pointer :: ptr => null()
+  end type FuzzyPartition_ptr
+
 
 
 
@@ -113,16 +116,19 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     class(FuzzyPartition), intent(inout) :: dts !! reference to a FuzzyPartition.
     integer,               intent(in)    :: n   !! number of fuzzy sets,
     !/ -----------------------------------------------------------------------------------
-
+    call dts%fp_resize(n)
+    dts%min_ctr = -D_ONE
+    dts%max_ctr =  D_ONE
+    call dts%fp_balance
   end subroutine fp_init_default
 
 
   !/ =====================================================================================
   subroutine fp_init_left_right( dts, n, mn, mx )
     !/ -----------------------------------------------------------------------------------
- !! Construct a domain of fuzzy sets. The left and right sets are trapezoidal.
- !! The internal sets are triangular. The centers are computed from the left
- !! and right extents and the number of sets.
+    !! Construct a domain of fuzzy sets. The left and right sets are trapezoidal.
+    !! The internal sets are triangular. The centers are computed from the left
+    !! and right extents and the number of sets.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(FuzzyPartition), intent(inout) :: dts !! reference to a FuzzyPartition.
@@ -130,7 +136,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(dp), intent(in) :: mn  !! left  most center.
     real(dp), intent(in) :: mx  !! right most center.
     !/ -----------------------------------------------------------------------------------
-
+    call dts%fp_resize(n)
+    dts%min_ctr = mn
+    dts%max_ctr = mx
+    call dts%fp_balance
   end subroutine fp_init_left_right
 
 
@@ -138,14 +147,63 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   subroutine fp_init_params( dts, ctrs )
     !/ -----------------------------------------------------------------------------------
     !!  Construct a domain of fuzzy sets. The left and right sets are trapezoidal.
-  !! The internal sets are triangular. The centers are defined by (ctrs) the left
-  !! and right extents are defined by the centers of the sets to the left and right.
-
+    !! The internal sets are triangular. The centers are defined by (ctrs) the left
+    !! and right extents are defined by the centers of the sets to the left and right.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyPartition), intent(inout) :: dts !! reference to a FuzzyPartition.
-    real(dp), intent(in) :: ctrs(:)  !! real array of center values.
+    class(FuzzyPartition), intent(inout) :: dts      !! reference to a FuzzyPartition.
+    real(dp),              intent(in)    :: ctrs(:)  !! real array of center values.
     !/ -----------------------------------------------------------------------------------
+    integer  :: i, n
+    real(dp) :: mid
+    !/ -----------------------------------------------------------------------------------
+    n = size(ctrs)
+
+    call dts%fp_resize(n)
+
+    if ( 1.gt.dts%num_set ) then
+       call log_error( 'FuzzyPartition%init: resize should have rejected this' )
+       goto 999
+    end if
+
+    if      ( 1.eq.dts%num_set ) then !/ ----- special case n=1 --------------------------
+       !/ set one triangle set
+
+       dts%min_ctr = ctrs(1) - D_ONE
+       dts%max_ctr = ctrs(1) + D_ONE
+       call dts%fset(1)%ptr%set( dts%min_ctr, ctrs(1), dts%max_ctr )
+
+    else if ( 2.eq.dts%num_set ) then !/ ----- special case n=2 --------------------------
+       !/ set a left and right pair of trapezoid sets.
+
+       dts%min_ctr = ctrs(1)
+       dts%max_ctr = ctrs(2)
+       call dts%fset(1)%ptr%set( dts%min_ctr, dts%max_ctr )
+       call dts%fset(2)%ptr%set( dts%min_ctr, dts%max_ctr )
+
+    else if ( 3.eq.dts%num_set ) then !/ ----- special case n=3 --------------------------
+       !/ set a trapezoid-triangle-trapezoid classic combination.
+
+       dts%min_ctr = ctrs(1)
+       mid         = ctrs(2)
+       dts%max_ctr = ctrs(3)
+       call dts%fset(1)%ptr%set( dts%min_ctr, mid              )
+       call dts%fset(2)%ptr%set( dts%min_ctr, mid, dts%max_ctr )
+       call dts%fset(3)%ptr%set(              mid, dts%max_ctr )
+
+    else                              !/ ----- general case n>3 --------------------------
+
+       call dts%fset(1)%ptr%set( ctrs(1), ctrs(2) )
+
+       do i=2,dts%num_set-1
+          call dts%fset(i)%ptr%set( ctrs(i-1), ctrs(i), ctrs(i+1) )
+       end do
+
+       call dts%fset(dts%num_set)%ptr%set( ctrs(dts%num_set-1), ctrs(dts%num_set) )
+
+    end if
+
+999 continue
 
   end subroutine fp_init_params
 
@@ -157,11 +215,36 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(FuzzyPartition), intent(inout) :: dts !! reference to a FuzzyPartition.
+    !/ -----------------------------------------------------------------------------------
+    integer :: i
+    !/ -----------------------------------------------------------------------------------
 
+    if ( allocated( dts%fset ) ) then
+       do i=1,dts%num_set
+          if ( associated( dts%fset(i)%ptr ) ) then
+             deallocate( dts%fset(i)%ptr )
+          end if
+          nullify( dts%fset(i)%ptr )
+       end do
+       deallocate( dts%fset )
+    end if
+        
   end subroutine fp_destroy
 
 
-!/ =====================================================================================
+  !/ =====================================================================================
+  subroutine fp_final( dts )
+    !/ -----------------------------------------------------------------------------------
+    !!
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(FuzzyPartition), intent(inout) :: dts !! reference to a FuzzyPartition.
+    !/ -----------------------------------------------------------------------------------
+    call dts%destroy
+  end subroutine fp_final
+
+  
+    !/ =====================================================================================
   subroutine fp_resize( dts, n, CHANGED )
     !/ -----------------------------------------------------------------------------------
     !!
@@ -177,13 +260,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     chg = .false.
 
-    if ( 1.gt.dts%num_set ) then
-       call log_error( 'There needs to be at least one function only got' )
+    if ( 1.gt.n ) then
+       call log_error( 'FuzzyPartition%resize: There needs to be at least one function only got', I4=n )
        goto 999
     end if
 
     if ( n.eq.dts%num_set ) then
-       call log_debug( 'Resize called with no change' )
+       call log_debug( 'FuzzyPartition%resize: Resize called with no change' )
        goto 999
     end if
 
@@ -209,7 +292,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
        dts%fset(1)%ptr => LeftTrapezoidSet()
        dts%fset(2)%ptr => RightTrapezoidSet()
-       
+
     else if ( 3.eq.dts%num_set ) then !/ ----- special case n=3 --------------------------
        !/ set a trapezoid-triangle-trapezoid classic combination.
 
@@ -227,8 +310,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        dts%fset(1)%ptr => LeftTrapezoidSet()
        do i=2,n-1
           !allocate( class(TriangleSet)       :: dts%fset(i)%ptr )
-        dts%fset(i)%ptr => TriangleSet()
-      end do
+          dts%fset(i)%ptr => TriangleSet()
+       end do
        !allocate( class(RightTrapezoidSet) :: dts%fset(n)%ptr )
        dts%fset(n)%ptr => RightTrapezoidSet()
 
@@ -253,7 +336,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     if      ( 1.gt.dts%num_set ) then !/ ----- this is an error --------------------------
-       call log_error( 'FuzzyPartition%resize should have rejected this' )
+       call log_error( 'FuzzyPartition%balance: resize should have rejected this' )
 
     else if ( 1.eq.dts%num_set ) then !/ ----- special case n=1 --------------------------
        !/ set one triangle set
@@ -262,6 +345,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
     else if ( 2.eq.dts%num_set ) then !/ ----- special case n=2 --------------------------
        !/ set a left and right pair of trapezoid sets.
+
        call dts%fset(1)%ptr%set( dts%min_ctr, dts%max_ctr )
        call dts%fset(2)%ptr%set( dts%min_ctr, dts%max_ctr )
 
@@ -302,6 +386,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     integer, intent(in) :: idx
     class(FuzzySet),       pointer       :: ptr 
     !/ -----------------------------------------------------------------------------------
+    nullify( ptr )
     if ( allocated( dts%fset ) ) then
        if ( associated( dts%fset(idx)%ptr ) ) then
           ptr => dts%fset(idx)%ptr
@@ -376,44 +461,51 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function fp_mu( dts, idx, x ) result( m )
+  subroutine fp_mu( dts, m, x )
     !/ -----------------------------------------------------------------------------------
     !!
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(FuzzyPartition), intent(inout) :: dts !! reference to a FuzzyPartition.
-    integer, intent(in) :: idx
-    real(dp), intent(in) :: x
-    real(dp) :: m
+    real(dp),              intent(out)   :: m(:)
+    real(dp),              intent(in)    :: x
+    !/ -----------------------------------------------------------------------------------
+    integer :: i
     !/ -----------------------------------------------------------------------------------
     if ( allocated( dts%fset ) ) then
-       if ( associated( dts%fset(idx)%ptr ) ) then
-          m = dts%fset(idx)%ptr%mu(x)
+       if ( associated( dts%fset(1)%ptr ) ) then
+          do i=1,dts%num_set
+             m(i) = dts%fset(i)%ptr%mu(x)
+          end do
        else
-          call log_error( 'FuzzyPartition: fset pointer not assigned', I4=idx )
+          call log_error( 'FuzzyPartition: fset pointers not assigned' )
        end if
     else
        call log_error( 'FuzzyPartition: fset array not allocated' )
     end if
-  end function fp_mu
+  end subroutine fp_mu
 
 
   !/ =====================================================================================
-  function fp_area( dts, idx, deg ) result( a )
+  function fp_area( dts, deg ) result( a )
     !/ -----------------------------------------------------------------------------------
     !!
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(FuzzyPartition), intent(inout) :: dts !! reference to a FuzzyPartition.
-    integer, intent(in) :: idx
-    real(dp), intent(in) :: deg
+    real(dp), intent(in) :: deg(:)
     real(dp) :: a
     !/ -----------------------------------------------------------------------------------
+    integer :: i
+    !/ -----------------------------------------------------------------------------------
     if ( allocated( dts%fset ) ) then
-       if ( associated( dts%fset(idx)%ptr ) ) then
-          a = dts%fset(idx)%ptr%area(deg)
+       if ( associated( dts%fset(1)%ptr ) ) then
+          a = D_ZERO
+          do i=1,dts%num_set
+             a = a + dts%fset(i)%ptr%area(deg(i))
+          end do
        else
-          call log_error( 'FuzzyPartition: fset pointer not assigned', I4=idx )
+          call log_error( 'FuzzyPartition: fset pointers not assigned' )
        end if
     else
        call log_error( 'FuzzyPartition: fset array not allocated' )
@@ -422,21 +514,32 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function fp_coa( dts, idx, deg ) result( c )
+  function fp_coa( dts, deg ) result( c )
     !/ -----------------------------------------------------------------------------------
     !!
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyPartition), intent(inout) :: dts !! reference to a FuzzyPartition.
-    integer, intent(in) :: idx
-    real(dp), intent(in) :: deg
-    real(dp) :: c
+    class(FuzzyPartition), intent(inout) :: dts    !! reference to a FuzzyPartition.
+    real(dp),              intent(in)    :: deg(:)
+    real(dp)                             :: c
     !/ -----------------------------------------------------------------------------------
+    integer :: i
+    real(dp) :: a, x, sum_a, sum_ax
+    !/ -----------------------------------------------------------------------------------
+    c = 0
     if ( allocated( dts%fset ) ) then
-       if ( associated( dts%fset(idx)%ptr ) ) then
-          c = dts%fset(idx)%ptr%coa(deg)
+       if ( associated( dts%fset(1)%ptr ) ) then
+          sum_ax = D_EPSILON
+          sum_a  = D_EPSILON
+          do i=1,dts%num_set
+             a = dts%fset(i)%ptr%area(deg(i))
+             x = dts%fset(i)%ptr%coa(deg(i))
+             sum_ax = sum_ax + ( a * x )
+             sum_a  = sum_a  +   a
+          end do
+          c = sum_ax / sum_a
        else
-          call log_error( 'FuzzyPartition: fset pointer not assigned', I4=idx )
+          call log_error( 'FuzzyPartition: fset pointers not assigned' )
        end if
     else
        call log_error( 'FuzzyPartition: fset array not allocated' )
@@ -445,59 +548,103 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function fp_load( dts, buffer, pre_idx ) result( post_idx )
+  function fp_load( dts, buffer, INDEX ) result( post_idx )
     !/ -----------------------------------------------------------------------------------
     !!
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(FuzzyPartition), intent(inout) :: dts       !! reference to a FuzzyPartition.
     real(dp),              intent(in)    :: buffer(:) !! 
-    integer,               intent(in)    :: pre_idx   !! 
+    integer, optional,     intent(in)    :: INDEX     !! 
     integer                              :: post_idx  !! 
     !/ -----------------------------------------------------------------------------------
-
+    integer :: s
+    !/ -----------------------------------------------------------------------------------
+    s = 1
+    if ( present(INDEX) ) s = INDEX
+    post_idx = s + dts%num_set
+    
+    call dts%init(buffer(s:post_idx-1))
+    
   end function fp_load
 
 
   !/ =====================================================================================
-  function fp_store( dts, buffer, pre_idx ) result( post_idx )
+  function fp_store( dts, buffer, INDEX ) result( post_idx )
     !/ -----------------------------------------------------------------------------------
     !!
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(FuzzyPartition), intent(inout) :: dts       !! reference to a FuzzyPartition.
-    real(dp),              intent(in)    :: buffer(:) !! 
-    integer,               intent(in)    :: pre_idx   !! 
+    real(dp),              intent(inout) :: buffer(:) !! 
+    integer, optional,     intent(in)    :: INDEX     !! 
     integer                              :: post_idx  !! 
     !/ -----------------------------------------------------------------------------------
-
+    integer i, s
+    !/ -----------------------------------------------------------------------------------
+    s = 0
+    if ( present( INDEX ) ) s = INDEX - 1
+    do i=1,dts%num_set
+       buffer(i+s) = dts%getCenter(i)
+    end do
+    post_idx = dts%num_set + s + 1
   end function fp_store
 
 
   !/ =====================================================================================
-  subroutine fp_read( dts, un, IOSTAT )
+  subroutine fp_read( dts, un, IOSTAT, MAXINDEX )
     !/ -----------------------------------------------------------------------------------
     !!
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyPartition), intent(inout) :: dts !! reference to a FuzzyPartition.
-    integer, intent(in) :: un
-    integer, optional, intent(in) :: IOSTAT
+    class(FuzzyPartition), intent(inout) :: dts      !! reference to a FuzzyPartition.
+    integer,               intent(in)    :: un       !! unit
+    integer, optional,     intent(out)   :: IOSTAT   !! 
+    integer, optional,     intent(in)    :: MAXINDEX
     !/ -----------------------------------------------------------------------------------
+    integer :: i, n, mxn
+    real(dp), allocatable :: buffer(:)
+    !/ -----------------------------------------------------------------------------------
+    mxn = 128
+    if ( present( MAXINDEX ) ) then
+       mxn = MAXINDEX
+    end if
 
+    allocate( buffer(mxn) )
+
+    read( un, * ) n, (buffer(i), i=1,n )
+
+    call dts%init( buffer(1:n) )
+
+    deallocate( buffer )
+    
   end subroutine fp_read
 
 
   !/ =====================================================================================
-  subroutine fp_write( dts, un, IOSTAT )
+  subroutine fp_write( dts, un, FMT, IOSTAT )
     !/ -----------------------------------------------------------------------------------
     !!
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(FuzzyPartition), intent(inout) :: dts !! reference to a FuzzyPartition.
     integer, intent(in) :: un
+    character(*), optional, intent(in) :: FMT
     integer, optional, intent(in) :: IOSTAT
     !/ -----------------------------------------------------------------------------------
+    character(64) :: afmt
+    integer :: i
+    !/ -----------------------------------------------------------------------------------
+    if ( present(FMT) ) then
+       write(afmt,100) dts%num_set, FMT
+    else
+       write(afmt,200) dts%num_set
+    end if
+
+    write(un,trim(adjustl(afmt))) dts%num_set, (dts%getCenter(i),i=1,dts%num_set)
+
+100 format('(I0,',I0,'(1X,',A,'))')
+200 format('(I0,',I0,'(1X,ES13.6))')
 
   end subroutine fp_write
 

@@ -61,6 +61,13 @@ module fuzzy_set_mod
 
 
   !/ =====================================================================================
+  type :: FuzzySet_ptr
+     !/ ----------------------------------------------------------------------------------
+     class(FuzzySet), pointer :: ptr => null()
+  end type FuzzySet_ptr
+
+
+  !/ =====================================================================================
   abstract interface
      !/ ----------------------------------------------------------------------------------
      subroutine fset_abst_set( dts, p1, p2, P3 )
@@ -247,6 +254,10 @@ module fuzzy_set_mod
      procedure, pass(dts) :: load      => ltrap_load
      procedure, pass(dts) :: store     => ltrap_store
 
+     procedure :: destroy => ltrap_destroy
+     
+     final :: ltrap_final
+
   end type LeftTrapezoidSet
 
 
@@ -286,7 +297,11 @@ module fuzzy_set_mod
      procedure, pass(dts) :: load      => rtrap_load
      procedure, pass(dts) :: store     => rtrap_store
 
-  end type RightTrapezoidSet
+     procedure :: destroy => rtrap_destroy
+     
+     final :: rtrap_final
+
+ end type RightTrapezoidSet
 
 
 
@@ -327,6 +342,10 @@ module fuzzy_set_mod
      procedure, pass(dts) :: toString  => triangle_toString
      procedure, pass(dts) :: load      => triangle_load
      procedure, pass(dts) :: store     => triangle_store
+
+     procedure :: destroy => triangle_destroy
+     
+     final :: triangle_final
 
   end type TriangleSet
 
@@ -407,9 +426,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     !! Allocate and set a LeftTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
-    real(dp), optional,   intent(in) :: LEFT
-    real(dp), optional,   intent(in) :: CENTER
-    class(LeftTrapezoidSet), pointer :: ptr
+    real(dp), optional,    intent(in) :: LEFT
+    real(dp), optional,    intent(in) :: CENTER
+    class(RightTrapezoidSet), pointer :: ptr
     !/ -----------------------------------------------------------------------------------
     allocate( ptr )
     if ( present(LEFT).and.present(CENTER) ) then
@@ -451,6 +470,29 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
 
+
+  !/ =====================================================================================
+  subroutine ltrap_destroy( dts )
+    !/ -----------------------------------------------------------------------------------
+    !! Destroy the internal representation of a LeftTrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    class(LeftTrapezoidSet), intent(inout) :: dts  !! reference to this LeftTrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    dts%C = D_ZERO
+    dts%R = D_ONE
+    dts%W = D_ONE
+  end subroutine ltrap_destroy
+
+  
+  !/ =====================================================================================
+  subroutine ltrap_final( dts )
+    !/ -----------------------------------------------------------------------------------
+    !! Finalize a LeftTrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    type(LeftTrapezoidSet), intent(inout) :: dts  !! reference to this LeftTrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    call dts%destroy
+  end subroutine ltrap_final
 
 
   !/ =====================================================================================
@@ -637,6 +679,30 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
+  subroutine rtrap_destroy( dts )
+    !/ -----------------------------------------------------------------------------------
+    !! Destroy the internal representation of a RightTrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    class(RightTrapezoidSet), intent(inout) :: dts  !! reference to this RightTrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    dts%L = -D_ONE
+    dts%C =  D_ZERO
+    dts%W =  D_ONE
+  end subroutine rtrap_destroy
+
+  
+  !/ =====================================================================================
+  subroutine rtrap_final( dts )
+    !/ -----------------------------------------------------------------------------------
+    !! Finalize a RightTrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    type(RightTrapezoidSet), intent(inout) :: dts  !! reference to this RightTrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    call dts%destroy
+  end subroutine rtrap_final
+
+
+  !/ =====================================================================================
   function rtrap_get_left( dts ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Get left extreme.
@@ -820,6 +886,33 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
 
+
+
+  !/ =====================================================================================
+  subroutine triangle_destroy( dts )
+    !/ -----------------------------------------------------------------------------------
+    !! Destroy the internal representation of a TriangleSet.
+    !/ -----------------------------------------------------------------------------------
+    class(TriangleSet), intent(inout) :: dts  !! reference to this TriangleSet.
+    !/ -----------------------------------------------------------------------------------
+    dts%R  = -D_ONE
+    dts%C  =  D_ZERO
+    dts%R  =  D_ONE
+    dts%W  =  D_TWO
+    dts%LD =  D_ONE
+    dts%RD =  D_ONE
+  end subroutine triangle_destroy
+
+  
+  !/ =====================================================================================
+  subroutine triangle_final( dts )
+    !/ -----------------------------------------------------------------------------------
+    !! Finalize a TriangleSet.
+    !/ -----------------------------------------------------------------------------------
+    type(TriangleSet), intent(inout) :: dts  !! reference to this TriangleSet.
+    !/ -----------------------------------------------------------------------------------
+    call dts%destroy
+  end subroutine triangle_final
 
 
   !/ =====================================================================================

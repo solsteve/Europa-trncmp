@@ -59,6 +59,34 @@ contains
 
   @test
   !/ =====================================================================================
+  subroutine test_init_set_ptr
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(FuzzySet), pointer :: LT
+    class(FuzzySet), pointer :: TR
+    class(FuzzySet), pointer :: RT
+
+     LT => LeftTrapezoidSet( 3.0d0, 5.0d0 )
+     TR => TriangleSet( 4.0d0, 6.0d0, 9.0d0 )
+     RT => RightTrapezoidSet( 8.0d0, 1.2d1 )
+
+    @assertEqual( 2.0d0, LT%getLeft())
+    @assertEqual( 3.0d0, LT%getCenter())
+    @assertEqual( 5.0d0, LT%getRight())
+
+    @assertEqual( 4.0d0, TR%getLeft())
+    @assertEqual( 6.0d0, TR%getCenter())
+    @assertEqual( 9.0d0, TR%getRight())
+
+    @assertEqual( 8.0d0, RT%getLeft())
+    @assertEqual( 1.2d1, RT%getCenter())
+    @assertEqual( 1.4d1, RT%getRight())
+
+  end subroutine test_init_set_ptr
+
+
+  @test
+  !/ =====================================================================================
   subroutine test_left_mu
     !/ -----------------------------------------------------------------------------------
     implicit none
