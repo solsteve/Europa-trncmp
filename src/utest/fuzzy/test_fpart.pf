@@ -338,7 +338,7 @@ contains
 
   end subroutine test_part_create_empty_five
 
-  
+
   @test
   !/ =====================================================================================
   subroutine test_part_mu
@@ -441,7 +441,7 @@ contains
 
   end subroutine test_part_area
 
-    
+
   @test
   !/ =====================================================================================
   subroutine test_part_coa
@@ -546,8 +546,8 @@ contains
 
   end subroutine test_part_load_store
 
-  
-   @test
+
+  @test
   !/ =====================================================================================
   subroutine test_part_write_read
     !/ -----------------------------------------------------------------------------------
@@ -586,11 +586,11 @@ contains
     un = WriteUnit( '/tmp/wxyz.txt' )
     call P1%write( un, FMT='F7.3' )
     close( un )
-    
+
     un = ReadUnit( '/tmp/wxyz.txt' )
     call P2%read( un )
     close( un )
-    
+
     n2 = P2%size()
     @assertEqual( 6, n2 )
 
@@ -600,6 +600,37 @@ contains
     end do
 
   end subroutine test_part_write_read
-   
+
+  @test
+  !/ =====================================================================================
+  subroutine test_part_clone
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer :: i, n
+
+    real(dp), parameter :: ctrs(6) = [ 7.0d0, 1.1d1, 1.9d1, 2.2d1, 2.5d1, 3.3d1 ]
+
+    type(FuzzyPartition)           :: P1
+    class(FuzzyPartition), pointer :: P2
+    class(FuzzySet), pointer :: F1, F2
+
+    call P1%init( ctrs )
+    P2 => P1%clone()
+
+    @assertEqual( P1%size(), P2%size() )
+
+    n = P1%size()
+
+    do i=1,n
+       @assertEqual( P1%getCenter(i), p2%getCenter(i) )
+       F1 => P1%set(i)
+       F2 => P2%set(i)
+       @assertEqual( F1%getLeft(),   F2%getLeft() )
+       @assertEqual( F1%getCenter(), F2%getCenter() )
+       @assertEqual( F1%getRight(),  F2%getRight() )
+    end do
+  end subroutine test_part_clone
+
+
 end module test_fpart
 

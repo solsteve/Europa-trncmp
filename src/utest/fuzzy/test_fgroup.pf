@@ -1,0 +1,76 @@
+module test_fgroup
+  use pfunit_mod
+  use trncmp_env
+  use fuzzy_group_mod
+  implicit none
+
+contains
+
+  @test
+  !/ =====================================================================================
+  subroutine test_group_create_empty
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(FuzzyGroup) :: FG
+    call FG%init(5)
+    @assertEqual( 5, FG%nIn() )
+  end subroutine test_group_create_empty
+
+  @test
+  !/ =====================================================================================
+  subroutine test_group_create_parts
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(FuzzyGroup)         :: FG
+    type(FuzzyPartition_ptr) :: list(2)
+    type(FuzzyPartition), target :: FP1, FP2
+    call FP1%init(3)
+    call FP2%init(4)
+
+    list(1)%ptr => FP1
+    list(2)%ptr => FP2
+
+    call FG%init(list)
+
+    @assertEqual( 2, FG%nIn() )
+    @assertEqual( 7, FG%nOut() )
+
+  end subroutine test_group_create_parts
+
+  @test
+  !/ =====================================================================================
+  subroutine test_group_create_params
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer,  parameter :: NS(3)    = [3,5,4]
+    real(dp), parameter :: PARS(12) = [-1.0d0, 0.0d0,  1.0d0, 2.0d0, 3.0d0, 4.0d0,  &
+         &                                   5.0d0, 6.0d0, -5.0d0, 0.0d0, 3.0d0, 7.0d0 ]
+
+    type(FuzzyGroup) :: FG
+    class(FuzzyPartition), pointer :: P
+    integer :: i, j, m, n, idx
+
+    call FG%init( NS, PARS )
+
+    @assertEqual(  3, FG%nIn() )
+    @assertEqual( 12, FG%nOut() )
+    @assertEqual( 12, FG%size() )
+
+    n = FG%nIn()
+    idx = 1
+    do i=1,n
+       P => FG%part(i)
+       m = P%size()
+       do j=1,m
+          @assertEqual( PARS(idx), P%getCenter(j) )
+          idx = idx + 1
+       end do
+    end do
+
+
+  end subroutine test_group_create_params
+
+
+
+
+end module test_fgroup

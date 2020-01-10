@@ -66,9 +66,9 @@ contains
     class(FuzzySet), pointer :: TR
     class(FuzzySet), pointer :: RT
 
-     LT => LeftTrapezoidSet( 3.0d0, 5.0d0 )
-     TR => TriangleSet( 4.0d0, 6.0d0, 9.0d0 )
-     RT => RightTrapezoidSet( 8.0d0, 1.2d1 )
+    LT => LeftTrapezoidSet( 3.0d0, 5.0d0 )
+    TR => TriangleSet( 4.0d0, 6.0d0, 9.0d0 )
+    RT => RightTrapezoidSet( 8.0d0, 1.2d1 )
 
     @assertEqual( 2.0d0, LT%getLeft())
     @assertEqual( 3.0d0, LT%getCenter())
@@ -332,5 +332,43 @@ contains
     @assertEqual( 'R(11.0,15.0)',      RT%toString( 'F4.1' ) )
 
   end subroutine test_string
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_clone
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    type(LeftTrapezoidSet)  :: L1
+    type(TriangleSet)       :: T1
+    type(RightTrapezoidSet) :: R1
+
+    class(FuzzySet), pointer :: L2
+    class(FuzzySet), pointer :: T2
+    class(FuzzySet), pointer :: R2
+
+    call L1%set( 7.0_dp, 11.0_dp )
+    call T1%set( 7.0_dp, 11.0_dp, 15.0_dp )
+    call R1%set(         11.0_dp, 15.0_dp )
+
+    L2 => L1%clone()
+    T2 => T1%clone()
+    R2 => R1%clone()
+
+    @assertEqual( L1%getLeft(),   L2%getLeft() )
+    @assertEqual( L1%getCenter(), L2%getCenter() )
+    @assertEqual( L1%getRight(),  L2%getRight() )
+
+    @assertEqual( T1%getLeft(),   T2%getLeft() )
+    @assertEqual( T1%getCenter(), T2%getCenter() )
+    @assertEqual( T1%getRight(),  T2%getRight() )
+
+    @assertEqual( R1%getLeft(),   R2%getLeft() )
+    @assertEqual( R1%getCenter(), R2%getCenter() )
+    @assertEqual( R1%getRight(),  R2%getRight() )
+
+  end subroutine test_clone
+
 
 end module test_fset

@@ -66,6 +66,9 @@ module fuzzy_partition_mod
      procedure, private :: fp_resize
      procedure, private :: fp_balance
 
+     procedure :: copy      => fp_copy
+     procedure :: clone     => fp_clone
+
      procedure :: set       => fp_get_set
      procedure :: nIn       => fp_get_number_inputs
      procedure :: nOut      => fp_get_number_outputs
@@ -97,11 +100,110 @@ module fuzzy_partition_mod
   end type FuzzyPartition_ptr
 
 
+  !/ =====================================================================================
+  interface FuzzyPartition
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: fp_create_default
+     module procedure :: fg_create_left_right
+     module procedure :: fp_create_params
+  end interface FuzzyPartition
 
 
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
+
+
+  !/ =====================================================================================
+  function fp_clone( dts ) result( ptr )
+    !/ -----------------------------------------------------------------------------------
+    !! Clone this .
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(FuzzyPartition), intent(inout) :: dts !! reference to a .
+    class(FuzzyPartition), pointer       :: ptr
+    !/ -----------------------------------------------------------------------------------
+    allocate( ptr )
+    call ptr%copy( dts )
+  end function fp_clone
+
+  !/ =====================================================================================
+  subroutine fp_copy( dts, src )
+    !/ -----------------------------------------------------------------------------------
+    !! Clone this TrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(FuzzyPartition), intent(inout) :: dts !! reference to this .
+    type(FuzzyPartition),  intent(in)    :: src !! reference to a source .
+    !/ -----------------------------------------------------------------------------------
+    integer :: i
+    !/ -----------------------------------------------------------------------------------
+    call dts%fp_resize(src%num_set)
+    do i=1,src%num_set
+       if ( associated( dts%fset(i)%ptr ) ) then
+          call dts%fset(i)%ptr%copy(src%fset(i)%ptr)
+       else
+          dts%fset(i)%ptr => src%fset(i)%ptr%clone()
+       end if
+    end do
+  end subroutine fp_copy
+
+
+
+
+
+
+
+
+  !/ =====================================================================================
+  function fp_create_default( n ) result( ptr )
+    !/ -----------------------------------------------------------------------------------
+    !! Construct a domain of fuzzy sets. The left and right sets are trapezoidal.
+    !! The internal sets are triangular. The left is -1 and the right is +1
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer,               intent(in) :: n   !! number of fuzzy sets.
+    class(FuzzyPartition), pointer    :: ptr !! pointer to a new FuzzyPartition.
+    !/ -----------------------------------------------------------------------------------
+    allocate( ptr )
+    call ptr%init(n)
+  end function fp_create_default
+
+
+  !/ =====================================================================================
+  function fg_create_left_right( n, mn, mx ) result( ptr )
+    !/ -----------------------------------------------------------------------------------
+    !! Construct a domain of fuzzy sets. The left and right sets are trapezoidal.
+    !! The internal sets are triangular. The centers are computed from the left
+    !! and right extents and the number of sets.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer,               intent(in) :: n   !! number of fuzzy sets,
+    real(dp),              intent(in) :: mn  !! left  most center.
+    real(dp),              intent(in) :: mx  !! right most center.
+    class(FuzzyPartition), pointer    :: ptr !! pointer to a new FuzzyPartition.
+    !/ -----------------------------------------------------------------------------------
+    allocate( ptr )
+    call ptr%init(n,mn,mx)
+  end function fg_create_left_right
+
+
+  !/ =====================================================================================
+  function fp_create_params(ctrs ) result( ptr )
+    !/ -----------------------------------------------------------------------------------
+    !! Construct a domain of fuzzy sets. The left and right sets are trapezoidal.
+    !! The internal sets are triangular. The centers are defined by (ctrs) the left
+    !! and right extents are defined by the centers of the sets to the left and right.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp),              intent(in) :: ctrs(:)  !! real array of center values.
+    class(FuzzyPartition), pointer    :: ptr      !! pointer to a new FuzzyPartition.
+    !/ -----------------------------------------------------------------------------------
+    allocate( ptr )
+    call ptr%init(ctrs)
+  end function fp_create_params
+
+
 
 
 
@@ -146,7 +248,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine fp_init_params( dts, ctrs )
     !/ -----------------------------------------------------------------------------------
-    !!  Construct a domain of fuzzy sets. The left and right sets are trapezoidal.
+    !! Construct a domain of fuzzy sets. The left and right sets are trapezoidal.
     !! The internal sets are triangular. The centers are defined by (ctrs) the left
     !! and right extents are defined by the centers of the sets to the left and right.
     !/ -----------------------------------------------------------------------------------
@@ -228,7 +330,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        end do
        deallocate( dts%fset )
     end if
-        
+    dts%num_set = 0
+
   end subroutine fp_destroy
 
 
@@ -243,8 +346,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%destroy
   end subroutine fp_final
 
-  
-    !/ =====================================================================================
+
+  !/ =====================================================================================
   subroutine fp_resize( dts, n, CHANGED )
     !/ -----------------------------------------------------------------------------------
     !!
@@ -277,6 +380,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     chg = .true.
 
     dts%num_set = n
+
+    !print *, 'Create partition with',n,'sets'
 
     if      ( 1.eq.dts%num_set ) then !/ ----- special case n=1 --------------------------
        !/ set one triangle set
@@ -563,9 +668,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     s = 1
     if ( present(INDEX) ) s = INDEX
     post_idx = s + dts%num_set
-    
+
     call dts%init(buffer(s:post_idx-1))
-    
+
   end function fp_load
 
 
@@ -617,7 +722,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%init( buffer(1:n) )
 
     deallocate( buffer )
-    
+
   end subroutine fp_read
 
 

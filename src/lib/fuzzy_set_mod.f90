@@ -44,6 +44,9 @@ module fuzzy_set_mod
 
    contains
 
+     procedure(fset_abst_clone),      pass(dts), deferred :: clone
+     procedure(fset_abst_copy),       pass(dts), deferred :: copy
+
      procedure(fset_abst_set),        pass(dts), deferred :: set
      procedure(fset_abst_update),     pass(dts), deferred :: update
 
@@ -70,13 +73,37 @@ module fuzzy_set_mod
   !/ =====================================================================================
   abstract interface
      !/ ----------------------------------------------------------------------------------
+     function fset_abst_clone( dts ) result( ptr )
+       use trncmp_env, only : dp
+       import :: FuzzySet
+       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet.
+       class(FuzzySet), pointer       :: ptr
+     end function fset_abst_clone
+  end interface
+
+
+  !/ =====================================================================================
+  abstract interface
+     !/ ----------------------------------------------------------------------------------
+     subroutine fset_abst_copy( dts, src )
+       use trncmp_env, only : dp
+       import :: FuzzySet
+       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet.
+       class(FuzzySet), intent(inout) :: src !! reference to a source LeftTrapezoidSet.
+     end subroutine fset_abst_copy
+  end interface
+
+
+  !/ =====================================================================================
+  abstract interface
+     !/ ----------------------------------------------------------------------------------
      subroutine fset_abst_set( dts, p1, p2, P3 )
        use trncmp_env, only : dp
        import :: FuzzySet
-       class(FuzzySet),    intent(inout) :: dts !! reference to a FuzzySet
-       real(dp),           intent(in)    :: p1  !! parameter one
-       real(dp),           intent(in)    :: p2  !! parameter two
-       real(dp), optional, intent(in)    :: P3  !! parameter three
+       class(FuzzySet),    intent(inout) :: dts !! reference to a FuzzySet.
+       real(dp),           intent(in)    :: p1  !! parameter one.
+       real(dp),           intent(in)    :: p2  !! parameter two.
+       real(dp), optional, intent(in)    :: P3  !! parameter three.
      end subroutine fset_abst_set
   end interface
 
@@ -87,7 +114,7 @@ module fuzzy_set_mod
      subroutine fset_abst_update( dts )
        use trncmp_env, only : dp
        import :: FuzzySet
-       class(FuzzySet),    intent(inout) :: dts !! reference to a FuzzySet
+       class(FuzzySet),    intent(inout) :: dts !! reference to a FuzzySet.
      end subroutine fset_abst_update
   end interface
 
@@ -98,7 +125,7 @@ module fuzzy_set_mod
      function fset_abst_get_left( dts ) result( v )
        use trncmp_env, only : dp
        import :: FuzzySet
-       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet
+       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet.
        real(dp)                       :: v   !! left extreme.
      end function fset_abst_get_left
   end interface
@@ -112,8 +139,8 @@ module fuzzy_set_mod
      function fset_abst_get_center( dts ) result( v )
        use trncmp_env, only : dp
        import :: FuzzySet
-       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet
-       real(dp)                       :: v   !! center of FuzzySet
+       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet.
+       real(dp)                       :: v   !! center of FuzzySet.
      end function fset_abst_get_center
   end interface
 
@@ -126,7 +153,7 @@ module fuzzy_set_mod
      function fset_abst_get_right( dts ) result( v )
        use trncmp_env, only : dp
        import :: FuzzySet
-       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet
+       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet.
        real(dp)                       :: v   !! left extreme.
      end function fset_abst_get_right
   end interface
@@ -145,9 +172,9 @@ module fuzzy_set_mod
      function fset_abst_mu( dts, x ) result( m )
        use trncmp_env, only : dp
        import :: FuzzySet
-       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet
-       real(dp),        intent(in)    :: x   !! crisp value
-       real(dp)                       :: m   !! degree of membership
+       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet.
+       real(dp),        intent(in)    :: x   !! crisp value.
+       real(dp)                       :: m   !! degree of membership.
      end function fset_abst_mu
   end interface
 
@@ -158,9 +185,9 @@ module fuzzy_set_mod
      function fset_abst_area( dts, deg ) result( a )
        use trncmp_env, only : dp
        import :: FuzzySet
-       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet
-       real(dp),        intent(in)    :: deg !! degree of membership
-       real(dp)                       :: a   !! area
+       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet.
+       real(dp),        intent(in)    :: deg !! degree of membership.
+       real(dp)                       :: a   !! area.
      end function fset_abst_area
   end interface
 
@@ -171,9 +198,9 @@ module fuzzy_set_mod
      function fset_abst_coa( dts, deg ) result( c )
        use trncmp_env, only : dp
        import :: FuzzySet
-       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet
-       real(dp),        intent(in)    :: deg !! degree of membership
-       real(dp)                       :: c   !! center
+       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet.
+       real(dp),        intent(in)    :: deg !! degree of membership.
+       real(dp)                       :: c   !! center.
      end function fset_abst_coa
   end interface
 
@@ -184,9 +211,9 @@ module fuzzy_set_mod
      function fset_abst_to_string( dts, fmt ) result( str )
        use trncmp_env, only : dp
        import :: FuzzySet
-       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet
-       character(*),    intent(in)    :: fmt !! edit descriptor
-       character(:),    allocatable   :: str !! output string
+       class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet.
+       character(*),    intent(in)    :: fmt !! edit descriptor.
+       character(:),    allocatable   :: str !! output string.
      end function fset_abst_to_string
   end interface
 
@@ -197,10 +224,10 @@ module fuzzy_set_mod
      function fset_abst_load( dts, array, pre_idx ) result( post_idx )
        use trncmp_env, only : dp
        import :: FuzzySet
-       class(FuzzySet), intent(inout) :: dts      !! reference to a FuzzySet
-       real(dp),        intent(inout) :: array(:) !! source array
-       integer,         intent(in)    :: pre_idx  !! pre-index
-       integer                        :: post_idx !! post-index
+       class(FuzzySet), intent(inout) :: dts      !! reference to a FuzzySet.
+       real(dp),        intent(inout) :: array(:) !! source array.
+       integer,         intent(in)    :: pre_idx  !! pre-index.
+       integer                        :: post_idx !! post-index.
      end function fset_abst_load
   end interface
 
@@ -211,10 +238,10 @@ module fuzzy_set_mod
      function fset_abst_store( dts, array, pre_idx ) result( post_idx )
        use trncmp_env, only : dp
        import :: FuzzySet
-       class(FuzzySet), intent(inout) :: dts      !! reference to a FuzzySet
-       real(dp),        intent(inout) :: array(:) !! destination array
-       integer,         intent(in)    :: pre_idx  !! pre-index
-       integer                        :: post_idx !! post-index
+       class(FuzzySet), intent(inout) :: dts      !! reference to a FuzzySet.
+       real(dp),        intent(inout) :: array(:) !! destination array.
+       integer,         intent(in)    :: pre_idx  !! pre-index.
+       integer                        :: post_idx !! post-index.
      end function fset_abst_store
   end interface
 
@@ -240,6 +267,9 @@ module fuzzy_set_mod
 
    contains
 
+     procedure, pass(dts) :: clone     => ltrap_clone
+     procedure, pass(dts) :: copy      => ltrap_copy
+
      procedure, pass(dts) :: set       => ltrap_set
      procedure, pass(dts) :: update    => ltrap_update
 
@@ -255,7 +285,7 @@ module fuzzy_set_mod
      procedure, pass(dts) :: store     => ltrap_store
 
      procedure :: destroy => ltrap_destroy
-     
+
      final :: ltrap_final
 
   end type LeftTrapezoidSet
@@ -283,6 +313,9 @@ module fuzzy_set_mod
 
    contains
 
+     procedure, pass(dts) :: clone     => rtrap_clone
+     procedure, pass(dts) :: copy      => rtrap_copy
+
      procedure, pass(dts) :: set       => rtrap_set
      procedure, pass(dts) :: update    => rtrap_update
 
@@ -298,10 +331,10 @@ module fuzzy_set_mod
      procedure, pass(dts) :: store     => rtrap_store
 
      procedure :: destroy => rtrap_destroy
-     
+
      final :: rtrap_final
 
- end type RightTrapezoidSet
+  end type RightTrapezoidSet
 
 
 
@@ -329,6 +362,9 @@ module fuzzy_set_mod
 
    contains
 
+     procedure, pass(dts) :: clone     => triangle_clone
+     procedure, pass(dts) :: copy      => triangle_copy
+
      procedure, pass(dts) :: set       => triangle_set
      procedure, pass(dts) :: update    => triangle_update
 
@@ -344,7 +380,7 @@ module fuzzy_set_mod
      procedure, pass(dts) :: store     => triangle_store
 
      procedure :: destroy => triangle_destroy
-     
+
      final :: triangle_final
 
   end type TriangleSet
@@ -353,28 +389,28 @@ module fuzzy_set_mod
 
   !/ =====================================================================================
   interface LeftTrapezoidSet
-    !/ -----------------------------------------------------------------------------------
+     !/ -----------------------------------------------------------------------------------
      module procedure :: ltrap_create
   end interface LeftTrapezoidSet
 
 
   !/ =====================================================================================
   interface TriangleSet
-    !/ -----------------------------------------------------------------------------------
+     !/ -----------------------------------------------------------------------------------
      module procedure :: triangle_create
   end interface TriangleSet
 
 
   !/ =====================================================================================
   interface RightTrapezoidSet
-    !/ -----------------------------------------------------------------------------------
+     !/ -----------------------------------------------------------------------------------
      module procedure :: rtrap_create
   end interface RightTrapezoidSet
 
 
   !/ =====================================================================================
   interface FuzzySet
-    !/ -----------------------------------------------------------------------------------
+     !/ -----------------------------------------------------------------------------------
      module procedure :: fuzzy_set_create
   end interface FuzzySet
 
@@ -386,13 +422,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
 
 
-
-
   !/ =====================================================================================
   function ltrap_create( CENTER, RIGHT ) result( ptr )
     !/ -----------------------------------------------------------------------------------
     !! Allocate and set a LeftTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
+    implicit none
     real(dp), optional,   intent(in) :: CENTER
     real(dp), optional,   intent(in) :: RIGHT
     class(LeftTrapezoidSet), pointer :: ptr
@@ -403,12 +438,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end if
   end function ltrap_create
 
-  
+
   !/ =====================================================================================
   function triangle_create( LEFT, CENTER, RIGHT ) result( ptr )
     !/ -----------------------------------------------------------------------------------
     !! Allocate and set a LeftTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
+    implicit none
     real(dp), optional, intent(in) :: LEFT
     real(dp), optional, intent(in) :: CENTER
     real(dp), optional, intent(in) :: RIGHT
@@ -420,12 +456,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end if
   end function triangle_create
 
-  
+
   !/ =====================================================================================
   function rtrap_create( LEFT, CENTER ) result( ptr )
     !/ -----------------------------------------------------------------------------------
     !! Allocate and set a LeftTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
+    implicit none
     real(dp), optional,    intent(in) :: LEFT
     real(dp), optional,    intent(in) :: CENTER
     class(RightTrapezoidSet), pointer :: ptr
@@ -442,6 +479,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     !! Allocate and set a RightTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
+    implicit none
     character(1),       intent(in) :: sub_type
     real(dp), optional, intent(in) :: P1
     real(dp), optional, intent(in) :: P2
@@ -472,10 +510,41 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
+  function ltrap_clone( dts ) result( ptr )
+    !/ -----------------------------------------------------------------------------------
+    !! Clone this LeftTrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(LeftTrapezoidSet), intent(inout) :: dts !! reference to a FuzzySet.
+    class(FuzzySet),         pointer       :: ptr !! pointer to a FuzzySet.
+    !/ -----------------------------------------------------------------------------------
+    class(LeftTrapezoidSet), pointer :: temp
+    !/ -----------------------------------------------------------------------------------
+    allocate( temp )
+    ptr => temp
+    call ptr%copy( dts )
+  end function ltrap_clone
+
+  !/ =====================================================================================
+  subroutine ltrap_copy( dts, src )
+    !/ -----------------------------------------------------------------------------------
+    !! Clone this TrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(LeftTrapezoidSet), intent(inout) :: dts !! reference to this LeftTrapezoidSet.
+    class(FuzzySet),         intent(inout) :: src !! reference to a source FuzzySet.
+    !/ -----------------------------------------------------------------------------------
+    dts%C = src%getCenter()
+    dts%R = src%getRight()
+    call dts%update
+  end subroutine ltrap_copy
+
+  !/ =====================================================================================
   subroutine ltrap_destroy( dts )
     !/ -----------------------------------------------------------------------------------
     !! Destroy the internal representation of a LeftTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
+    implicit none
     class(LeftTrapezoidSet), intent(inout) :: dts  !! reference to this LeftTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
     dts%C = D_ZERO
@@ -483,12 +552,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     dts%W = D_ONE
   end subroutine ltrap_destroy
 
-  
+
   !/ =====================================================================================
   subroutine ltrap_final( dts )
     !/ -----------------------------------------------------------------------------------
     !! Finalize a LeftTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
+    implicit none
     type(LeftTrapezoidSet), intent(inout) :: dts  !! reference to this LeftTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
     call dts%destroy
@@ -541,9 +611,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(LeftTrapezoidSet), intent(inout) :: dts !! reference to a LeftTrapezoidSet
-    real(dp),                intent(in)    :: p1  !! parameter one
-    real(dp),                intent(in)    :: p2  !! parameter two
-    real(dp), optional,      intent(in)    :: P3  !! unused
+    real(dp),                intent(in)    :: p1  !! parameter one.
+    real(dp),                intent(in)    :: p2  !! parameter two.
+    real(dp), optional,      intent(in)    :: P3  !! unused.
     !/ -----------------------------------------------------------------------------------
     dts%C = p1
     dts%R = p2
@@ -570,9 +640,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! The domain is all real numbers. The range is 0 to 1 inclusive.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(LeftTrapezoidSet), intent(inout) :: dts !! reference to a LeftTrapezoidSet
-    real(dp),                intent(in)    :: x   !! crisp value
-    real(dp)                               :: m   !! degree of membership
+    class(LeftTrapezoidSet), intent(inout) :: dts !! reference to a LeftTrapezoidSet.
+    real(dp),                intent(in)    :: x   !! crisp value.
+    real(dp)                               :: m   !! degree of membership.
     !/ -----------------------------------------------------------------------------------
     m = D_ONE
     if ( x.gt.dts%C ) then
@@ -592,9 +662,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! The domain is 0 to 1 inclusive. The range is 0 to max area for this LeftTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(LeftTrapezoidSet), intent(inout) :: dts !! reference to a LeftTrapezoidSet
-    real(dp),                intent(in)    :: deg !! degree of membership
-    real(dp)                               :: a   !! area
+    class(LeftTrapezoidSet), intent(inout) :: dts !! reference to a LeftTrapezoidSet.
+    real(dp),                intent(in)    :: deg !! degree of membership.
+    real(dp)                               :: a   !! area.
     !/ -----------------------------------------------------------------------------------
     a = D_HALF*dts%W*deg*(D_THREE-deg)
   end function ltrap_area
@@ -607,9 +677,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! The domain is 0 to 1 inclusive. The range is (left) to (right) inclusive.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(LeftTrapezoidSet), intent(inout) :: dts !! reference to a LeftTrapezoidSet
-    real(dp),                intent(in)    :: deg !! degree of membership
-    real(dp)                               :: c   !! center
+    class(LeftTrapezoidSet), intent(inout) :: dts !! reference to a LeftTrapezoidSet.
+    real(dp),                intent(in)    :: deg !! degree of membership.
+    real(dp)                               :: c   !! center.
     !/ -----------------------------------------------------------------------------------
     c = ( D_NINE*(D_THREE*dts%C + dts%R) - (1.2d1*dts%R - D_FOUR*dts%W*deg)*deg ) / (1.2d1*(D_THREE - deg))
   end function ltrap_coa
@@ -621,9 +691,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Convert parameters to a string.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(LeftTrapezoidSet), intent(inout) :: dts !! reference to a LeftTrapezoidSet
-    character(*),            intent(in)    :: fmt !! edit descriptor
-    character(:),            allocatable   :: str !! output string
+    class(LeftTrapezoidSet), intent(inout) :: dts !! reference to a LeftTrapezoidSet.
+    character(*),            intent(in)    :: fmt !! edit descriptor.
+    character(:),            allocatable   :: str !! output string.
     !/ -----------------------------------------------------------------------------------
     character(:), allocatable :: buffer
     !/ -----------------------------------------------------------------------------------
@@ -643,10 +713,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Load the parameters for this LeftTrapezoidSet from a source array.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(LeftTrapezoidSet), intent(inout) :: dts      !! reference to a LeftTrapezoidSet
-    real(dp),                intent(inout) :: array(:) !! source array
-    integer,                 intent(in)    :: pre_idx  !! pre-index
-    integer                                :: post_idx !! post-index
+    class(LeftTrapezoidSet), intent(inout) :: dts      !! reference to a LeftTrapezoidSet.
+    real(dp),                intent(inout) :: array(:) !! source array.
+    integer,                 intent(in)    :: pre_idx  !! pre-index.
+    integer                                :: post_idx !! post-index.
     !/ -----------------------------------------------------------------------------------
     dts%C    = array(pre_idx)
     dts%R    = array(pre_idx+1)
@@ -661,10 +731,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Store the parameters for this LeftTrapezoidSet from a source array.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(LeftTrapezoidSet), intent(inout) :: dts      !! reference to a LeftTrapezoidSet
-    real(dp),                intent(inout) :: array(:) !! destination array
-    integer,                 intent(in)    :: pre_idx  !! pre-index
-    integer                                :: post_idx !! post-index
+    class(LeftTrapezoidSet), intent(inout) :: dts      !! reference to a LeftTrapezoidSet.
+    real(dp),                intent(inout) :: array(:) !! destination array.
+    integer,                 intent(in)    :: pre_idx  !! pre-index.
+    integer                                :: post_idx !! post-index.
     !/ -----------------------------------------------------------------------------------
     array(pre_idx)   = dts%C
     array(pre_idx+1) = dts%R
@@ -679,10 +749,41 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
+  function rtrap_clone( dts ) result( ptr )
+    !/ -----------------------------------------------------------------------------------
+    !! Clone this RightTrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(RightTrapezoidSet), intent(inout) :: dts !! reference to a RightTrapezoidSet.
+    class(FuzzySet),          pointer       :: ptr !! pointer to a FuzzySet.
+    !/ -----------------------------------------------------------------------------------
+    class(RightTrapezoidSet), pointer :: temp
+    !/ -----------------------------------------------------------------------------------
+    allocate( temp )
+    ptr => temp
+    call ptr%copy( dts )
+  end function rtrap_clone
+
+  !/ =====================================================================================
+  subroutine rtrap_copy( dts, src )
+    !/ -----------------------------------------------------------------------------------
+    !! Clone this TrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(RightTrapezoidSet), intent(inout) :: dts !! reference to this RightTrapezoidSet.
+    class(FuzzySet),          intent(inout) :: src !! reference to a source FuzzySet.
+    !/ -----------------------------------------------------------------------------------
+    dts%L  = src%getLeft()
+    dts%C  = src%getCenter()
+    call dts%update
+  end subroutine rtrap_copy
+
+  !/ =====================================================================================
   subroutine rtrap_destroy( dts )
     !/ -----------------------------------------------------------------------------------
     !! Destroy the internal representation of a RightTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
+    implicit none
     class(RightTrapezoidSet), intent(inout) :: dts  !! reference to this RightTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
     dts%L = -D_ONE
@@ -690,12 +791,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     dts%W =  D_ONE
   end subroutine rtrap_destroy
 
-  
+
   !/ =====================================================================================
   subroutine rtrap_final( dts )
     !/ -----------------------------------------------------------------------------------
     !! Finalize a RightTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
+    implicit none
     type(RightTrapezoidSet), intent(inout) :: dts  !! reference to this RightTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
     call dts%destroy
@@ -748,9 +850,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(RightTrapezoidSet), intent(inout) :: dts !! reference to a RightTrapezoidSet
-    real(dp),                 intent(in)    :: p1  !! parameter one
-    real(dp),                 intent(in)    :: p2  !! parameter two
-    real(dp), optional,       intent(in)    :: P3  !! unused
+    real(dp),                 intent(in)    :: p1  !! parameter one.
+    real(dp),                 intent(in)    :: p2  !! parameter two.
+    real(dp), optional,       intent(in)    :: P3  !! unused.
     !/ -----------------------------------------------------------------------------------
     dts%L = p1
     dts%C = p2
@@ -764,7 +866,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Update pre-computed constants.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(RightTrapezoidSet), intent(inout) :: dts !! reference to a RightTrapezoidSet
+    class(RightTrapezoidSet), intent(inout) :: dts !! reference to a RightTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
     dts%W = dts%C - dts%L
   end subroutine rtrap_update
@@ -777,9 +879,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! The domain is all real numbers. The range is 0 to 1 inclusive.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(RightTrapezoidSet), intent(inout) :: dts !! reference to a RightTrapezoidSet
-    real(dp),                 intent(in)    :: x   !! crisp value
-    real(dp)                                :: m   !! degree of membership
+    class(RightTrapezoidSet), intent(inout) :: dts !! reference to a RightTrapezoidSet.
+    real(dp),                 intent(in)    :: x   !! crisp value.
+    real(dp)                                :: m   !! degree of membership.
     !/ -----------------------------------------------------------------------------------
     m = D_ONE
     if ( x.lt.dts%C ) then
@@ -799,9 +901,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! The domain is 0 to 1 inclusive. The range is 0 to max area for this RightTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(RightTrapezoidSet), intent(inout) :: dts !! reference to a RightTrapezoidSet
-    real(dp),                 intent(in)    :: deg !! degree of membership
-    real(dp)                                :: a   !! area
+    class(RightTrapezoidSet), intent(inout) :: dts !! reference to a RightTrapezoidSet.
+    real(dp),                 intent(in)    :: deg !! degree of membership.
+    real(dp)                                :: a   !! area.
     !/ -----------------------------------------------------------------------------------
     a = D_HALF*(D_THREE - deg)*dts%W*deg
   end function rtrap_area
@@ -814,9 +916,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! The domain is 0 to 1 inclusive. The range is (left) to (right) inclusive.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(RightTrapezoidSet), intent(inout) :: dts !! reference to a RightTrapezoidSet
-    real(dp),                 intent(in)    :: deg !! degree of membership
-    real(dp)                                :: c   !! center
+    class(RightTrapezoidSet), intent(inout) :: dts !! reference to a RightTrapezoidSet.
+    real(dp),                 intent(in)    :: deg !! degree of membership.
+    real(dp)                                :: c   !! center.
     !/ -----------------------------------------------------------------------------------
     c = ( D_NINE*(D_THREE*dts%C + dts%L) - (D_FOUR*dts%W*deg + 1.2d1*dts%L)*deg ) / &
          &                                  (1.2d1*(D_THREE - deg))
@@ -829,9 +931,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Convert parameters to a string.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(RightTrapezoidSet), intent(inout) :: dts !! reference to a RightTrapezoidSet
-    character(*),             intent(in)    :: fmt !! edit descriptor
-    character(:),             allocatable   :: str !! output string
+    class(RightTrapezoidSet), intent(inout) :: dts !! reference to a RightTrapezoidSet.
+    character(*),             intent(in)    :: fmt !! edit descriptor.
+    character(:),             allocatable   :: str !! output string.
     !/ -----------------------------------------------------------------------------------
     character(:), allocatable :: buffer
     !/ -----------------------------------------------------------------------------------
@@ -851,10 +953,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Load the parameters for this RightTrapezoidSet from a source array.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(RightTrapezoidSet), intent(inout) :: dts      !! reference to a RightTrapezoidSet
-    real(dp),                 intent(inout) :: array(:) !! source array
-    integer,                  intent(in)    :: pre_idx  !! pre-index
-    integer                                 :: post_idx !! post-index
+    class(RightTrapezoidSet), intent(inout) :: dts      !! reference to a RightTrapezoidSet.
+    real(dp),                 intent(inout) :: array(:) !! source array.
+    integer,                  intent(in)    :: pre_idx  !! pre-index.
+    integer                                 :: post_idx !! post-index.
     !/ -----------------------------------------------------------------------------------
     dts%L    = array(pre_idx)
     dts%C    = array(pre_idx+1)
@@ -869,10 +971,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Store the parameters for this RightTrapezoidSet from a source array.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(RightTrapezoidSet), intent(inout) :: dts      !! reference to a RightTrapezoidSet
-    real(dp),                 intent(inout) :: array(:) !! destination array
-    integer,                  intent(in)    :: pre_idx  !! pre-index
-    integer                                 :: post_idx !! post-index
+    class(RightTrapezoidSet), intent(inout) :: dts      !! reference to a RightTrapezoidSet.
+    real(dp),                 intent(inout) :: array(:) !! destination array.
+    integer,                  intent(in)    :: pre_idx  !! pre-index.
+    integer                                 :: post_idx !! post-index.
     !/ -----------------------------------------------------------------------------------
     array(pre_idx)   = dts%L
     array(pre_idx+1) = dts%C
@@ -889,10 +991,42 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
+  function triangle_clone( dts ) result( ptr )
+    !/ -----------------------------------------------------------------------------------
+    !! Clone this TrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(TriangleSet), intent(inout) :: dts !! reference to a TriangleSet.
+    class(FuzzySet),    pointer       :: ptr !! pointer to a FuzzySet.
+    !/ -----------------------------------------------------------------------------------
+    class(TriangleSet), pointer :: temp
+    !/ -----------------------------------------------------------------------------------
+    allocate( temp )
+    ptr => temp
+    call ptr%copy( dts )
+  end function triangle_clone
+
+  !/ =====================================================================================
+  subroutine triangle_copy( dts, src )
+    !/ -----------------------------------------------------------------------------------
+    !! Clone this TrapezoidSet.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(TriangleSet), intent(inout) :: dts !! reference to this TriangleSet.
+    class(FuzzySet),    intent(inout) :: src !! reference to a source TriangleSet.
+    !/ -----------------------------------------------------------------------------------
+    dts%L  = src%getLeft()
+    dts%C  = src%getCenter()
+    dts%R  = src%getRight()
+    call dts%update
+  end subroutine triangle_copy
+
+  !/ =====================================================================================
   subroutine triangle_destroy( dts )
     !/ -----------------------------------------------------------------------------------
     !! Destroy the internal representation of a TriangleSet.
     !/ -----------------------------------------------------------------------------------
+    implicit none
     class(TriangleSet), intent(inout) :: dts  !! reference to this TriangleSet.
     !/ -----------------------------------------------------------------------------------
     dts%R  = -D_ONE
@@ -903,12 +1037,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     dts%RD =  D_ONE
   end subroutine triangle_destroy
 
-  
+
   !/ =====================================================================================
   subroutine triangle_final( dts )
     !/ -----------------------------------------------------------------------------------
     !! Finalize a TriangleSet.
     !/ -----------------------------------------------------------------------------------
+    implicit none
     type(TriangleSet), intent(inout) :: dts  !! reference to this TriangleSet.
     !/ -----------------------------------------------------------------------------------
     call dts%destroy
@@ -960,10 +1095,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Set main parameters.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(TriangleSet), intent(inout) :: dts !! reference to a TriangleSet
-    real(dp),           intent(in)    :: p1  !! parameter one
-    real(dp),           intent(in)    :: p2  !! parameter two
-    real(dp), optional, intent(in)    :: P3  !! parameter three
+    class(TriangleSet), intent(inout) :: dts !! reference to a TriangleSet.
+    real(dp),           intent(in)    :: p1  !! parameter one.
+    real(dp),           intent(in)    :: p2  !! parameter two.
+    real(dp), optional, intent(in)    :: P3  !! parameter three.
     !/ -----------------------------------------------------------------------------------
     if ( present( P3 ) ) then
        dts%L  = p1
@@ -982,7 +1117,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Update pre-computed constants.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(TriangleSet), intent(inout) :: dts !! reference to a TriangleSet
+    class(TriangleSet), intent(inout) :: dts !! reference to a TriangleSet.
     !/ -----------------------------------------------------------------------------------
     dts%LD = dts%C - dts%L
     dts%RD = dts%R - dts%C
@@ -997,9 +1132,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! The domain is all real numbers. The range is 0 to 1 inclusive.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(TriangleSet), intent(inout) :: dts !! reference to a TriangleSet
-    real(dp),           intent(in)    :: x   !! crisp value
-    real(dp)                          :: m   !! degree of membership
+    class(TriangleSet), intent(inout) :: dts !! reference to a TriangleSet.
+    real(dp),           intent(in)    :: x   !! crisp value.
+    real(dp)                          :: m   !! degree of membership.
     !/ -----------------------------------------------------------------------------------
     m = D_ONE
     if ( x.lt.dts%C ) then
@@ -1027,9 +1162,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! The domain is 0 to 1 inclusive. The range is 0 to max area for this TriangleSet.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(TriangleSet), intent(inout) :: dts !! reference to a TriangleSet
-    real(dp),           intent(in)    :: deg !! degree of membership
-    real(dp)                          :: a   !! area
+    class(TriangleSet), intent(inout) :: dts !! reference to a TriangleSet.
+    real(dp),           intent(in)    :: deg !! degree of membership.
+    real(dp)                          :: a   !! area.
     !/ -----------------------------------------------------------------------------------
     a = D_HALF*dts%W*deg*(D_TWO-deg)
   end function triangle_area
@@ -1042,9 +1177,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! The domain is 0 to 1 inclusive. The range is (left) to (right) inclusive.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(TriangleSet), intent(inout) :: dts !! reference to a TriangleSet
-    real(dp),           intent(in)    :: deg !! degree of membership
-    real(dp)                          :: c   !! center
+    class(TriangleSet), intent(inout) :: dts !! reference to a TriangleSet.
+    real(dp),           intent(in)    :: deg !! degree of membership.
+    real(dp)                          :: c   !! center.
     !/ -----------------------------------------------------------------------------------
     c = (D_THREE*(dts%L+dts%R) - (D_THREE*(dts%R-dts%C+dts%L) - &
          &          (dts%R-D_TWO*dts%C+dts%L)*deg)*deg ) / &
@@ -1058,9 +1193,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Convert parameters to a string.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(TriangleSet), intent(inout) :: dts !! reference to a TriangleSet
-    character(*),       intent(in)    :: fmt !! edit descriptor
-    character(:),       allocatable   :: str !! output string
+    class(TriangleSet), intent(inout) :: dts !! reference to a TriangleSet.
+    character(*),       intent(in)    :: fmt !! edit descriptor.
+    character(:),       allocatable   :: str !! output string.
     !/ -----------------------------------------------------------------------------------
     character(:), allocatable :: buffer
     !/ -----------------------------------------------------------------------------------
@@ -1082,10 +1217,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Load the parameters for this TriangleSet from a source array.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(TriangleSet), intent(inout) :: dts      !! reference to a TriangleSet
-    real(dp),           intent(inout) :: array(:) !! source array
-    integer,            intent(in)    :: pre_idx  !! pre-index
-    integer                           :: post_idx !! post-index
+    class(TriangleSet), intent(inout) :: dts      !! reference to a TriangleSet.
+    real(dp),           intent(inout) :: array(:) !! source array.
+    integer,            intent(in)    :: pre_idx  !! pre-index.
+    integer                           :: post_idx !! post-index.
     !/ -----------------------------------------------------------------------------------
     dts%L    = array(pre_idx)
     dts%C    = array(pre_idx+1)
@@ -1101,10 +1236,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Store the parameters for this TriangleSet from a source array.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(TriangleSet), intent(inout) :: dts      !! reference to a TriangleSet
-    real(dp),           intent(inout) :: array(:) !! destination array
-    integer,            intent(in)    :: pre_idx  !! pre-index
-    integer                           :: post_idx !! post-index
+    class(TriangleSet), intent(inout) :: dts      !! reference to a TriangleSet.
+    real(dp),           intent(inout) :: array(:) !! destination array.
+    integer,            intent(in)    :: pre_idx  !! pre-index.
+    integer                           :: post_idx !! post-index.
     !/ -----------------------------------------------------------------------------------
     array(pre_idx)   = dts%L
     array(pre_idx+1) = dts%C

@@ -257,11 +257,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     if ( dts%b.gt.2.55 ) dts%b = 255.0
   end subroutine fix_pscolor
 
-  
+
   !/ =====================================================================================
   subroutine set_pscolor_R8( dts, tr, tg, tb )
     !/ -----------------------------------------------------------------------------------
-  !! Set the color using RGB values.
+    !! Set the color using RGB values.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class( PSColor ), intent(inout) :: dts !! reference to this PSColor.
@@ -275,11 +275,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%fix
   end subroutine set_pscolor_R8
 
-  
+
   !/ =====================================================================================
   subroutine set_pscolor_R4( dts, tr, tg, tb )
     !/ -----------------------------------------------------------------------------------
-  !! Set the color using RGB values.
+    !! Set the color using RGB values.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class( PSColor ), intent(inout) :: dts !! reference to this PSColor.
@@ -293,11 +293,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%fix
   end subroutine set_pscolor_R4
 
-  
+
   !/ =====================================================================================
   subroutine copy_pscolor( dts, src )
     !/ -----------------------------------------------------------------------------------
-  !! Set the color using a source color.
+    !! Set the color using a source color.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class( PSColor ), intent(inout) :: dts  !! reference to this PSColor.
@@ -319,7 +319,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine set_device_pswin( dts, dev_x, dev_y )
     !/ -----------------------------------------------------------------------------------
-!! Set Position.
+    !! Set Position.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class( PSWindow ), intent(inout) :: dts    !! reference to this PSWindow.
@@ -330,11 +330,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     dts%device_y = dev_y
   end subroutine set_device_pswin
 
-  
+
   !/ =====================================================================================
   subroutine write_header_pswin( dts, unit )
     !/ -----------------------------------------------------------------------------------
-  !! Write the postscript header for this window on the output stream.
+    !! Write the postscript header for this window on the output stream.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class( PSWindow ), intent(inout) :: dts   !! reference to this PSWindow.
@@ -345,11 +345,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     write(unit,*) dts%device_x, ' ', dts%device_y, ' translate'
   end subroutine write_header_pswin
 
-  
+
   !/ =====================================================================================
   subroutine write_trailer_pswin( dts, unit )
     !/ -----------------------------------------------------------------------------------
-  !! Write the postscript trailer for this window on the output stream.
+    !! Write the postscript trailer for this window on the output stream.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class( PSWindow ), intent(inout) :: dts   !! reference to this PSWindow.
@@ -368,7 +368,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   function init_wh_xy_psdraw( dw, dh, x1, y1, x2, y2 ) result( psd )
     !/ -----------------------------------------------------------------------------------
-!! Constructor.
+    !! Constructor.
     !/ -----------------------------------------------------------------------------------
     implicit none
     real(dp), intent(in)   :: dw  !! window width  in device coordinates (inches).
@@ -383,11 +383,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call psd%init_psdraw( dw, dh, x1, y1, x2, y2 )
   end function init_wh_xy_psdraw
 
-  
+
   !/ =====================================================================================
   function init_wh_psdraw( dw, dh ) result( psd )
     !/ -----------------------------------------------------------------------------------
-!! Constructor.
+    !! Constructor.
     !/ -----------------------------------------------------------------------------------
     implicit none
     real(dp), intent(in)   :: dw  !! window width  in device coordinates (inches).
@@ -398,11 +398,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call psd%init_psdraw( dw, dh, D_ZERO, D_ZERO, dw, dh )
   end function init_wh_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine init_psdraw( dts, dw, dh, x1, y1, x2, y2 )
     !/ -----------------------------------------------------------------------------------
-  !! Initialize the physical position of this object on a device.
+    !! Initialize the physical position of this object on a device.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(PSDraw), intent(inout) :: dts !! reference to this PSDraw.
@@ -454,11 +454,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
          &                           ( dts%world_y2 - dts%world_y1 )
   end subroutine init_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine draw_point_psdraw( dts, xc, yc, wdt, hgt, bar )
     !/ -----------------------------------------------------------------------------------
-  !! Draw a error bar + centered at (x,y) with height and width defined as +/- (wdt,hgt)
+    !! Draw a error bar + centered at (x,y) with height and width defined as +/- (wdt,hgt)
     !/ -----------------------------------------------------------------------------------
     class(PSDraw), intent(inout) :: dts   !! reference to this PSDraw.
     real(dp),           intent(in) :: xc  !! center x world coordinate for the point.
@@ -510,11 +510,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end if
   end subroutine draw_point_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine draw_line_psdraw( dts, x1, y1, x2, y2 )
     !/ -----------------------------------------------------------------------------------
-  !! Draw a line between two world coordinates.
+    !! Draw a line between two world coordinates.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(PSDraw), intent(inout) :: dts !! reference to this PSDraw.
@@ -528,11 +528,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 100 format( F0.5,' ',F0.5,' ',F0.5,' ',F0.5,'  DL' )
   end subroutine draw_line_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine draw_ray_psdraw( dts, xc, yc, m, theta )
     !/ -----------------------------------------------------------------------------------
-  !! Draw a ray length m from (x,y) and rotated theta radians.
+    !! Draw a ray length m from (x,y) and rotated theta radians.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(PSDraw), intent(inout) :: dts   !! reference to this PSDraw.
@@ -548,12 +548,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%drawLine( xc, yc, x, y )
   end subroutine draw_ray_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine draw_ellipse_psdraw( dts, xc, yc, a, b, theta, parts )
     !/ -----------------------------------------------------------------------------------
-  !! Draw an ellipse centered at (x,y) and rotated theta radians.
-  !/ -----------------------------------------------------------------------------------
+    !! Draw an ellipse centered at (x,y) and rotated theta radians.
+    !/ -----------------------------------------------------------------------------------
     implicit none
     class(PSDraw),     intent(inout) :: dts   !! reference to this PSDraw.
     real(dp),          intent(in)    :: xc    !! x coordinate of the center of the ellipse.
@@ -589,11 +589,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end do
   end subroutine draw_ellipse_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine draw_circle_psdraw( dts, xc, yc, r, parts )
     !/ -----------------------------------------------------------------------------------
-  !! Draw a circle centered at (x,y).
+    !! Draw a circle centered at (x,y).
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(PSDraw),     intent(inout) :: dts    !! reference to this PSDraw.
@@ -605,7 +605,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%drawEllipse( xc, yc, r, r, D_ZERO, parts )
   end subroutine draw_circle_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine draw_polygon_psdraw( dts, x, y, n, fill )
     !/ -----------------------------------------------------------------------------------
@@ -637,11 +637,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end if
   end subroutine draw_polygon_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine draw_rect_psdraw( dts, x1, y1, x2, y2, fill )
     !/ -----------------------------------------------------------------------------------
-  !! Draw a rectangle in his window and optionally fill.
+    !! Draw a rectangle in his window and optionally fill.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(PSDraw),     intent(inout) :: dts  !! reference to this PSDraw.
@@ -664,11 +664,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%drawPolygon( x, y, 4, fill )
   end subroutine draw_rect_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine draw_border_psdraw( dts )
     !/ -----------------------------------------------------------------------------------
-  !! Draw a rectangle around the border of this window.
+    !! Draw a rectangle around the border of this window.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(PSDraw), intent(inout) :: dts  !! reference to this PSDraw.
@@ -679,12 +679,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%drawLine( dts%world_x2, dts%world_y1,  dts%world_x1, dts%world_y1 )
   end subroutine draw_border_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine write_psdraw( dts, text, x1, y1, x2, y2, theta )
     !/ -----------------------------------------------------------------------------------
-  !! Scale a string of text within a box of width and height. Place the text at the x and y
-  !! coordinates and rotate it counter clockwise theta degrees.
+    !! Scale a string of text within a box of width and height. Place the text at the x and y
+    !! coordinates and rotate it counter clockwise theta degrees.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(PSDraw),      intent(inout) :: dts   !! reference to this PSDraw.
@@ -709,7 +709,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 100 format( 5(G0.5,' '),'(',A,') BS' )
   end subroutine write_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine write_inch_psdraw( dts, text, x, y, width, height, theta )
     !/ -----------------------------------------------------------------------------------
@@ -736,11 +736,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 100 format( 5(G0.5,' '),'(',A,') BS' )
   end subroutine write_inch_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine save_color_psdraw( dts )
     !/ -----------------------------------------------------------------------------------
-  !! Save the current drawing color.
+    !! Save the current drawing color.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(PSDraw), intent(inout) :: dts !! reference to this PSDraw.
@@ -748,11 +748,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%saved%copy( dts%last )
   end subroutine save_color_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine restore_color_psdraw( dts )
     !/ -----------------------------------------------------------------------------------
-  !! Restore the last saved drawing color.
+    !! Restore the last saved drawing color.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(PSDraw), intent(inout) :: dts !! reference to this PSDraw.
@@ -760,7 +760,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%setRGB( dts%saved%r, dts%saved%g, dts%saved%b )
   end subroutine restore_color_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine set_font_psdraw( dts, ft )
     !/ -----------------------------------------------------------------------------------
@@ -783,7 +783,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end if
   end subroutine set_font_psdraw
 
-  
+
   !/ =====================================================================================
   function scaleX_psdraw( dts, x ) result( sx )
     !/ -----------------------------------------------------------------------------------
@@ -797,7 +797,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     sx = (dts%slope_x * x) + dts%inter_x
   end function scaleX_psdraw
 
-  
+
   !/ =====================================================================================
   function scaleY_psdraw( dts, y ) result( sy )
     !/ -----------------------------------------------------------------------------------
@@ -811,11 +811,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     sy = (dts%slope_y * y) + dts%inter_y
   end function scaleY_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine set_rgb_color_psdraw( dts, clr )
     !/ -----------------------------------------------------------------------------------
-  !! Set the current drawing color to the RGB value in clr.
+    !! Set the current drawing color to the RGB value in clr.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(PSDraw), intent(inout) :: dts !! reference to this PSDraw.
@@ -824,11 +824,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%setRGB( clr%r, clr%g, clr%b )
   end subroutine set_rgb_color_psdraw
 
-  
+
   !/ =====================================================================================
   subroutine set_rgb_component_psdraw_R8( dts, r, g, b )
     !/ -----------------------------------------------------------------------------------
-  !! Set the current RGB value.
+    !! Set the current RGB value.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(PSDraw), intent(inout) :: dts !! reference to this PSDraw.
@@ -839,11 +839,11 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%setRGB( real(r), real(g), real(b) )
   end subroutine set_rgb_component_psdraw_R8
 
-  
+
   !/ =====================================================================================
   subroutine set_rgb_component_psdraw_R4( dts, r, g, b )
     !/ -----------------------------------------------------------------------------------
-  !! Set the current RGB value.
+    !! Set the current RGB value.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(PSDraw), intent(inout) :: dts !! reference to this PSDraw.
@@ -856,7 +856,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 100 format( F0.3,' ',F0.3,' ',F0.3,' setrgbcolor' )
   end subroutine set_rgb_component_psdraw_R4
 
-  
+
   !/ =====================================================================================
   subroutine ps_write_psdraw( dts, unit )
     !/ -----------------------------------------------------------------------------------
@@ -917,7 +917,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     dts%page_number =  id
   end subroutine init_pspage
 
-  
+
   !/ =====================================================================================
   subroutine delete_pspage( dts )
     !/ -----------------------------------------------------------------------------------
@@ -940,7 +940,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
   end subroutine set_name_pspage
 
-  
+
   !/ =====================================================================================
   subroutine add_pspage( dts, w, x, y );
     !/ -----------------------------------------------------------------------------------
@@ -958,7 +958,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%psd_list%push(P)
   end subroutine add_pspage
 
-  
+
   !/ =====================================================================================
   subroutine ps_write_pspage( dts, unit )
     !/ -----------------------------------------------------------------------------------
@@ -988,7 +988,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   end subroutine ps_write_pspage
 
-  
+
   !/ =====================================================================================
   subroutine write_header_pspage( dts, unit )
     !/ -----------------------------------------------------------------------------------
@@ -1011,7 +1011,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     write(unit,'(A)') '%%EndPageSetup'
   end subroutine write_header_pspage
 
-  
+
   !/ =====================================================================================
   subroutine write_trailer_pspage( dts, unit )
     !/ -----------------------------------------------------------------------------------
@@ -1068,7 +1068,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     deallocate( dts%page )
   end subroutine delete_psgraph
 
-  
+
   !/ =====================================================================================
   subroutine set_name_psgraph( dts, pn, nm )
     !/ -----------------------------------------------------------------------------------
@@ -1081,7 +1081,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
   end subroutine set_name_psgraph
 
-  
+
   !/ =====================================================================================
   subroutine add_psgraph( dts, w, pn, x, y )
     !/ -----------------------------------------------------------------------------------
@@ -1099,7 +1099,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%page(pn)%add( w, x, y )
   end subroutine add_psgraph
 
-  
+
   !/ =====================================================================================
   subroutine ps_write_psgraph( dts, fspc )
     !/ -----------------------------------------------------------------------------------
@@ -1125,7 +1125,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     close(un)
   end subroutine ps_write_psgraph
 
-  
+
   !/ =====================================================================================
   subroutine write_header_psgraph( dts, fspc, unit )
     !/ -----------------------------------------------------------------------------------
@@ -1208,7 +1208,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     write(unit,'(A)') '%%EndProlog'
   end subroutine write_header_psgraph
 
-  
+
   !/ =====================================================================================
   subroutine write_trailer_psgraph( dts, unit )
     !/ -----------------------------------------------------------------------------------
@@ -1223,7 +1223,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     write(unit,'(A)') '%EOF'
   end subroutine write_trailer_psgraph
 
-  
+
 end module psgraph_mod
 
 
