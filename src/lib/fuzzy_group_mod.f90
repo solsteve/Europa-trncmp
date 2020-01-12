@@ -28,7 +28,7 @@ module fuzzy_group_mod
   !! Provides a collection of Fuzzy Partitions
   !!
   !! author:  Stephen W. Soliday
-  !! date:    2019-01-05
+  !! date:    2020-01-05
   !! license: GPL
   !! -------------------------------------------------------------------------------------
   use trncmp_env
@@ -41,8 +41,8 @@ module fuzzy_group_mod
   type :: FuzzyGroup
      !/ ----------------------------------------------------------------------------------
 
-     integer :: num_part = 0
-     type(FuzzyPartition_ptr), allocatable :: fpart(:)  !!  array of fuzzy partitions.
+     integer                               :: num_part = 0 !! number of partitions.
+     type(FuzzyPartition_ptr), allocatable :: fpart(:)     !! array of fuzzy partitions.
 
    contains
 
@@ -113,7 +113,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     real(dp),          intent(in)    :: mnc(:)     !! minimum center for each partition.
     real(dp),          intent(in)    :: mxc(:)     !! minimum center for each partition.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, np
+    integer                        :: i, np
     class(FuzzyPartition), pointer :: ptemp
     !/ -----------------------------------------------------------------------------------
 
@@ -154,8 +154,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Create a FuzzyGroup by cloning FuzzyPartitions from a list.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyGroup),        intent(inout) :: dts      !! reference to this FuzzyGroup.
-    type(FuzzyPartition_ptr), intent(in)    :: list(:)  !! List of FuzzyPartitions.
+    class(FuzzyGroup),        intent(inout) :: dts     !! reference to this FuzzyGroup.
+    type(FuzzyPartition_ptr), intent(in)    :: list(:) !! List of FuzzyPartitions.
     !/ -----------------------------------------------------------------------------------
     integer :: i,n
     !/ -----------------------------------------------------------------------------------
@@ -244,7 +244,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Destroy the allocation for this FuzzyGroup.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyGroup), intent(inout) :: dts  !! reference to this FuzzyGroup.
+    class(FuzzyGroup), intent(inout) :: dts !! reference to this FuzzyGroup.
     !/ -----------------------------------------------------------------------------------
     integer :: i
     !/ -----------------------------------------------------------------------------------
@@ -269,7 +269,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Destructor.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(FuzzyGroup), intent(inout) :: dts  !! reference to this FuzzyGroup.
+    type(FuzzyGroup), intent(inout) :: dts !! reference to this FuzzyGroup.
     !/ -----------------------------------------------------------------------------------
     call dts%destroy
   end subroutine fg_final
@@ -325,9 +325,9 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Return a pointer to the indexed FuzzyPartition in this FuzzyGroup.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyGroup),     intent(inout) :: dts  !! reference to this FuzzyGroup.
-    integer,               intent(in)    :: idx  !! partition index.
-    class(FuzzyPartition), pointer       :: ptr  !! pointer to the indexed FuzzyPartition.
+    class(FuzzyGroup),     intent(inout) :: dts !! reference to this FuzzyGroup.
+    integer,               intent(in)    :: idx !! partition index.
+    class(FuzzyPartition), pointer       :: ptr !! pointer to the indexed FuzzyPartition.
     !/ -----------------------------------------------------------------------------------
     ptr => dts%fpart(idx)%ptr
   end function fg_get_part
@@ -339,8 +339,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Get the number of crisp inputs to this FuzzyGroup.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyGroup), intent(inout) :: dts  !! reference to this FuzzyGroup.
-    integer                          :: n    !! number of inputs.
+    class(FuzzyGroup), intent(inout) :: dts !! reference to this FuzzyGroup.
+    integer                          :: n   !! number of inputs.
     !/ -----------------------------------------------------------------------------------
     n = dts%num_part
   end function fg_get_number_inputs
@@ -352,8 +352,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Get the number of fuzzy membership outputs from this FuzzyGroup.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyGroup), intent(inout) :: dts  !! reference to this FuzzyGroup.
-    integer                          :: n    !! number of outputs.
+    class(FuzzyGroup), intent(inout) :: dts !! reference to this FuzzyGroup.
+    integer                          :: n   !! number of outputs.
     !/ -----------------------------------------------------------------------------------
     integer :: i
     !/ -----------------------------------------------------------------------------------
@@ -372,8 +372,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! 
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyGroup), intent(inout) :: dts  !! reference to this FuzzyGroup.
-    integer                          :: n 
+    class(FuzzyGroup), intent(inout) :: dts !! reference to this FuzzyGroup.
+    integer                          :: n   !! number of parameters.
     !/ -----------------------------------------------------------------------------------
     integer :: i
     !/ -----------------------------------------------------------------------------------
@@ -389,14 +389,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine fg_fuzzify( dts, mu, x )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Compute the degree of membership for each FuzzySet based on a crisp value x.
+    !! The domain is all real numbers. The range is 0 to 1 inclusive.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyGroup), intent(inout) :: dts    !! reference to this FuzzyGroup.
-    real(dp),          intent(out)   :: mu(:)  !! 
-    real(dp),          intent(in)    :: x(:)   !! 
+    class(FuzzyGroup), intent(inout) :: dts   !! reference to this FuzzyGroup.
+    real(dp),          intent(out)   :: mu(:) !! degree of membership list.
+    real(dp),          intent(in)    :: x(:)  !! crisp value list.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, ms, me
+    integer                        :: i, ms, me
     class(FuzzyPartition), pointer :: P
     !/ -----------------------------------------------------------------------------------
     ms = 1
@@ -404,6 +405,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        P => dts%fpart(i)%ptr
        me = ms + P%nOut() - 1
        call P%mu( mu(ms:me), x(i) )
+       ms = me + 1
     end do
   end subroutine fg_fuzzify
 
@@ -411,14 +413,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine fg_defuzzify( dts, x, mu )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Compute the center of area based on the degrees of membership in this FuzzyPartition. 
+    !! The domain is 0 to 1 inclusive. The range is (left) to (right) inclusive.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(FuzzyGroup), intent(inout) :: dts    !! reference to this FuzzyGroup.
-    real(dp),          intent(out)   :: x(:)   !! 
-    real(dp),          intent(in)    :: mu(:)  !! 
+    real(dp),          intent(out)   :: x(:)   !! center of area list.
+    real(dp),          intent(in)    :: mu(:)  !! degree of membership list.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, ms, me
+    integer                        :: i, ms, me
     class(FuzzyPartition), pointer :: P
     !/ -----------------------------------------------------------------------------------
     ms = 1
@@ -426,6 +429,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
        P => dts%fpart(i)%ptr
        me = ms + P%nOut() - 1
        x(i) = P%coa( mu(ms:me) )
+       ms = me + 1
     end do
   end subroutine fg_defuzzify
 
@@ -433,15 +437,23 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   function fg_load( dts, buffer, INDEX ) result( post_index )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Load the parameters for this FuzzyGroup from a source array.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyGroup), intent(inout) :: dts  !! reference to this FuzzyGroup.
-    real(dp),          intent(in)    :: buffer(:)   !! 
-    integer, optional, intent(in)    :: INDEX
-    integer                          :: post_index
+    class(FuzzyGroup), intent(inout) :: dts        !! reference to this FuzzyGroup.
+    real(dp),          intent(in)    :: buffer(:)  !! buffer for the parameters.
+    integer, optional, intent(in)    :: INDEX      !! index of starting parameter.
+    integer                          :: post_index !! next available index.
+    !/ -----------------------------------------------------------------------------------
+    integer :: i
     !/ -----------------------------------------------------------------------------------
 
+    post_index = 1
+    if ( present( INDEX ) ) post_index = INDEX
+
+    do i=1,dts%num_part
+       post_index = dts%fpart(i)%ptr%load(buffer,post_index)
+    end do
 
   end function fg_load
 
@@ -449,45 +461,76 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   function fg_store( dts, buffer, INDEX ) result( post_index )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Store the parameters for this FuzzyGroup from a source array.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyGroup), intent(inout) :: dts  !! reference to this FuzzyGroup.
-    real(dp),          intent(out)   :: buffer(:)   !! 
-    integer, optional, intent(in)    :: INDEX
-    integer                          :: post_index
+    class(FuzzyGroup), intent(inout) :: dts        !! reference to this FuzzyGroup.
+    real(dp),          intent(out)   :: buffer(:)  !! buffer for the parameters.
+    integer, optional, intent(in)    :: INDEX      !! index of starting parameter.
+    integer                          :: post_index !! next available index.
+    !/ -----------------------------------------------------------------------------------
+    integer :: i
     !/ -----------------------------------------------------------------------------------
 
+    post_index = 1
+    if ( present( INDEX ) ) post_index = INDEX
+
+    do i=1,dts%num_part
+       post_index = dts%fpart(i)%ptr%store(buffer,post_index)
+    end do
 
   end function fg_store
 
 
   !/ =====================================================================================
-  subroutine fg_read( dts, un, IOSTAT )
+  subroutine fg_read( dts, un, IOSTAT, MAXINDEX )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Read the parameters for this FuzzyGroup from a source array.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyGroup), intent(inout) :: dts     !! reference to this FuzzyGroup.
-    integer,           intent(in)    :: un      !! file unit.
-    integer,           intent(out)   :: IOSTAT  !! return error code.
+    class(FuzzyGroup), intent(inout) :: dts      !! reference to this FuzzyGroup.
+    integer,           intent(in)    :: un       !! file unit.
+    integer, optional, intent(out)   :: IOSTAT   !! error return status.
+    integer, optional, intent(in)    :: MAXINDEX !! maximum parameters that can be read.
+    !/ -----------------------------------------------------------------------------------
+    integer                        :: i, n
+    class(FuzzyPartition), pointer :: temp
     !/ -----------------------------------------------------------------------------------
 
+    read( un, * ) n
+    call dts%fg_init_default(n)
+    do i=1,n
+       allocate( temp )
+       call temp%read( un, IOSTAT, MAXINDEX )
+       if ( associated( dts%fpart(i)%ptr ) ) then
+          call dts%fpart(i)%ptr%copy( temp )
+          deallocate( temp )
+       else
+          dts%fpart(i)%ptr => temp
+       end if
+       temp => null()
+    end do
 
   end subroutine fg_read
 
 
   !/ =====================================================================================
-  subroutine fg_write( dts, un, IOSTAT )
+  subroutine fg_write( dts, un, FMT, IOSTAT )
     !/ -----------------------------------------------------------------------------------
-    !! 
+    !! Write the parameters for this FuzzyGroup from a source array.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FuzzyGroup), intent(inout) :: dts  !! reference to this FuzzyGroup.
-    integer,           intent(in)    :: un      !! file unit.
-    integer,           intent(out)   :: IOSTAT  !! return error code.
+    class(FuzzyGroup),      intent(inout) :: dts    !! reference to this FuzzyGroup.
+    integer,                intent(in)    :: un     !! file unit.
+    character(*), optional, intent(in)    :: FMT    !! edit descriptor.
+    integer,      optional, intent(out)   :: IOSTAT !! error return status.
     !/ -----------------------------------------------------------------------------------
-
+    integer :: i
+    !/ -----------------------------------------------------------------------------------
+    write(un,'(I0)') dts%num_part
+    do i=1,dts%num_part
+       call dts%fpart(i)%ptr%write(un,FMT,IOSTAT)
+    end do
 
   end subroutine fg_write
 

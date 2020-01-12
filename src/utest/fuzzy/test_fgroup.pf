@@ -42,13 +42,13 @@ contains
   subroutine test_group_create_params
     !/ -----------------------------------------------------------------------------------
     implicit none
-    integer,  parameter :: NS(3)    = [3,5,4]
+    integer,  parameter :: NS(3)    = [3, 5, 4]
     real(dp), parameter :: PARS(12) = [-1.0d0, 0.0d0,  1.0d0, 2.0d0, 3.0d0, 4.0d0,  &
          &                                   5.0d0, 6.0d0, -5.0d0, 0.0d0, 3.0d0, 7.0d0 ]
 
     type(FuzzyGroup) :: FG
     class(FuzzyPartition), pointer :: P
-    integer :: i, j, m, n, idx
+    integer :: i, j, k, m, n, idx
 
     call FG%init( NS, PARS )
 
@@ -71,6 +71,206 @@ contains
   end subroutine test_group_create_params
 
 
+  @test
+  !/ =====================================================================================
+  subroutine test_group_execution
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer, parameter :: n_sample = 40
+
+    real(dp), parameter :: ctr(14) = [ 1.0d0, 2.0d0, 3.0d0,                           &
+         &                             7.0d0, 8.0d0, 9.0d0, 10.0d0, 11.0d0, 12.0d0,   &
+         &                            -1.0d0, 1.0d0,                                  &
+         &                             4.0d0, 5.0d0, 6.0d0 ]
+
+    integer,  parameter :: nc(4) = [ 3, 6, 2, 3 ]
+
+    real(dp), parameter :: min_x(4) = [ 0.0d0,  6.0d0, -2.0d0, 3.0d0 ]
+    real(dp), parameter :: max_x(4) = [ 4.0d0, 13.0d0,  2.0d0, 7.0d0 ]
+
+    type(FuzzyGroup) :: FG
+    type(FuzzyPartition), pointer :: FP
+
+    integer :: i, j, k, idx, n_in, n_out, no
+
+    real(dp), allocatable :: input(:), delta(:), mu(:), mini_mu(:), coa(:)
+    real(dp) :: y
+
+    !/ -----------------------------------------------------------------------------------
+
+    call FG%init( nc, ctr )
+
+    n_in  = FG%nIn()
+    n_out = FG%nOut()
+
+    allocate( input(n_in) )
+    allocate( delta(n_in) )
+    allocate( mu(n_out) )
+    allocate( coa(n_in) )
+
+    do i=1,n_in
+       delta(i) = ( max_x(i) - min_x(i) ) / real( n_sample-1, dp )
+       input(i) = min_x(i)
+    end do
+
+    do j=1,n_sample
+       call FG%fuzzify( mu, input )
+       call FG%defuzzify( coa, mu )
+
+       idx = 1
+       do i=1,n_in
+          FP => FG%part(i)
+
+          no = FP%nOut()
+          allocate( mini_mu(no) )
+
+          call FP%mu( mini_mu, input(i) )
+          do k=1,no
+             @assertEqual( mini_mu(k), mu(idx) )
+             idx = idx + 1
+          end do
+          y = FP%coa( mini_mu )
+
+          @assertEqual( y, coa(i) )
+
+          input(i) = input(i) + delta(i)
+
+          deallocate( mini_mu )
+       end do
+    end do
+
+    deallocate( input )
+    deallocate( delta )
+    deallocate( mu )
+    deallocate( coa )
+    
+  end subroutine test_group_execution
+  
+  @test
+  !/ =====================================================================================
+  subroutine test_group_load_save
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: ctr(14) = [ 1.0d0, 2.0d0, 3.0d0,                           &
+         &                             7.0d0, 8.0d0, 9.0d0, 10.0d0, 11.0d0, 12.0d0,   &
+         &                            -1.0d0, 1.0d0,                                  &
+         &                             4.0d0, 5.0d0, 6.0d0 ]
 
 
+    real(dp), parameter :: test(14) = [ 11.01d0, 12.02d0, 13.03d0,    &
+         &                   21.04d0, 22.05d0, 23.06d0, 24.07d0, 25.08d0, 26.09d0,    &
+         &                   31.10d0, 32.11d0,    &
+         &                   41.12d0, 42.13d0, 43.14d0 ]
+
+    integer,  parameter :: nc(4) = [ 3, 6, 2, 3 ]
+
+    type(FuzzyGroup) :: G, H
+
+    real(dp), allocatable :: g_buf(:), h_buf(:), x_buf(:)
+
+    integer :: i, j, k, np, nr, m, idx, dummy
+
+    !/ -----------------------------------------------------------------------------------
+
+    call G%init( nc, ctr )
+    call H%init( nc, test )
+
+    k = G%size()
+    nr = size(nc)
+
+    allocate( g_buf( k ) )
+    allocate( x_buf( k ) )
+    allocate( h_buf( H%size() ) )
+
+    do i=1,k
+       g_buf(i) = 1.0d0
+       x_buf(i) = 1.0d0
+       h_buf(i) = 1.0d0
+       @assertEqual( g_buf(i), h_buf(i) )
+    end do
+
+    dummy = G%store( g_buf )
+     dummy = H%store( h_buf )
+
+    idx = 1
+    np  = G%nIn()
+    do i=1,np
+       m = G%fpart(i)%ptr%nOut()
+       do j=1,m
+          @assertFalse( isEqual( g_buf(idx), h_buf(idx) ) )
+          idx = idx + 1
+       end do
+    end do
+
+     dummy = G%load( h_buf )
+     dummy = G%store( x_buf )
+
+    do i=1,k
+       @assertEqual( h_buf(i), x_buf(i) )
+    end do
+
+    deallocate( g_buf )
+    deallocate( x_buf )
+    deallocate( h_buf )
+
+  end subroutine test_group_load_save
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_group_read_write
+    !/ -----------------------------------------------------------------------------------
+    use file_tools, only : ReadUnit
+    use file_tools, only : WriteUnit
+    implicit none
+
+    real(dp), parameter :: ctr(14) = [ 1.0d0, 2.0d0, 3.0d0,                           &
+         &                             7.0d0, 8.0d0, 9.0d0, 10.0d0, 11.0d0, 12.0d0,   &
+         &                            -1.0d0, 1.0d0,                                  &
+         &                             4.0d0, 5.0d0, 6.0d0 ]
+
+    integer,  parameter :: nc(4) = [ 3, 6, 2, 3 ]
+
+    type(FuzzyGroup) :: G, H
+
+    integer :: un, ng, nh, i, dummy
+
+    real(dp), allocatable :: g_buff(:), h_buff(:)
+
+    !/ -----------------------------------------------------------------------------------
+
+    call G%init( nc, ctr )
+    
+    un = WriteUnit( FILE='/tmp/group.ftest' )
+    call G%write(un)
+    close(un)
+
+    un = ReadUnit( FILE='/tmp/group.ftest' )
+    call H%read(un)
+    close(un)
+
+    ng = G%size()
+    nh = H%size()
+
+    @assertEqual( ng, nh )
+
+    allocate( g_buff(ng) )
+    allocate( h_buff(nh) )
+
+    dummy = G%store( g_buff )
+    dummy = H%store( h_buff )
+
+    do i=1,ng
+       @assertEqual( g_buff(i), h_buff(i) )
+    end do
+
+    deallocate( g_buff )
+    deallocate( h_buff )
+
+  end subroutine test_group_read_write
+    
 end module test_fgroup

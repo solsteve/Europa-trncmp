@@ -63,6 +63,12 @@ module fuzzy_set_mod
   end type FuzzySet
 
 
+
+
+
+
+
+
   !/ =====================================================================================
   type :: FuzzySet_ptr
      !/ ----------------------------------------------------------------------------------
@@ -73,11 +79,13 @@ module fuzzy_set_mod
   !/ =====================================================================================
   abstract interface
      !/ ----------------------------------------------------------------------------------
+     !! Return an allocated clone of this FuzzySet
+     !/ ----------------------------------------------------------------------------------
      function fset_abst_clone( dts ) result( ptr )
        use trncmp_env, only : dp
        import :: FuzzySet
        class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet.
-       class(FuzzySet), pointer       :: ptr
+       class(FuzzySet), pointer       :: ptr !! pointer to a FuzzySet.
      end function fset_abst_clone
   end interface
 
@@ -85,17 +93,21 @@ module fuzzy_set_mod
   !/ =====================================================================================
   abstract interface
      !/ ----------------------------------------------------------------------------------
+     !! Copy another FuzzySet.
+     !/ ----------------------------------------------------------------------------------
      subroutine fset_abst_copy( dts, src )
        use trncmp_env, only : dp
        import :: FuzzySet
        class(FuzzySet), intent(inout) :: dts !! reference to a FuzzySet.
-       class(FuzzySet), intent(inout) :: src !! reference to a source LeftTrapezoidSet.
+       class(FuzzySet), intent(inout) :: src !! reference to a source FuzzySet.
      end subroutine fset_abst_copy
   end interface
 
 
   !/ =====================================================================================
   abstract interface
+     !/ ----------------------------------------------------------------------------------
+     !! Set the parameters of the derived FuzzySet,
      !/ ----------------------------------------------------------------------------------
      subroutine fset_abst_set( dts, p1, p2, P3 )
        use trncmp_env, only : dp
@@ -111,6 +123,8 @@ module fuzzy_set_mod
   !/ =====================================================================================
   abstract interface
      !/ ----------------------------------------------------------------------------------
+     !! Update pre-computed constants
+     !/ ----------------------------------------------------------------------------------
      subroutine fset_abst_update( dts )
        use trncmp_env, only : dp
        import :: FuzzySet
@@ -121,6 +135,8 @@ module fuzzy_set_mod
 
   !/ =====================================================================================
   abstract interface
+     !/ ----------------------------------------------------------------------------------
+     !! Get left extreme.
      !/ ----------------------------------------------------------------------------------
      function fset_abst_get_left( dts ) result( v )
        use trncmp_env, only : dp
@@ -165,9 +181,11 @@ module fuzzy_set_mod
 
 
 
-
   !/ =====================================================================================
   abstract interface
+     !/ ----------------------------------------------------------------------------------
+     !! Compute the degree of membership in this FuzzySet based on a crisp value x.
+     !! The domain is all real numbers. The range is 0 to 1 inclusive.
      !/ ----------------------------------------------------------------------------------
      function fset_abst_mu( dts, x ) result( m )
        use trncmp_env, only : dp
@@ -182,6 +200,9 @@ module fuzzy_set_mod
   !/ =====================================================================================
   abstract interface
      !/ ----------------------------------------------------------------------------------
+     !! Compute the area under the degree of membership for this FuzzySet.
+     !! The domain is 0 to 1 inclusive. The range is 0 to max area for this FuzzySet.
+     !/ ----------------------------------------------------------------------------------
      function fset_abst_area( dts, deg ) result( a )
        use trncmp_env, only : dp
        import :: FuzzySet
@@ -195,6 +216,9 @@ module fuzzy_set_mod
   !/ =====================================================================================
   abstract interface
      !/ ----------------------------------------------------------------------------------
+     !! Compute the center of area based on the degree of membership in this FuzzySet. 
+     !! The domain is 0 to 1 inclusive. The range is (left) to (right) inclusive.
+     !/ -----------------------------------------------------------------------------------
      function fset_abst_coa( dts, deg ) result( c )
        use trncmp_env, only : dp
        import :: FuzzySet
@@ -208,6 +232,8 @@ module fuzzy_set_mod
   !/ =====================================================================================
   abstract interface
      !/ ----------------------------------------------------------------------------------
+     !! Convert parameters to a string.
+     !/ ----------------------------------------------------------------------------------
      function fset_abst_to_string( dts, fmt ) result( str )
        use trncmp_env, only : dp
        import :: FuzzySet
@@ -220,6 +246,8 @@ module fuzzy_set_mod
 
   !/ =====================================================================================
   abstract interface
+     !/ ----------------------------------------------------------------------------------
+     !! Load the parameters for this FuzzySet from a source array.
      !/ ----------------------------------------------------------------------------------
      function fset_abst_load( dts, array, pre_idx ) result( post_idx )
        use trncmp_env, only : dp
@@ -235,6 +263,8 @@ module fuzzy_set_mod
   !/ =====================================================================================
   abstract interface
      !/ ----------------------------------------------------------------------------------
+     !! Store the parameters for this FuzzySet from a source array.
+     !/ ----------------------------------------------------------------------------------
      function fset_abst_store( dts, array, pre_idx ) result( post_idx )
        use trncmp_env, only : dp
        import :: FuzzySet
@@ -244,6 +274,12 @@ module fuzzy_set_mod
        integer                        :: post_idx !! post-index.
      end function fset_abst_store
   end interface
+
+
+
+
+
+
 
 
   !/ =====================================================================================
@@ -261,7 +297,7 @@ module fuzzy_set_mod
      !       C     R
      !/ ----------------------------------------------------------------------------------
 
-     real(dp) :: C = D_ZERO !! Point of maximum membership extreme of this fuzzy set.
+     real(dp) :: C = D_ZERO !! Point of maximum membership of this fuzzy set.
      real(dp) :: R = D_ONE  !! Right extreme of this fuzzy set.
      real(dp) :: W = D_ONE  !! Work variable.
 
@@ -289,6 +325,7 @@ module fuzzy_set_mod
      final :: ltrap_final
 
   end type LeftTrapezoidSet
+
 
 
 
@@ -335,6 +372,7 @@ module fuzzy_set_mod
      final :: rtrap_final
 
   end type RightTrapezoidSet
+
 
 
 
@@ -387,6 +425,11 @@ module fuzzy_set_mod
 
 
 
+
+
+
+
+
   !/ =====================================================================================
   interface LeftTrapezoidSet
      !/ -----------------------------------------------------------------------------------
@@ -420,6 +463,8 @@ module fuzzy_set_mod
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
+
+
 
 
   !/ =====================================================================================
@@ -509,6 +554,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
 
+
   !/ =====================================================================================
   function ltrap_clone( dts ) result( ptr )
     !/ -----------------------------------------------------------------------------------
@@ -525,6 +571,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call ptr%copy( dts )
   end function ltrap_clone
 
+
   !/ =====================================================================================
   subroutine ltrap_copy( dts, src )
     !/ -----------------------------------------------------------------------------------
@@ -539,13 +586,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%update
   end subroutine ltrap_copy
 
+
   !/ =====================================================================================
   subroutine ltrap_destroy( dts )
     !/ -----------------------------------------------------------------------------------
     !! Destroy the internal representation of a LeftTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(LeftTrapezoidSet), intent(inout) :: dts  !! reference to this LeftTrapezoidSet.
+    class(LeftTrapezoidSet), intent(inout) :: dts !! reference to this LeftTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
     dts%C = D_ZERO
     dts%R = D_ONE
@@ -559,7 +607,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Finalize a LeftTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(LeftTrapezoidSet), intent(inout) :: dts  !! reference to this LeftTrapezoidSet.
+    type(LeftTrapezoidSet), intent(inout) :: dts !! reference to this LeftTrapezoidSet.
     !/ -----------------------------------------------------------------------------------
     call dts%destroy
   end subroutine ltrap_final
@@ -764,6 +812,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call ptr%copy( dts )
   end function rtrap_clone
 
+
   !/ =====================================================================================
   subroutine rtrap_copy( dts, src )
     !/ -----------------------------------------------------------------------------------
@@ -777,6 +826,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     dts%C  = src%getCenter()
     call dts%update
   end subroutine rtrap_copy
+
 
   !/ =====================================================================================
   subroutine rtrap_destroy( dts )
@@ -988,8 +1038,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
 
-
-
   !/ =====================================================================================
   function triangle_clone( dts ) result( ptr )
     !/ -----------------------------------------------------------------------------------
@@ -1006,6 +1054,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call ptr%copy( dts )
   end function triangle_clone
 
+
   !/ =====================================================================================
   subroutine triangle_copy( dts, src )
     !/ -----------------------------------------------------------------------------------
@@ -1021,13 +1070,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     call dts%update
   end subroutine triangle_copy
 
+
   !/ =====================================================================================
   subroutine triangle_destroy( dts )
     !/ -----------------------------------------------------------------------------------
     !! Destroy the internal representation of a TriangleSet.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(TriangleSet), intent(inout) :: dts  !! reference to this TriangleSet.
+    class(TriangleSet), intent(inout) :: dts !! reference to this TriangleSet.
     !/ -----------------------------------------------------------------------------------
     dts%R  = -D_ONE
     dts%C  =  D_ZERO
@@ -1044,7 +1094,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !! Finalize a TriangleSet.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    type(TriangleSet), intent(inout) :: dts  !! reference to this TriangleSet.
+    type(TriangleSet), intent(inout) :: dts !! reference to this TriangleSet.
     !/ -----------------------------------------------------------------------------------
     call dts%destroy
   end subroutine triangle_final
