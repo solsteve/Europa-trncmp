@@ -38,17 +38,22 @@ module px_blas
   !/ -------------------------------------------------------------------------------------
 
 
+  
+
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
 
 
+  
+
   !/ =====================================================================================
   subroutine btest( msg )
     !/ -----------------------------------------------------------------------------------
     !! Test function will display a message on the standard out file unit.
-    !! @note The dummy array containing tokens must allocatable and its character elements must have the same length of the input
-    !! string. If the length of the delimiter is higher than the input string one then the output tokens array is allocated with
+    !! @note The dummy array containing tokens must allocatable and its character elements
+    !! must have the same length of the input string. If the length of the delimiter is
+    !! higher than the input string one then the output tokens array is allocated with
     !! only one element set to input string.
     !/ -----------------------------------------------------------------------------------
     implicit none

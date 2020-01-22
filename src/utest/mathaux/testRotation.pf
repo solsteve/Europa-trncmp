@@ -4,101 +4,185 @@ module testRotation
   use rotation_mod
   implicit none
 
-  real(dp), parameter :: TESTIN(3,6) = reshape( [  &
-       &     D_TWO,    D_ZERO,   D_ZERO,  &  ! 1
-       &    -D_TWO,    D_ZERO,   D_ZERO,  &  ! 2
-       &     D_ZERO,   D_TWO,    D_ZERO,  &  ! 3
-       &     D_ZERO,  -D_TWO,    D_ZERO,  &  ! 4
-       &     D_ZERO,   D_ZERO,   D_TWO,   &  ! 5
-       &     D_ZERO,   D_ZERO,  -D_TWO    &  ! 6
-       &  ], [3,6] )
-
-  real(dp), parameter :: R1(3,6) = reshape( [  &
-       &     D_TWO,    D_ZERO,   D_ZERO,  &  ! 1
-       &    -D_TWO,    D_ZERO,   D_ZERO,  &  ! 2
-       &     D_ZERO,   D_SQRT3,  D_ONE,   &  ! 3
-       &     D_ZERO,  -D_SQRT3, -D_ONE,   &  ! 4
-       &     D_ZERO,  -D_ONE,    D_SQRT3, &  ! 5
-       &     D_ZERO,   D_ONE,   -D_SQRT3  &  ! 6
-       &  ], [3,6] )
-
-  real(dp), parameter :: R2(3,6) = reshape( [  &
-       &     D_SQRT3,  D_ZERO,  -D_ONE,   &  ! 1
-       &    -D_SQRT3,  D_ZERO,   D_ONE,   &  ! 2
-       &     D_ZERO,   D_TWO,    D_ZERO,  &  ! 3
-       &     D_ZERO,  -D_TWO,    D_ZERO,  &  ! 4
-       &     D_ONE,    D_ZERO,   D_SQRT3, &  ! 5
-       &    -D_ONE,    D_ZERO,  -D_SQRT3  &  ! 6
-       &  ], [3,6] )
-
-  real(dp), parameter :: R3(3,6) = reshape( [  &
-       &     D_SQRT3,  D_ONE,    D_ZERO,  &  ! 1
-       &    -D_SQRT3, -D_ONE,    D_ZERO,  &  ! 2
-       &    -D_ONE,    D_SQRT3,  D_ZERO,  &  ! 3
-       &     D_ONE,   -D_SQRT3,  D_ZERO,  &  ! 4
-       &     D_ZERO,   D_ZERO,   D_TWO,   &  ! 5
-       &     D_ZERO,   D_ZERO,  -D_TWO    &  ! 6
-       &  ], [3,6] )
+  real(dp), parameter :: D_TOL = 1.0d-12
 
 contains
-
-  !/ =====================================================================================
-  function testVector( v1, v2 ) result( cmp )
-    !/ ----------------------------------------------------------------------------------
-    implicit none
-    real(dp), intent(in) :: v1(3)
-    real(dp), intent(in) :: v2(3)
-    logical              :: cmp
-    integer :: i, ie
-    do i=1,3
-       if ( v1(i).lt.v2(i) ) then
-          ie = i
-          goto 100
-       end if
-       if ( v1(i).gt.v2(i) ) then
-          ie = i
-          goto 200
-       end if
-    end do
-    cmp = .true.
-    goto 300
-100 continue
-    write( ERROR_UNIT, 1000 ) ie, v1(i), v2(i)
-    cmp = .false.
-    goto 300
-200 continue
-    write( ERROR_UNIT, 2000 ) ie, v1(i), v2(i)
-    cmp = .false.
-300 continue
-1000 format('Vector elements (',I0,'): ',F9.6,' < ',F9.6)
-2000 format('Vector elements (',I0,'): ',F9.6,' > ',F9.6)
-  end function testVector
-
-
-  !/ =====================================================================================
-  function testMatrix( m1, m2 ) result( cmp )
-    !/ ----------------------------------------------------------------------------------
-    implicit none
-    real(dp), intent(in) :: m1(3,3)
-    real(dp), intent(in) :: m2(3,3)
-    logical              :: cmp
-  end function testMatrix
 
 
   @test
   !/ =====================================================================================
-  subroutine test_rot1
+  subroutine test_single_rot
     !/ ----------------------------------------------------------------------------------
-    type(rotationmatrix) :: R1
-    real(dp) :: xp(3), x(3)
+    type(Rotationmatrix) :: R
+    real(dp)             :: xp(3), x(3)
 
-    call R1%reset
-    call R1%add( D_PI_6, 1 )
+    !/ ----------------------------------------------------------------------------------
 
-    call R1%mul( xp, x )
+    x = [ D_ZERO, D_TWO, D_ZERO ]
+
+    call R%reset
+    call R%add( D_PI_6, 1 )
+    call R%mul( xp, x )
+
+    @assertEqual( D_ZERO,  xp(1), D_TOL )
+    @assertEqual( D_SQRT3, xp(2), D_TOL )
+    @assertEqual( D_ONE,   xp(3), D_TOL )
+
+    !/ ----------------------------------------------------------------------------------
+
+    x = [ D_ZERO, D_ZERO, D_TWO ]
+
+    call R%reset
+    call R%add( D_PI_6, 2 )
+    call R%mul( xp, x )
+
+    @assertEqual( D_ONE,   xp(1), D_TOL )
+    @assertEqual( D_ZERO,  xp(2), D_TOL )
+    @assertEqual( D_SQRT3, xp(3), D_TOL )
+
+    !/ ----------------------------------------------------------------------------------
+
+    x = [ D_TWO, D_ZERO, D_ZERO ]
+
+    call R%reset
+    call R%add( D_PI_6, 3 )
+    call R%mul( xp, x )
+
+    @assertEqual( D_SQRT3, xp(1), D_TOL )
+    @assertEqual( D_ONE,   xp(2), D_TOL )
+    @assertEqual( D_ZERO,  xp(3), D_TOL )
 
 
-  end subroutine test_rot1
+  end subroutine test_single_rot
 
+  @test
+  !/ =====================================================================================
+  subroutine test_multi_rot
+    !/ ----------------------------------------------------------------------------------
+    type(Rotationmatrix) :: R
+    real(dp)             :: xp(3), xf(3), x(3)
+
+    !/ ----------------------------------------------------------------------------------
+
+    x = [ D_ONE, D_ONE, D_ONE ]
+
+    call R%reset
+    call R%add( D_PI_6,  1 )
+    call R%mul( xp, x )
+
+    @assertEqual( 1.0d0,                 xp(1) )
+    @assertEqual( 0.36602540378443876d0, xp(2) )
+    @assertEqual( 1.3660254037844386d0,  xp(3) )
+
+    call R%reset
+    call R%add( D_PI_4, 2 )
+    call R%mul( x, xp )
+
+    @assertEqual( 1.6730326074756157d0,  x(1) )
+    @assertEqual( 0.36602540378443876d0, x(2) )
+    @assertEqual( 0.25881904510252085d0, x(3) )
+    
+    call R%reset
+    call R%add( D_PI_12, 3 )
+    call R%mul( xp, x )
+    
+    @assertEqual( 1.5212910582936856d0, xp(1) )
+    @assertEqual( 0.7865660924854931d0, xp(2) )
+    @assertEqual( 0.2588190451025209d0, xp(3), D_TOL )
+    
+    x = [ D_ONE, D_ONE, D_ONE ]
+
+    call R%reset
+    call R%add( D_PI_6,  1 )
+    call R%add( D_PI_4,  2 )
+    call R%add( D_PI_12, 3 )
+    call R%mul( xf, x )
+
+    @assertEqual( xp(1), xf(1), D_TOL )
+    @assertEqual( xp(2), xf(2), D_TOL )
+    @assertEqual( xp(3), xf(3), D_TOL )
+
+  end subroutine test_multi_rot
+
+  
+  @test
+  !/ =====================================================================================
+  subroutine test_array_rot
+    !/ ----------------------------------------------------------------------------------
+    real(dp), parameter :: TEST_IN(3,8) = reshape( [  &
+         &   -D_ONE,-D_ONE,-D_ONE,    &
+         &   -D_ONE,-D_ONE, D_ONE,    &
+         &   -D_ONE, D_ONE,-D_ONE,    &
+         &   -D_ONE, D_ONE, D_ONE,    &
+         &    D_ONE,-D_ONE,-D_ONE,    &
+         &    D_ONE,-D_ONE, D_ONE,    &
+         &    D_ONE, D_ONE,-D_ONE,    &
+         &    D_ONE, D_ONE, D_ONE ],  &
+         & [3,8] )
+    
+    real(dp), parameter :: R_TEST_OUT(3,8) = reshape( [  &
+         &   -1.521291058293686D+00, -7.865660924854930D-01, -2.588190451025209D-01,  &
+         &   -7.945931129894568D-02, -1.435504620666781D+00,  9.659258262890683D-01,  &
+         &   -1.286566092485493D+00,  1.069479216882342D+00,  4.482877360840266D-01,  &
+         &    1.552656545092468D-01,  4.205406887010544D-01,  1.673032607475616D+00,  &
+         &   -1.552656545092468D-01, -4.205406887010544D-01, -1.673032607475616D+00,  &
+         &    1.286566092485493D+00, -1.069479216882342D+00, -4.482877360840266D-01,  &
+         &    7.945931129894568D-02,  1.435504620666781D+00, -9.659258262890683D-01,  &
+         &    1.521291058293686D+00,  7.865660924854930D-01,  2.588190451025209D-01],  &
+         & [3,8] )
+
+    real(dp), parameter :: C_TEST_OUT(8,3) = Transpose(R_TEST_OUT)
+
+    type(Rotationmatrix) :: R
+
+    real(dp) :: C_in(8,3), C_out(8,3)
+    real(dp) :: R_in(3,8), R_out(3,8)
+
+    integer :: i
+
+    R_IN = TEST_IN
+    C_IN = Transpose( R_IN )
+
+    call R%reset
+    call R%add( D_PI_6,  1 )
+    call R%add( D_PI_4,  2 )
+    call R%add( D_PI_12, 3 )
+    
+    call R%mul( C_OUT, C_IN )
+
+    do i=1,8
+       @assertEqual( C_TEST_OUT(i,1), C_OUT(i,1), D_TOL )
+       @assertEqual( C_TEST_OUT(i,2), C_OUT(i,2), D_TOL )
+       @assertEqual( C_TEST_OUT(i,3), C_OUT(i,3), D_TOL )
+    end do
+    
+    call R%mul( R_OUT, C_IN )
+
+    do i=1,8
+       @assertEqual( R_TEST_OUT(1,i), R_OUT(1,i), D_TOL )
+       @assertEqual( R_TEST_OUT(2,i), R_OUT(2,i), D_TOL )
+       @assertEqual( R_TEST_OUT(3,i), R_OUT(3,i), D_TOL )
+    end do
+
+    call R%mul( C_OUT, R_IN )
+
+    do i=1,8
+       @assertEqual( C_TEST_OUT(i,1), C_OUT(i,1), D_TOL )
+       @assertEqual( C_TEST_OUT(i,2), C_OUT(i,2), D_TOL )
+       @assertEqual( C_TEST_OUT(i,3), C_OUT(i,3), D_TOL )
+    end do
+        
+    call R%mul( R_OUT, R_IN )
+    
+    do i=1,8
+       @assertEqual( R_TEST_OUT(1,i), R_OUT(1,i), D_TOL )
+       @assertEqual( R_TEST_OUT(2,i), R_OUT(2,i), D_TOL )
+       @assertEqual( R_TEST_OUT(3,i), R_OUT(3,i), D_TOL )
+    end do
+
+  end subroutine test_array_rot
+  
 
 end module testRotation
+
+

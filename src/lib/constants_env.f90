@@ -94,7 +94,8 @@ module constants_env
   real(dp), public, parameter :: D_3PI_4     = D_THREE*D_PI_4     !! 3*Pi/4
   real(dp), public, parameter :: D_5PI_4     = D_FIVE*D_PI_4      !! 5*Pi/4
   real(dp), public, parameter :: D_7PI_4     = D_SEVEN*D_PI_4     !! 7*Pi/4
-
+  real(dp), public, parameter :: D_PI_12     = D_PI_2/D_SIX       !! Pi/12
+  
   real(dp), public, parameter :: D_PI2       = D_PI*D_PI          !! Pi**2
   real(dp), public, parameter :: D_1_PI      = D_ONE/D_PI         !! 1/Pi
   real(dp), public, parameter :: D_2_PI      = D_TWO/D_PI         !! 2/Pi

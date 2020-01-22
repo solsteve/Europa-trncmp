@@ -626,4 +626,99 @@ subroutine test_matrix_inv4
 end subroutine test_matrix_inv4
 
 
+!/ =====================================================================================
+function dfunc( i ) result( x )
+  !/ -----------------------------------------------------------------------------------
+  implicit none
+  integer, intent(in) :: i
+  real(dp)            :: x
+  !/ -----------------------------------------------------------------------------------
+  x = sin( real( i, dp ) )
+end function dfunc
+
+
+!/ =====================================================================================
+function mfunc( i, j ) result( x )
+  !/ -----------------------------------------------------------------------------------
+  implicit none
+  integer, intent(in) :: i
+  integer, intent(in) :: j
+  real(dp)            :: x
+  !/ -----------------------------------------------------------------------------------
+  x = log( real( i, dp ) * exp( real( j, dp ) ) )
+end function mfunc
+
+
+@test
+!/ =====================================================================================
+subroutine test_matrix_diagmul_small
+  !/ -----------------------------------------------------------------------------------
+  implicit none
+
+  integer, parameter :: n = 5
+
+  real(dp) :: x, C1(n,n), C2(n,n), V(n), D(n,n), M(n,n)
+  integer :: i, j
+
+  do i=1,n
+     V(i) = dfunc(i)
+     do j=1,n
+        if ( i.eq.j ) then
+           D(i,j) = V(i)
+        else
+           D(i,j) = D_ZERO
+        end if
+        M(i,j) = mfunc(i,j)
+     end do
+  end do
+
+  call dot( C1, D, M )
+  call diagmul( C2, V, M )
+
+  do i=1,n
+     do j=1,n
+        x = dfunc(i)*mfunc(i,j)
+        @assertEqual( x, C1(i,j) )
+        @assertEqual( x, C2(i,j) )
+     end do
+  end do
+
+end subroutine test_matrix_diagmul_small
+
+@test
+!/ =====================================================================================
+subroutine test_matrix_diagmul_big
+  !/ -----------------------------------------------------------------------------------
+  implicit none
+
+  integer, parameter :: n = 100
+
+  real(dp) :: x, C1(n,n), C2(n,n), V(n), D(n,n), M(n,n)
+  integer :: i, j
+
+  do i=1,n
+     V(i) = dfunc(i)
+     do j=1,n
+        if ( i.eq.j ) then
+           D(i,j) = V(i)
+        else
+           D(i,j) = D_ZERO
+        end if
+        M(i,j) = mfunc(i,j)
+     end do
+  end do
+
+  call dot( C1, D, M )
+  call diagmul( C2, V, M )
+
+  do i=1,n
+     do j=1,n
+        x = dfunc(i)*mfunc(i,j)
+        @assertEqual( x, C1(i,j), 1.0d-12 )
+        @assertEqual( x, C2(i,j), 1.0d-12 )
+     end do
+  end do
+
+end subroutine test_matrix_diagmul_big
+
 end module test_mat

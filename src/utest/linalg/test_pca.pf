@@ -1,0 +1,409 @@
+module test_pca
+  use pfunit_mod
+  use dice_mod
+  use tc_lapack
+  use rotation_mod
+  use matrix_mod
+  use pca_mod
+
+
+
+contains
+
+
+  !/ =====================================================================================
+  subroutine generateCloud( table, rx, ry, rz, sigma, mu, dd )
+    !/ -----------------------------------------------------------------------------------
+    real(dp),   intent(inout) :: table(:,:)
+    real(dp),   intent(in)    :: rx
+    real(dp),   intent(in)    :: ry
+    real(dp),   intent(in)    :: rz
+    real(dp),   intent(in)    :: sigma(3)
+    real(dp),   intent(in)    :: mu(3)
+    type(Dice), intent(inout) :: dd
+    !/ -----------------------------------------------------------------------------------
+    integer :: i, j, ns
+    real(dp), allocatable :: raw(:,:)
+    type(RotationMatrix) :: rot
+    !/ -----------------------------------------------------------------------------------
+    if (3.ne.size(table,1)) then
+       print *, 'table mu only have 3 rows'
+       goto 999
+    end if
+    ns = size(table,2)
+    allocate( raw(3,ns) )
+
+    call rot%reset
+    call rot%add( DEG2RAD*rx, 1 )
+    call rot%add( DEG2RAD*ry, 2 )
+    call rot%add( DEG2RAD*rz, 3 )
+
+    !/ ----- generate independent cloud --------------------------------------------------
+    do i=1,ns
+       do j=1,3
+          raw(j,i) = sigma(j)*dd%normal()
+       end do
+    end do
+
+    !/ ----- rotate data about the origin ------------------------------------------------
+    call rot%mul( table, raw )
+
+    !/ ----- move data off of the origin -------------------------------------------------
+    do i=1,ns
+       do j=1,3
+          table(j,i) = table(j,i) + mu(j)
+       end do
+    end do
+
+    deallocate( raw )
+999 continue
+  end subroutine generateCloud
+
+
+  !@test
+  !/ =====================================================================================
+  subroutine test_first
+    !/ -----------------------------------------------------------------------------------
+    use matrix_mod, only : DiagMul
+    use matrix_mod, only : dot
+    integer,  parameter :: N_SAMP = 50
+    real(dp), parameter :: true_mu(3)    = [ 3.0d0, -7.0d0, 11.0d0 ]
+    real(dp), parameter :: true_sigma(3) = [ 1.2d0, 0.8d0, 0.3d0 ]
+
+    real(dp), allocatable :: table(:,:), X(:,:), Xp(:,:), U(:,:), VH(:,:), T1(:,:)
+    real(dp), allocatable :: mu(:), s(:)
+
+    type(Dice) :: dd
+
+    integer :: i, j, ierr
+
+    !/ -----------------------------------------------------------------------------------
+
+    allocate( table(3,N_SAMP) )
+    allocate(     X(N_SAMP,3) )
+    allocate(     Xp(N_SAMP,3) )
+
+    allocate( U(N_SAMP,N_SAMP) )
+    allocate( VH(3,3) )
+    allocate( T1(3,3) )
+    allocate( s(3) )
+    allocate( mu(3) )
+
+    call generateCloud( table, 30.0d0, 25.0d0, 15.0d0, true_sigma, true_mu, dd )
+
+    !/ ----- find the mean ---------------------------------------------------------------
+    do j=1,3
+       mu(j) = D_ZERO
+       do i=1,N_SAMP
+          mu(j) = mu(j) + table(j,i)
+       end do
+    end do
+
+    do j=1,3
+       mu(j) = mu(j) / real(N_SAMP,dp)
+    end do
+
+    print *, mu
+
+    !/ ----- mean shift the data ---------------------------------------------------------
+    do i=1,N_SAMP
+       do j=1,3
+          X(i,j) = table(j,i) - mu(j)
+       end do
+    end do
+
+    !/ ----- perform SVD -----------------------------------------------------------------
+
+    call tc_dgesdd(X, s, U, VT=VH, JOB='N', INFO=ierr )
+
+    call DiagMul( T1, s, VH )
+
+    call dot( Xp, U(:,1:3), T1 )
+
+    do i=1,N_SAMP
+       do j=1,3
+          print *, Xp(i,j), X(i,j),  Xp(i,j) - X(i,j)
+       end do
+    end do
+    
+
+    deallocate( table )
+    deallocate( X )
+
+  end subroutine test_first
+  
+  
+  @test
+  !/ =====================================================================================
+  subroutine test_pca_particle
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    
+    integer, parameter :: N_SAMP = 7
+    
+    real(dp), parameter :: sig1 = 3.2d0
+    real(dp), parameter :: sig2 = 1.3d0
+    real(dp), parameter :: sig3 = 0.8d0
+
+    real(dp), parameter :: true_mu(3) = [ 3.0d0, -7.0d0, 11.0d0 ]
+    
+   real(dp), parameter ::  PData(N_SAMP,3) = reshape( [ &
+   &                  D_ZERO, sig1, -sig1, D_ZERO, D_ZERO, D_ZERO, D_ZERO, &
+   &                  D_ZERO, D_ZERO, D_ZERO, sig2, -sig2 , D_ZERO, D_ZERO, &
+   &                  D_ZERO, D_ZERO, D_ZERO, D_ZERO, D_ZERO, sig3, -sig3 ], [N_SAMP,3] )
+
+    !/ -----------------------------------------------------------------------------------
+
+type(RotationMatrix) :: RM
+
+    real(dp), allocatable :: Xc(:,:), U(:,:), VT(:,:), S(:), T1(:,:), Xr(:,:)
+    
+    integer :: i,j,ierr
+    
+    !/ -----------------------------------------------------------------------------------
+
+    allocate( Xc(N_SAMP,3) )
+    allocate( Xr(N_SAMP,3) )
+    allocate(  U(N_SAMP,3) )
+    allocate(  S(3) )
+    allocate(  VT(3,3) )
+    allocate(  T1(3,3) )
+    
+  print *, ''
+  print *, 'v=================================v'
+  print *, ''
+  
+  call RM%reset
+  call RM%add( DEG2RAD * 30.d0, 1)
+  call RM%add( DEG2RAD * 15.d0, 2)
+  call RM%add( DEG2RAD * 45.d0, 3)
+  
+    call RM%mul( Xc, PData )
+     call copy( U, Xc )
+
+ call print_array( PData, FMT='F6.3' )
+ 
+ print *,'----'
+ 
+ call print_array( Xc, FMT='F11.8' )
+  
+ print *,'----'
+ 
+ call print_array( U, FMT='F11.8' )
+  
+  print *,'============='
+ 
+   call tc_dgesdd( U, S, VT=VT, JOB='U', INFO=ierr )
+  
+ print *, ierr
+  
+  
+  
+  print *,''
+  print *,'U='
+  call print_array( U, FMT='F11.8' )
+  
+  print *,''
+  print *,'S='
+  call print_array( S, FMT='F11.8' )
+  
+  print *,''
+  print *,'VT='
+  call print_array( VT, FMT='F11.8' )
+  
+  call DiagMul( T1, S, VT )
+  call dot( Xr, U, T1 )
+  call sub( Xr, Xc )
+  
+  print *,''
+  print *,'Xr='
+  call print_array( Xr, FMT='F11.8' )
+  
+  
+  print *, ''
+  print *, '^=================================^'
+
+  
+  deallocate( U )
+  deallocate( S )
+  deallocate( VT )
+  deallocate( Xc )
+  deallocate( Xr )
+  deallocate( T1 )
+  
+  end subroutine test_pca_particle
+  
+  
+@test
+!/ =====================================================================================
+subroutine test_mean_shift_vector
+  !/ -----------------------------------------------------------------------------------
+implicit none
+
+integer,  parameter :: NN      = 100000
+real(dp), parameter :: true_mu = 0.0d0
+
+type(Dice) :: dd
+
+real(dp) :: mu1, mu2, S1, S2, d
+integer  :: i
+
+real(dp), allocatable :: X(:), Xs(:), Xr(:)
+
+allocate( X(NN) )
+allocate( Xs(NN) )
+allocate( Xr(NN) )
+
+do i=1,NN
+   X(i)  = dd%normal()
+   Xs(i) = X(i) + true_mu
+end do
+
+call MeanShift( Xr, Xs, MEAN=mu1 )
+call MeanShift(     Xs, MEAN=mu2 )
+
+S1 = D_ZERO
+S2 = D_ZERO
+do i=1,NN
+   d = X(i) - Xs(i)
+   S1 = S1 + (d*d)
+   d = X(i) - Xr(i)
+   S2 = S2 + (d*d)
+end do
+
+S1 = S1 / real(NN,dp)
+S2 = S2 / real(NN,dp)
+
+print *, true_mu, mu1, mu2, S1, S2
+
+deallocate( X )
+deallocate( Xs )
+deallocate( Xr )
+
+
+
+end subroutine test_mean_shift_vector
+
+@test
+!/ =====================================================================================
+subroutine test_mean_shift_matrix_col
+  !/ -----------------------------------------------------------------------------------
+implicit none
+
+integer,  parameter :: NR = 10000
+integer,  parameter :: NC = 3
+real(dp), parameter :: true_mu(3) = [ 3.0d0, -11.0d0, 7.0d0 ]
+
+type(Dice) :: dd
+
+integer  :: i, j
+
+real(dp), allocatable :: X(:,:), Xs(:,:), Xr(:,:), mu1(:), mu2(:)
+real(dp) :: d, S1, S2
+
+allocate( X(NR,NC) )
+allocate( Xs(NR,NC) )
+allocate( Xr(NR,NC) )
+allocate( mu1(NC) )
+allocate( mu2(NC) )
+
+do j=1,NC
+   do i=1,NR
+      X(i,j)  = dd%normal()
+      Xs(i,j) = X(i,j) + true_mu(j)
+   end do
+end do
+
+call MeanShift( Xr, Xs, MEAN=mu1 )
+call MeanShift(     Xs, MEAN=mu2 )
+
+S1 = D_ZERO
+S2 = D_ZERO
+do j=1,NC
+   do i=1,NR
+      d = X(i,j) - Xs(i,j)
+      S1 = S1 + (d*d)
+      d = X(i,j) - Xr(i,j)
+      S2 = S2 + (d*d)
+   end do
+end do
+
+S1 = S1 / real(NR*NC,dp)
+S2 = S2 / real(NR*NC,dp)
+
+print *, true_mu
+print *, mu1
+print *, mu2
+print *, S1
+print *, S2
+
+deallocate( X )
+deallocate( Xs )
+deallocate( Xr )
+deallocate( mu1 )
+deallocate( mu2 )
+
+end subroutine test_mean_shift_matrix_col
+
+@test
+!/ =====================================================================================
+subroutine test_mean_shift_matrix_row
+  !/ -----------------------------------------------------------------------------------
+implicit none
+
+integer,  parameter :: NR = 3
+integer,  parameter :: NC = 10000
+real(dp), parameter :: true_mu(3) = [ 3.0d0, -11.0d0, 7.0d0 ]
+
+type(Dice) :: dd
+
+integer  :: i, j
+
+real(dp), allocatable :: X(:,:), Xs(:,:), Xr(:,:), mu1(:), mu2(:)
+real(dp) :: d, S1, S2
+
+allocate( X(NR,NC) )
+allocate( Xs(NR,NC) )
+allocate( Xr(NR,NC) )
+allocate( mu1(NR) )
+allocate( mu2(NR) )
+
+do i=1,NR
+   do j=1,NC
+      X(i,j)  = dd%normal()
+      Xs(i,j) = X(i,j) + true_mu(i)
+   end do
+end do
+
+call MeanShift( Xr, Xs, MEAN=mu1 )
+call MeanShift(     Xs, MEAN=mu2 )
+
+S1 = D_ZERO
+S2 = D_ZERO
+do i=1,NR
+   do j=1,NC
+      d = X(i,j) - Xs(i,j)
+      S1 = S1 + (d*d)
+      d = X(i,j) - Xr(i,j)
+      S2 = S2 + (d*d)
+   end do
+end do
+
+S1 = S1 / real(NR*NC,dp)
+S2 = S2 / real(NR*NC,dp)
+
+print *, true_mu
+print *, mu1
+print *, mu2
+print *, S1
+print *, S2
+
+deallocate( X )
+deallocate( Xs )
+deallocate( Xr )
+deallocate( mu1 )
+deallocate( mu2 )
+
+end subroutine test_mean_shift_matrix_row
+
+end module test_pca

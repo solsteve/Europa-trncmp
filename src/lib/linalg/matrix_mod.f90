@@ -35,7 +35,7 @@ module matrix_mod
   !
   !/ -------------------------------------------------------------------------------------
   use vector_mod
-
+  implicit none
 
   integer, parameter :: MIN_M_PAR = 64 !! minimum matrix dimension for parallization with openmp
 
@@ -71,6 +71,13 @@ module matrix_mod
      module procedure :: mul_mm_R8_inplace
      module procedure :: mul_mm_R8
   end interface mul
+
+
+  !/ -------------------------------------------------------------------------------------
+  interface DiagMul
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: mul_dm_R8
+  end interface DiagMul
 
 
   !/ -------------------------------------------------------------------------------------
@@ -691,11 +698,35 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end subroutine mul_mm_R8
 
 
+  !/ =====================================================================================
+  subroutine mul_dm_R8( mat, D, M )
+    !/ -----------------------------------------------------------------------------------
+    !! Diagonal and Matrix multiplication. ${mat} = D \cdot M$
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(out) :: mat(:,:) !! Resulting Matrix.
+    real(dp), intent(in)  :: D(:)     !! Diagonal elements.
+    real(dp), intent(in)  :: M(:,:)   !! Matrix.
+    !/ -----------------------------------------------------------------------------------
+    integer :: r, c, n
+    !/ -----------------------------------------------------------------------------------
+    n = size(D)
 
-
-
-
-
+    if ( n.lt.MIN_M_PAR ) then
+       do concurrent (r=1:n, c=1:n)
+          mat(r,c) = D(r) * M(r,c)
+       end do
+    else
+       !$omp parallel do private(r,c) shared(n,mat,D,M)
+       do c=1,n
+          do r=1,n
+             mat(r,c) = D(r) * M(r,c)
+          end do
+       end do
+       !$omp end parallel do
+    end if
+    
+  end subroutine mul_dm_R8
 
   !/ =====================================================================================
   subroutine div_ms_R8( mc, ml, sr )
@@ -1329,9 +1360,6 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     end if
   end subroutine eigen_value_2_R8
 
-    
-
-  
 
 end module matrix_mod
 
