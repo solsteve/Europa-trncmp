@@ -21,3 +21,7 @@ Write a better CMakelist.txt
 - Random Numbers
 - Statistics
 - Linear Algebra
+
+### Improvements
+- Matrix_Mod
+-- Optimize ATA and AAT

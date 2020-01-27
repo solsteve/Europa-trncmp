@@ -7,7 +7,6 @@ module test_pca
   use pca_mod
 
 
-
 contains
 
 
@@ -125,285 +124,210 @@ contains
           print *, Xp(i,j), X(i,j),  Xp(i,j) - X(i,j)
        end do
     end do
-    
+
 
     deallocate( table )
     deallocate( X )
 
   end subroutine test_first
-  
-  
+
+
+  !/ =====================================================================================
+  subroutine mini_cov( CV, M )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(inout) :: CV(:,:)  !! CV( N_VAR,  N_VAR )
+    real(dp), intent(in)    :: M(:,:)   !! M ( N_SAMP, N_VAR ) already mean shifted
+    integer  :: k, i, j, ns, nv
+    real(dp) :: S, x, y, fnm1
+
+    ns = size( M, DIM=1 )
+    nv = size( M, DIM=2 )
+
+    fnm1 = real( ns-1, dp )
+
+    do i=1,nv
+       do j=1,nv
+          S = D_ZERO
+          do k=1,ns
+             x = M(k,i)
+             y = M(k,j)
+             S = S + (x*y)
+          end do
+          x = S / fnm1
+          CV(i,j) = x
+          CV(j,i) = x
+       end do
+    end do
+
+  end subroutine mini_cov
+
+
+
+
   @test
   !/ =====================================================================================
   subroutine test_pca_particle
     !/ -----------------------------------------------------------------------------------
     implicit none
-    
-    integer, parameter :: N_SAMP = 7
-    
+    integer,  parameter :: N_SAMP = 7
+
     real(dp), parameter :: sig1 = 3.2d0
     real(dp), parameter :: sig2 = 1.3d0
     real(dp), parameter :: sig3 = 0.8d0
 
+
     real(dp), parameter :: true_mu(3) = [ 3.0d0, -7.0d0, 11.0d0 ]
-    
-   real(dp), parameter ::  PData(N_SAMP,3) = reshape( [ &
-   &                  D_ZERO, sig1, -sig1, D_ZERO, D_ZERO, D_ZERO, D_ZERO, &
-   &                  D_ZERO, D_ZERO, D_ZERO, sig2, -sig2 , D_ZERO, D_ZERO, &
-   &                  D_ZERO, D_ZERO, D_ZERO, D_ZERO, D_ZERO, sig3, -sig3 ], [N_SAMP,3] )
+
+
+    real(dp), parameter ::  PData(N_SAMP,3) = reshape( [ &
+         &                  D_ZERO, sig1, -sig1, D_ZERO, D_ZERO, D_ZERO, D_ZERO, &
+         &                  D_ZERO, D_ZERO, D_ZERO, sig2, -sig2 , D_ZERO, D_ZERO, &
+         &                  D_ZERO, D_ZERO, D_ZERO, D_ZERO, D_ZERO, sig3, -sig3 ], [N_SAMP,3] )
+
+
+    real(dp), parameter :: U_test(N_SAMP,3) = reshape( [ &
+         &   1.124930272717521d-17, -7.071067811865476d-01,  7.071067811865475d-01,   &
+         &   8.390459417189572d-18, -8.390459417189572d-18, -4.709091476442237d-18,   &
+         &   4.709091476442237d-18, -1.561426652245926d-17,  1.869513183688143d-16,   &
+         &  -5.158350800113021d-17,  7.071067811865475d-01, -7.071067811865475d-01,   &
+         &   1.431973835336066d-16, -1.431973835336066d-16, -3.421098982239136d-17,   &
+         &  -8.419369592915586d-18, -5.470373758313279d-17,  1.820133946974506d-16,   &
+         &  -1.820133946974506d-16, -7.071067811865476d-01,  7.071067811865476d-01    &
+         &  ],[N_SAMP,3] )
+
+
+    real(dp), parameter :: S_test(3) = [  &
+         &   4.525483399593905d+00,   &
+         &   1.838477631085024d+00,   &
+         &   1.131370849898477d+00 ]
+
+
+    real(dp), parameter :: VT_test(3,3) = reshape( [ &
+         &  -6.830127018922194d-01, -5.208660847496850d-01, -5.120470396471642d-01,   &
+         &  -6.830127018922194d-01,  7.038787866419044d-01,  1.950597415393835d-01,   &
+         &   2.588190451025209d-01,  4.829629131445346d-01, -8.365163037378079d-01    &
+         &  ],[3,3] )
+
+
+    real(dp), parameter :: ev_test(3) = [  &
+         &   3.413333333333332d+00,   &
+         &   5.633333333333332d-01,   &
+         &   2.133333333333334d-01 ]
+
 
     !/ -----------------------------------------------------------------------------------
 
-type(RotationMatrix) :: RM
+    type(RotationMatrix) :: RM
 
-    real(dp), allocatable :: Xc(:,:), U(:,:), VT(:,:), S(:), T1(:,:), Xr(:,:)
-    
+    real(dp), allocatable :: Xc(:,:), Xt(:,:), Xf(:,:), T1(:,:), Xr(:,:), cv(:,:)
+    real(dp), allocatable :: V1(:), V2(:), V3(:)
+    real(dp) :: W(3)
+
     integer :: i,j,ierr
-    
+
+    type(PCA) :: P
+
     !/ -----------------------------------------------------------------------------------
 
     allocate( Xc(N_SAMP,3) )
+    allocate( Xt(N_SAMP,3) )
+    allocate( Xf(N_SAMP,3) )
     allocate( Xr(N_SAMP,3) )
-    allocate(  U(N_SAMP,3) )
-    allocate(  S(3) )
-    allocate(  VT(3,3) )
     allocate(  T1(3,3) )
-    
-  print *, ''
-  print *, 'v=================================v'
-  print *, ''
-  
-  call RM%reset
-  call RM%add( DEG2RAD * 30.d0, 1)
-  call RM%add( DEG2RAD * 15.d0, 2)
-  call RM%add( DEG2RAD * 45.d0, 3)
-  
+    allocate(  cv(3,3) )
+    allocate(  V1(3) )
+    allocate(  V2(3) )
+    allocate(  V3(3) )
+
+    call RM%reset
+    call RM%add( DEG2RAD * 30.d0, 1)
+    call RM%add( DEG2RAD * 15.d0, 2)
+    call RM%add( DEG2RAD * 45.d0, 3)
+
     call RM%mul( Xc, PData )
-     call copy( U, Xc )
 
- call print_array( PData, FMT='F6.3' )
- 
- print *,'----'
- 
- call print_array( Xc, FMT='F11.8' )
-  
- print *,'----'
- 
- call print_array( U, FMT='F11.8' )
-  
-  print *,'============='
- 
-   call tc_dgesdd( U, S, VT=VT, JOB='U', INFO=ierr )
-  
- print *, ierr
-  
-  
-  
-  print *,''
-  print *,'U='
-  call print_array( U, FMT='F11.8' )
-  
-  print *,''
-  print *,'S='
-  call print_array( S, FMT='F11.8' )
-  
-  print *,''
-  print *,'VT='
-  call print_array( VT, FMT='F11.8' )
-  
-  call DiagMul( T1, S, VT )
-  call dot( Xr, U, T1 )
-  call sub( Xr, Xc )
-  
-  print *,''
-  print *,'Xr='
-  call print_array( Xr, FMT='F11.8' )
-  
-  
-  print *, ''
-  print *, '^=================================^'
+    !/ -----------------------------------------------------------------------------------
 
-  
-  deallocate( U )
-  deallocate( S )
-  deallocate( VT )
-  deallocate( Xc )
-  deallocate( Xr )
-  deallocate( T1 )
-  
+    call P%compile( Xc, MEAN_CENTERED=.true. )
+
+    @assertEqual( U_test,  P%U,  1.0d-14 )
+
+    @assertEqual( S_test,  P%S,  1.0d-14 )
+
+    @assertEqual( VT_test, P%VT, 1.0d-14 )
+
+    !/ -----------------------------------------------------------------------------------
+
+    call DiagMul( T1, P%S, P%VT )
+    call dot( Xr, P%U, T1 )
+    call sub( Xr, Xc )
+
+    call mini_cov( cv, Xc )
+    W(1) = P%eigenvalue(1)
+    W(2) = P%eigenvalue(2)
+    W(3) = P%eigenvalue(3)
+
+    @assertEqual( ev_test, W, 1.0d-14 )
+
+    !/ -----------------------------------------------------------------------------------
+
+    print *, ''
+    print *, 'Original Covariance ='
+    call print_array( cv, FMT='F10.6' )
+
+    call P%transform( Xt, Xc )
+    call P%recover( Xf, Xt )
+
+    @assertEqual( Xc, Xf, 1.0d-12 )
+
+    print *, ''
+    call mini_cov( cv, Xt )
+    print *, 'Rotated Covariance ='
+    call print_array( cv, FMT='F10.6' )
+
+    print *, ''
+    call mini_cov( cv, Xf )
+    print *, 'Recovered Covariance ='
+    call print_array( cv, FMT='F10.6' )
+
+    print *, ''
+
+    do i=1,7
+       V1(1) = Xc(i,1)
+       V1(2) = Xc(i,2)
+       V1(3) = Xc(i,3)
+       call P%transform( V2, V1 )
+       @assertEqual( Xt(i,1), V2(1), 1.0d-14 )
+       @assertEqual( Xt(i,2), V2(2), 1.0d-14 )
+       @assertEqual( Xt(i,3), V2(3), 1.0d-14 )
+    end do
+
+    do i=1,7
+       V2(1) = Xt(i,1)
+       V2(2) = Xt(i,2)
+       V2(3) = Xt(i,3)
+       call P%recover( V3, V2 )
+       @assertEqual( Xf(i,1), V3(1), 1.0d-14 )
+       @assertEqual( Xf(i,2), V3(2), 1.0d-14 )
+       @assertEqual( Xf(i,3), V3(3), 1.0d-14 )
+    end do
+
+
+
+    !/ -----------------------------------------------------------------------------------
+
+    deallocate( V1 )
+    deallocate( V2)
+    deallocate( V3)
+    deallocate( cv )
+    deallocate( Xc )
+    deallocate( Xt )
+    deallocate( Xf )
+    deallocate( Xr )
+    deallocate( T1 )
+
   end subroutine test_pca_particle
-  
-  
-@test
-!/ =====================================================================================
-subroutine test_mean_shift_vector
-  !/ -----------------------------------------------------------------------------------
-implicit none
 
-integer,  parameter :: NN      = 100000
-real(dp), parameter :: true_mu = 0.0d0
-
-type(Dice) :: dd
-
-real(dp) :: mu1, mu2, S1, S2, d
-integer  :: i
-
-real(dp), allocatable :: X(:), Xs(:), Xr(:)
-
-allocate( X(NN) )
-allocate( Xs(NN) )
-allocate( Xr(NN) )
-
-do i=1,NN
-   X(i)  = dd%normal()
-   Xs(i) = X(i) + true_mu
-end do
-
-call MeanShift( Xr, Xs, MEAN=mu1 )
-call MeanShift(     Xs, MEAN=mu2 )
-
-S1 = D_ZERO
-S2 = D_ZERO
-do i=1,NN
-   d = X(i) - Xs(i)
-   S1 = S1 + (d*d)
-   d = X(i) - Xr(i)
-   S2 = S2 + (d*d)
-end do
-
-S1 = S1 / real(NN,dp)
-S2 = S2 / real(NN,dp)
-
-print *, true_mu, mu1, mu2, S1, S2
-
-deallocate( X )
-deallocate( Xs )
-deallocate( Xr )
-
-
-
-end subroutine test_mean_shift_vector
-
-@test
-!/ =====================================================================================
-subroutine test_mean_shift_matrix_col
-  !/ -----------------------------------------------------------------------------------
-implicit none
-
-integer,  parameter :: NR = 10000
-integer,  parameter :: NC = 3
-real(dp), parameter :: true_mu(3) = [ 3.0d0, -11.0d0, 7.0d0 ]
-
-type(Dice) :: dd
-
-integer  :: i, j
-
-real(dp), allocatable :: X(:,:), Xs(:,:), Xr(:,:), mu1(:), mu2(:)
-real(dp) :: d, S1, S2
-
-allocate( X(NR,NC) )
-allocate( Xs(NR,NC) )
-allocate( Xr(NR,NC) )
-allocate( mu1(NC) )
-allocate( mu2(NC) )
-
-do j=1,NC
-   do i=1,NR
-      X(i,j)  = dd%normal()
-      Xs(i,j) = X(i,j) + true_mu(j)
-   end do
-end do
-
-call MeanShift( Xr, Xs, MEAN=mu1 )
-call MeanShift(     Xs, MEAN=mu2 )
-
-S1 = D_ZERO
-S2 = D_ZERO
-do j=1,NC
-   do i=1,NR
-      d = X(i,j) - Xs(i,j)
-      S1 = S1 + (d*d)
-      d = X(i,j) - Xr(i,j)
-      S2 = S2 + (d*d)
-   end do
-end do
-
-S1 = S1 / real(NR*NC,dp)
-S2 = S2 / real(NR*NC,dp)
-
-print *, true_mu
-print *, mu1
-print *, mu2
-print *, S1
-print *, S2
-
-deallocate( X )
-deallocate( Xs )
-deallocate( Xr )
-deallocate( mu1 )
-deallocate( mu2 )
-
-end subroutine test_mean_shift_matrix_col
-
-@test
-!/ =====================================================================================
-subroutine test_mean_shift_matrix_row
-  !/ -----------------------------------------------------------------------------------
-implicit none
-
-integer,  parameter :: NR = 3
-integer,  parameter :: NC = 10000
-real(dp), parameter :: true_mu(3) = [ 3.0d0, -11.0d0, 7.0d0 ]
-
-type(Dice) :: dd
-
-integer  :: i, j
-
-real(dp), allocatable :: X(:,:), Xs(:,:), Xr(:,:), mu1(:), mu2(:)
-real(dp) :: d, S1, S2
-
-allocate( X(NR,NC) )
-allocate( Xs(NR,NC) )
-allocate( Xr(NR,NC) )
-allocate( mu1(NR) )
-allocate( mu2(NR) )
-
-do i=1,NR
-   do j=1,NC
-      X(i,j)  = dd%normal()
-      Xs(i,j) = X(i,j) + true_mu(i)
-   end do
-end do
-
-call MeanShift( Xr, Xs, MEAN=mu1 )
-call MeanShift(     Xs, MEAN=mu2 )
-
-S1 = D_ZERO
-S2 = D_ZERO
-do i=1,NR
-   do j=1,NC
-      d = X(i,j) - Xs(i,j)
-      S1 = S1 + (d*d)
-      d = X(i,j) - Xr(i,j)
-      S2 = S2 + (d*d)
-   end do
-end do
-
-S1 = S1 / real(NR*NC,dp)
-S2 = S2 / real(NR*NC,dp)
-
-print *, true_mu
-print *, mu1
-print *, mu2
-print *, S1
-print *, S2
-
-deallocate( X )
-deallocate( Xs )
-deallocate( Xr )
-deallocate( mu1 )
-deallocate( mu2 )
-
-end subroutine test_mean_shift_matrix_row
 
 end module test_pca

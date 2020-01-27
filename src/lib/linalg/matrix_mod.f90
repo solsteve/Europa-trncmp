@@ -35,6 +35,7 @@ module matrix_mod
   !
   !/ -------------------------------------------------------------------------------------
   use vector_mod
+  use tlogger
   implicit none
 
   integer, parameter :: MIN_M_PAR = 64 !! minimum matrix dimension for parallization with openmp
@@ -141,7 +142,28 @@ module matrix_mod
      module procedure :: inverse_n_R8
   end interface inverse
 
+  
+  !/ -------------------------------------------------------------------------------------
+  interface MeanShift
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: mean_shift_vec_R8
+     module procedure :: mean_shift_vec_R8_inplace
+     module procedure :: mean_shift_mat_R8
+     module procedure :: mean_shift_mat_R8_inplace
+  end interface MeanShift
 
+
+  !/ -------------------------------------------------------------------------------------
+  interface ATA
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: dot_AT_A_R8
+  end interface ATA
+
+  !/ -------------------------------------------------------------------------------------
+  interface AAT
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: dot_A_AT_R8
+  end interface AAT
 
 
   !/ =====================================================================================
@@ -1361,6 +1383,409 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end subroutine eigen_value_2_R8
 
 
+  !/ =======================================================================================
+  subroutine mean_shift_vec_R8( MS, V, MEAN )
+    !/ -------------------------------------------------------------------------------------
+    !! Mean shift a Vector.
+    !/ -------------------------------------------------------------------------------------
+    implicit none
+    real(dp),           intent(inout) :: MS(:)  !! Mean Shifted Vector.
+    real(dp),           intent(in)    :: V(:)   !! Source Vector.
+    real(dp), optional, intent(out)   :: MEAN   !! return the mean value.
+    !/ -------------------------------------------------------------------------------------
+    integer  :: i, n
+    real(dp) :: mu
+    !/ -------------------------------------------------------------------------------------
+    mu = D_ZERO
+    n = size(V)
+    if ( size(MS).lt.n ) then
+       call log_error( 'Mean Shift Vector: return array is smaller than', I4=n )
+       goto 999
+    end if
+
+    do i=1,n
+       mu = mu + V(i)
+    end do
+
+    mu = mu / real(n,dp)
+
+    do i=1,n
+       MS(i) = V(i) - mu
+    end do
+
+999 continue
+
+    if ( present( MEAN ) ) MEAN = mu
+
+  end subroutine mean_shift_vec_R8
+
+
+  !/ =======================================================================================
+  subroutine mean_shift_vec_R8_inplace( V, MEAN )
+    !/ -------------------------------------------------------------------------------------
+    !! Mean shift a Vector inplace.
+    !/ -------------------------------------------------------------------------------------
+    implicit none
+    real(dp),           intent(inout) :: V(:)   !! Source Vector.
+    real(dp), optional, intent(out)   :: MEAN   !! return the mean value.
+    !/ -------------------------------------------------------------------------------------
+    integer  :: i, n
+    real(dp) :: mu
+    !/ -------------------------------------------------------------------------------------
+    mu = D_ZERO
+    n  = size(V)
+
+    do i=1,n
+       mu = mu + V(i)
+    end do
+
+    mu = mu / real(n,dp)
+
+    do i=1,n
+       V(i) = V(i) - mu
+    end do
+
+    if ( present( MEAN ) ) MEAN = mu
+
+  end subroutine mean_shift_vec_R8_inplace
+
+
+  !/ =======================================================================================
+  subroutine mean_shift_col_R8( MS, M, MEAN )
+    !/ -------------------------------------------------------------------------------------
+    !! Mean shift a Column Matrix. A row of means will be used. One mean for each column.
+    !/ -------------------------------------------------------------------------------------
+    implicit none
+    real(dp),           intent(inout) :: MS(:,:)  !! Mean Shifted Matrix.
+    real(dp),           intent(in)    :: M(:,:)   !! Source Matrix.
+    real(dp), optional, intent(out)   :: MEAN(:)  !! return the mean values.
+    !/ -------------------------------------------------------------------------------------
+    integer  :: i, j, nr, nc
+    real(dp), allocatable :: mu(:)
+    real(dp) :: s, f
+    !/ -------------------------------------------------------------------------------------
+    nr = size(M, DIM=1)
+    nc = size(M, DIM=2)
+
+    allocate( mu(nc) )
+    do i=1,nc
+       mu(i) = D_ZERO
+    end do
+
+    if ( size(MS,DIM=1).lt.nr ) then
+       call log_error( 'Mean Shift Matrix: return number of rows smaller than', I4=nr )
+       goto 999
+    end if
+
+    if ( size(MS,DIM=2).lt.nc ) then
+       call log_error( 'Mean Shift Matrix: return number of columns smaller than', I4=nc )
+       goto 999
+    end if
+
+    f = real(nr,dp)
+    do j=1,nc
+       s = D_ZERO
+       do i=1,nr
+          s = s + M(i,j)
+       end do
+       mu(j) = s / f
+    end do
+
+    do j=1,nc
+       do i=1,nr
+          MS(i,j) = M(i,j) - mu(j)
+       end do
+    end do
+
+999 continue
+
+    if ( present( MEAN ) ) then
+       do i=1,nc
+          MEAN(i) = mu(i)
+       end do
+    end if
+
+    deallocate( mu )
+
+  end subroutine mean_shift_col_R8
+
+
+  !/ =======================================================================================
+  subroutine mean_shift_col_R8_inplace( M, MEAN )
+    !/ -------------------------------------------------------------------------------------
+    !! Mean shift a Column Matrix inplace.
+    !! A row of means will be used. One mean for each column.
+    !/ -------------------------------------------------------------------------------------
+    implicit none
+    real(dp),           intent(inout) :: M(:,:)   !! Source Matrix.
+    real(dp), optional, intent(out)   :: MEAN(:)  !! return the mean values.
+    !/ -------------------------------------------------------------------------------------
+    integer  :: i, j, nr, nc
+    real(dp), allocatable :: mu(:)
+    real(dp) :: s, f
+    !/ -------------------------------------------------------------------------------------
+    nr = size(M, DIM=1)
+    nc = size(M, DIM=2)
+
+    allocate( mu(nc) )
+    do i=1,nc
+       mu(i) = D_ZERO
+    end do
+
+    f = real(nr,dp)
+    do j=1,nc
+       s = D_ZERO
+       do i=1,nr
+          s = s + M(i,j)
+       end do
+       mu(j) = s / f
+    end do
+
+    do j=1,nc
+       do i=1,nr
+          M(i,j) = M(i,j) - mu(j)
+       end do
+    end do
+
+    if ( present( MEAN ) ) then
+       do i=1,nc
+          MEAN(i) = mu(i)
+       end do
+    end if
+
+    deallocate( mu )
+
+  end subroutine mean_shift_col_R8_inplace
+
+
+  !/ =======================================================================================
+  subroutine mean_shift_row_R8( MS, M, MEAN )
+    !/ -------------------------------------------------------------------------------------
+    !! Mean shift a Column Matrix inplace.
+    !! A column of means will be used. One mean for each row.
+    !/ -------------------------------------------------------------------------------------
+    implicit none
+    real(dp),           intent(inout) :: MS(:,:)  !! Mean Shifted Matrix.
+    real(dp),           intent(in)    :: M(:,:)   !! Source Matrix.
+    real(dp), optional, intent(out)   :: MEAN(:)  !! return the mean values.
+    !/ -------------------------------------------------------------------------------------
+    integer               :: i, j, nr, nc
+    real(dp), allocatable :: mu(:)
+    real(dp)              :: s, f
+    !/ -------------------------------------------------------------------------------------
+    nr = size(M, DIM=1)
+    nc = size(M, DIM=2)
+
+    allocate( mu(nr) )
+    do i=1,nr
+       mu(i) = D_ZERO
+    end do
+
+    if ( size(MS,DIM=1).lt.nr ) then
+       call log_error( 'Mean Shift Matrix: return number of rows smaller than', I4=nr )
+       goto 999
+    end if
+
+    if ( size(MS,DIM=2).lt.nc ) then
+       call log_error( 'Mean Shift Matrix: return number of columns smaller than', I4=nc )
+       goto 999
+    end if
+
+    f = real(nc,dp)
+    do i=1,nr
+       s = D_ZERO
+       do j=1,nc
+          s = s + M(i,j)
+       end do
+       mu(i) = s / f
+    end do
+
+    do i=1,nr
+       do j=1,nc
+          MS(i,j) = M(i,j) - mu(i)
+       end do
+    end do
+
+999 continue
+
+    if ( present( MEAN ) ) then
+       do i=1,nr
+          MEAN(i) = mu(i)
+       end do
+    end if
+
+    deallocate( mu )
+
+  end subroutine mean_shift_row_R8
+
+
+  !/ =======================================================================================
+  subroutine mean_shift_row_R8_inplace( M, MEAN )
+    !/ -------------------------------------------------------------------------------------
+    !! Mean shift a Row Matrix inplace.
+    !! A column of means will be used. One mean for each row.
+    !/ -------------------------------------------------------------------------------------
+    implicit none
+    real(dp),           intent(inout) :: M(:,:)   !! Source Matrix.
+    real(dp), optional, intent(out)   :: MEAN(:)  !! return the mean values.
+    !/ -------------------------------------------------------------------------------------
+    integer               :: i, j, nr, nc
+    real(dp), allocatable :: mu(:)
+    real(dp)              :: s, f
+    !/ -------------------------------------------------------------------------------------
+    nr = size(M, DIM=1)
+    nc = size(M, DIM=2)
+
+    allocate( mu(nr) )
+    do i=1,nr
+       mu(i) = D_ZERO
+    end do
+
+    f = real(nc,dp)
+    do i=1,nr
+       s = D_ZERO
+       do j=1,nc
+          s = s + M(i,j)
+       end do
+       mu(i) = s / f
+    end do
+
+    do i=1,nr
+       do j=1,nc
+          M(i,j) = M(i,j) - mu(i)
+       end do
+    end do
+
+999 continue
+
+    if ( present( MEAN ) ) then
+       do i=1,nr
+          MEAN(i) = mu(i)
+       end do
+    end if
+
+    deallocate( mu )
+
+  end subroutine mean_shift_row_R8_inplace
+
+
+  !/ =======================================================================================
+  subroutine mean_shift_mat_R8( MS, M, AXIS, MEAN )
+    !/ -------------------------------------------------------------------------------------
+    !! Mean shift a Matrix.
+    !/ -------------------------------------------------------------------------------------
+    implicit none
+    real(dp),           intent(inout) :: MS(:,:)  !! Mean Shifted Matrix.
+    real(dp),           intent(in)    :: M(:,:)   !! Source Matrix.
+    integer,  optional, intent(in)    :: AXIS     !! Axis.
+    real(dp), optional, intent(out)   :: MEAN(:)  !! return the mean values.
+    !/ -------------------------------------------------------------------------------------
+    integer :: ax
+    !/ -------------------------------------------------------------------------------------
+    if ( size(M, DIM=1).gt.size(M, DIM=2) ) then
+       ax = 1
+    else
+       ax = 2
+    end if
+
+    if ( present( AXIS ) ) ax = AXIS
+
+    if ( 1.eq.ax ) then
+       call mean_shift_col_R8( MS, M, MEAN )
+    else
+       call mean_shift_row_R8( MS, M, MEAN )
+    end if
+
+  end subroutine mean_shift_mat_R8
+
+
+  !/ =======================================================================================
+  subroutine mean_shift_mat_R8_inplace( M, AXIS, MEAN )
+    !/ -------------------------------------------------------------------------------------
+    !! Mean shift a Matrix inplace.
+    !/ -------------------------------------------------------------------------------------
+    !/ -------------------------------------------------------------------------------------
+    implicit none
+    real(dp),           intent(inout) :: M(:,:)   !! Source Matrix.
+    integer,  optional, intent(in)    :: AXIS     !! Axis.
+    real(dp), optional, intent(out)   :: MEAN(:)  !! return the mean values.
+    !/ -------------------------------------------------------------------------------------
+    integer :: ax
+    !/ -------------------------------------------------------------------------------------
+    if ( size(M, DIM=1).gt.size(M, DIM=2) ) then
+       ax = 1
+    else
+       ax = 2
+    end if
+
+    if ( present( AXIS ) ) ax = AXIS
+
+    if ( 1.eq.ax ) then
+       call mean_shift_col_R8_inplace( M, MEAN )
+    else
+       call mean_shift_row_R8_inplace( M, MEAN )
+    end if
+
+  end subroutine mean_shift_mat_R8_inplace
+
+
+
+
+  
+  !/ =======================================================================================
+  subroutine dot_AT_A_R8( B, A )
+    !/ -------------------------------------------------------------------------------------
+    !! Inner product of a Transpose of a Matrix with itself.  $$B = A^T \cdot A$$
+    !/ -------------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(inout) :: B(:,:)  !! Resulting Matrix.
+    real(dp), intent(in)    :: A(:,:)  !! source Matrix.
+    !/ -------------------------------------------------------------------------------------
+    integer :: r,c,k,nr,nc
+    !/ -------------------------------------------------------------------------------------
+    nr = size( A, DIM=1 )
+    nc = size( A, DIM=2 )
+
+    do r=1,nc
+       do c=1,nc
+          B(r,c) = D_ZERO
+          do k=1,nr
+             B(r,c) = B(r,c) + ( A(k,r) * A(k,c) )
+          end do
+       end do
+    end do
+
+  end subroutine dot_AT_A_R8
+  
+  
+  !/ =======================================================================================
+  subroutine dot_A_AT_R8( B, A )
+    !/ -------------------------------------------------------------------------------------
+    !! inner product of a Matrix with its own transpose. $$C = B \cdot A^T$$
+    !/ -------------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(inout) :: B(:,:)  !! Resulting Matrix.
+    real(dp), intent(in)    :: A(:,:)  !! source Matrix.
+    !/ -------------------------------------------------------------------------------------
+    integer :: r,c,k,nr,nc
+    !/ -------------------------------------------------------------------------------------
+    nr = size( A, DIM=1 )
+    nc = size( A, DIM=2 )
+
+    do r=1,nr
+       do c=1,nr
+          B(r,c) = D_ZERO
+          do k=1,nc
+             B(r,c) = B(r,c) + ( A(r,k) * A(c,k) )
+          end do
+       end do
+    end do
+
+  end subroutine dot_A_AT_R8
+
+
+
+     
 end module matrix_mod
 
 
