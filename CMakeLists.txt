@@ -132,6 +132,12 @@ find_package ( BLAS )
 find_package ( LAPACK )
 find_package ( HDF5 COMPONENTS Fortran )
 
+add_library( davidv STATIC IMPORTED )
+set_target_properties( davidv PROPERTIES
+  IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/lib/libdavidv.a"
+  #INTERFACE_INCLUDE_DIRECTORIES "~/include"
+  )
+
 add_subdirectory ( src )
 add_subdirectory ( tools )
 add_subdirectory ( apps )

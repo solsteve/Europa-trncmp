@@ -24,6 +24,7 @@
 
 project ( tests Fortran )
 
+add_subdirectory ( core )
 add_subdirectory ( arrays )
 add_subdirectory ( container )
 add_subdirectory ( mathaux )
@@ -33,6 +34,9 @@ add_subdirectory ( stats )
 add_subdirectory ( linalg )
 add_subdirectory ( entropy )
 add_subdirectory ( fuzzy )
+add_subdirectory ( datetime )
+add_subdirectory ( linear3d )
+add_subdirectory ( astro )
 
 set ( CMAKE_Fortran_MODULE_DIRECTORY "" )
 

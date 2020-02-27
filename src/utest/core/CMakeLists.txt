@@ -1,8 +1,8 @@
 #/ ====================================================================== BEGIN FILE =====
-#/ **                             FTest - C M A K E L I S T                             **
+#/ **                      pFUnit Subdirectory - C M A K E L I S T                      **
 #/ =======================================================================================
 #/ **                                                                                   **
-#/ **  Copyright  (c) 2018, Stephen W. Soliday                                           **
+#/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
 #/ **                      stephen.soliday@trncmp.org                                   **
 #/ **                      http://research.trncmp.org                                   **
 #/ **                                                                                   **
@@ -10,7 +10,7 @@
 #/ **                                                                                   **
 #/ **  This program is free software: you can redistribute it and/or modify it under    **
 #/ **  the terms of the GNU General Public License as published by the Free Software    **
-#/ **  Foundation, either version 3 of the License, or  (at your option)                 **
+#/ **  Foundation, either version 3 of the License, or (at your option)                 **
 #/ **  any later version.                                                               **
 #/ **                                                                                   **
 #/ **  This program is distributed in the hope that it will be useful, but WITHOUT      **
@@ -22,33 +22,10 @@
 #/ **                                                                                   **
 #/ =======================================================================================
 
-project ( ftest Fortran )
+project(core Fortran)
 
-file ( GLOB fsrc "ftest_*.f90" )
-
-foreach ( ft ${fsrc} )
-  get_filename_component ( _exec ${ft} NAME_WE )
-  
-  set ( CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/temp )
-  set ( SDSPEC "-std=f2008 -ffree-form" )
-
-  add_executable ( ${_exec} ${ft} )
-  
-  target_include_directories( ${_exec} PRIVATE ${HDF5_INCLUDE_DIRS})
-
-  target_link_libraries ( ${_exec} europa )
-  target_link_libraries ( ${_exec} ${LAPACK_LIBRARIES} )
-  target_link_libraries ( ${_exec} ${BLAS_LIBRARIES} )
-  target_link_libraries ( ${_exec} ${HDF5_Fortran_LIBRARIES} )
-  target_link_libraries ( ${_exec} davidv)
-  
-  install (TARGETS ${_exec}
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib)
-  
-endforeach ( )
+include( ../build_pfunit.cmake )
 
 #/ =======================================================================================
-#/ **                             FTest - C M A K E L I S T                             **
-#/ =========================================================================== END FILE ==
+#/ **                      pFUnit Subdirectory - C M A K E L I S T                      **
+#/ =========================================================================== end FILE ==

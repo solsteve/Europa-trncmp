@@ -97,5 +97,32 @@ contains
     end do
 
   end subroutine area_test1
+
+  @test
+  subroutine test_fraction
+        use dice_mod
+    implicit none
+
+    type(Dice) :: dd
+    integer :: i
+    real(dp) :: x1, xw, xf, x2
+
+    call dd%seed_set
+
+    print *, ''
+
+    do i=1,100
+       x1 = dd%normal() * 1.0d2
+
+       call fraction( xw, xf, x1 )
+
+       x2 = xw + xf
+
+       @assertEqual( x1, x2 )
+    end do
+
+  end subroutine test_fraction
+  
+
     
 end module testMathAux

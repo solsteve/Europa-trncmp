@@ -78,6 +78,29 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
+  pure subroutine fraction( whole_part, fraction_part, x, MULTIPLY, DIVIDE )
+    !/ -----------------------------------------------------------------------------------
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp),            intent(out) :: whole_part
+    real(dp),            intent(out) :: fraction_part
+    real(dp),           intent(in)   :: x
+    real(dp), optional, intent(in)   :: MULTIPLY
+    real(dp), optional, intent(in)   :: DIVIDE
+    !/ -----------------------------------------------------------------------------------
+    real(dp) :: temp
+    !/ -----------------------------------------------------------------------------------
+    temp = x
+
+    if ( present( MULTIPLY ) ) temp = temp * MULTIPLY
+    if ( present( DIVIDE ) )   temp = temp / DIVIDE
+    
+    whole_part    = real(floor(temp),dp)
+    fraction_part = temp - whole_part
+  end subroutine fraction
+  
+
+  !/ =====================================================================================
   function area_triangle( a, b, c ) result( x )
     !/ -----------------------------------------------------------------------------------
     !! Area of an arbitrary triangle where the length of all three sides in known.

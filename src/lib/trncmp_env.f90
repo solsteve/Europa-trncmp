@@ -90,7 +90,6 @@ module trncmp_env
 
 
 
-
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
@@ -251,6 +250,70 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
   end subroutine display_matrix
 
+
+
+
+
+  !/ =====================================================================================
+  subroutine URANDOM( buffer )
+    !/ -----------------------------------------------------------------------------------
+    !! Retrieve entropy from /dev/urandom
+   !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer, intent(inout) :: buffer(:)
+   !/ -----------------------------------------------------------------------------------
+    integer :: un, istat
+    open(newunit=un, file="/dev/urandom", access="stream",  &
+         &           form="unformatted", action="read", status="old", iostat=istat)
+    if (istat == 0) then
+       read(un) buffer
+       close(un)
+    end if
+  end subroutine URANDOM
+
+  !/ =====================================================================================
+  function LeadingZero( fmt, x, pos ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Create floating point numbers with leading zeros.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    character(*),      intent(in) :: fmt !! floating point edit descriptor
+    real(dp),          intent(in) :: x   !! value
+    logical, optional, intent(in) :: pos !! use '+' for positive numbers
+    character(:), allocatable     :: str !! return string
+    !/ -----------------------------------------------------------------------------------
+    character(32) :: buffer
+    character(16) :: ed
+    integer       :: i, n
+    !/ -----------------------------------------------------------------------------------
+
+    write( ed, 100 ) fmt
+100 format('(',A,')')
+    
+    if ( x.lt.D_ZERO ) then
+       write( buffer, trim(adjustl(ed)) ) -x
+    else
+       write( buffer, trim(adjustl(ed)) )  x
+    end if
+
+    str = trim(buffer)
+    n   = len(str)
+    do i=1,n
+       if ( ' '.eq.str(i:i) ) then
+          str(i:i) = '0'
+       end if
+    end do
+
+    if ( x.lt.D_ZERO ) then
+       str(1:1) = '-'
+    else
+       if ( present( pos ) ) then
+          if ( pos ) then
+             str(1:1) = '+'
+          end if
+       end if
+    end if
+  end function LeadingZero
 
 end module trncmp_env
 

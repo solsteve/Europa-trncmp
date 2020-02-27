@@ -1,0 +1,21 @@
+module test_core
+  use pfunit_mod
+  use trncmp_ENV
+  implicit none
+
+contains
+
+  @test
+  !/ =====================================================================================
+  subroutine test_leading_zero
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    @assertEqual( '-003.12', LeadingZero( 'F7.2', -3.12d0 ) )
+    @assertEqual( '0003.12', LeadingZero( 'F7.2', 3.12d0 ) )
+    @assertEqual( '0003.12', LeadingZero( 'F7.2', 3.12d0, pos=.false. ) )
+    @assertEqual( '+003.12', LeadingZero( 'F7.2', 3.12d0, pos=.true. ) )
+
+  end subroutine test_leading_zero
+
+end module test_core

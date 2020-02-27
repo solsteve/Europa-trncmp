@@ -195,7 +195,7 @@ contains
     @assertEqual( 34, list(2) )
     @assertEqual( 93, list(3) )
 
-    str = toString( a )
+    str = toListString( a )
 
     @assertEqual( '[1,3,5,7]', str )
 
@@ -232,7 +232,7 @@ contains
     @assertTrue( isEqual( 3.4_sp, list(2) ) )
     @assertTrue( isEqual( 9.3_sp, list(3) ) )
 
-    str = toString( a, 'F5.2' )
+    str = toListString( a, fmt='F5.2' )
 
     @assertEqual( '[ 1.30, 3.40, 5.70, 7.90]', str )
 
@@ -269,7 +269,7 @@ contains
     @assertTrue( isEqual( 3.4_dp, list(2) ) )
     @assertTrue( isEqual( 9.3_dp, list(3) ) )
 
-    str = toString( a, 'ES10.3' )
+    str = toListString( a, 'ES10.3' )
 
     @assertEqual( '[ 1.300E+00, 3.400E+00, 5.700E+00, 7.900E+00]', str )
 

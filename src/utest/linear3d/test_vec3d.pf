@@ -1,0 +1,619 @@
+module test_vec3d
+  use pfunit_mod
+  use trncmp_ENV
+  use vector3d_mod
+
+contains
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_comp
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: test(3) = [ 1.2d0, 3.4d0, 5.6d0 ]
+    real(8)             :: x1, x2, y1, y2, z1, z2
+    type(Vector3D)      :: V
+    integer             :: n
+
+    x1 = 3.0d0
+    y1 = 7.0d0
+    z1 = 5.0d0
+
+    V%v(1) = x1
+    V%v(2) = y1
+    V%v(3) = z1
+
+    x2 = V%X()
+    y2 = V%Y()
+    z2 = V%Z()
+
+    @assertEqual( x1, x2 )
+    @assertEqual( y1, y2 )
+    @assertEqual( z1, z2 )
+
+    call V%zero
+    @assertEqual( D_ZERO, V%v(1) )
+    @assertEqual( D_ZERO, V%v(2) )
+    @assertEqual( D_ZERO, V%v(3) )
+
+    call V%set( test )
+    @assertEqual( 1.2d0, V%v(1) )
+    @assertEqual( 3.4d0, V%v(2) )
+    @assertEqual( 5.6d0, V%v(3) )
+
+    call V%set( X=7.7d0 )
+    @assertEqual( 7.7d0, V%v(1) )
+    @assertEqual( 3.4d0, V%v(2) )
+    @assertEqual( 5.6d0, V%v(3) )
+
+    call V%set( Y=9.1d0 )
+    @assertEqual( 7.7d0, V%v(1) )
+    @assertEqual( 9.1d0, V%v(2) )
+    @assertEqual( 5.6d0, V%v(3) )
+
+    call V%set( Z=8.8d0 )
+    @assertEqual( 7.7d0, V%v(1) )
+    @assertEqual( 9.1d0, V%v(2) )
+    @assertEqual( 8.8d0, V%v(3) )
+
+    call V%set( Z=3.3d0, X=1.1d0, Y=2.2d0 )
+    @assertEqual( 1.1d0, V%v(1) )
+    @assertEqual( 2.2d0, V%v(2) )
+    @assertEqual( 3.3d0, V%v(3) )
+
+    call V%set( VAL=4.4d0 )
+    @assertEqual( 4.4d0, V%v(1) )
+    @assertEqual( 4.4d0, V%v(2) )
+    @assertEqual( 4.4d0, V%v(3) )
+
+    call V%set
+    @assertEqual( D_ZERO, V%v(1) )
+    @assertEqual( D_ZERO, V%v(2) )
+    @assertEqual( D_ZERO, V%v(3) )
+
+    n = size( V )
+    @assertEqual( 3, n )
+
+
+  end subroutine test_v3_comp
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_add
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: lVec(3) = [ 3.5900d0, 5.8700d0, 0.0900d0 ]
+    real(dp), parameter :: rVec(3) = [ -4.9200d0, -1.3100d0, -7.0800d0 ]
+    real(dp), parameter :: ls      =   -7.7600d0
+    real(dp), parameter :: rs      =   4.3000d0
+
+    real(dp), parameter :: test1(3) = [ -12.6800d0, -9.0700d0, -14.8400d0 ]
+    real(dp), parameter :: test2(3) = [ 7.8900d0, 10.1700d0, 4.3900d0 ]
+    real(dp), parameter :: test3(3) = [ -1.3300d0, 4.5600d0, -6.9900d0 ]
+    real(dp), parameter :: test4(3) = [ -8.3800d0, -4.7700d0, -10.5400d0 ]
+    real(dp), parameter :: test5(3) = [ 6.5600d0, 14.7300d0, -2.6000d0 ]
+
+    type(Vector3D) :: lv, rv, V1, V2, V3, V4, V5
+
+    call copy( lv, lVec )
+    call copy( rv, rVec )
+
+    call V1%add( ls, rv )
+    call V2%add( lv, rs )
+    call V3%add( lv, rv )
+
+    call copy( V4, V1 )
+    call V5%copy( V2 )
+
+    call V4%add( rs )
+    call V5%add( V3 )
+
+    @assertEqual( test1, V1%v, 1.0d-12 )
+    @assertEqual( test2, V2%v, 1.0d-12 )
+    @assertEqual( test3, V3%v, 1.0d-12 )
+    @assertEqual( test4, V4%v, 1.0d-12 )
+    @assertEqual( test5, V5%v, 1.0d-12 )
+
+    call zero( V5 )
+
+    @assertEqual( D_ZERO, V5%v(1) )
+    @assertEqual( D_ZERO, V5%v(2) )
+    @assertEqual( D_ZERO, V5%v(3) )
+
+  end subroutine test_v3_add
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_sub
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: lVec(3) = [ -5.1400d0, 9.4600d0, 4.0200d0 ]
+    real(dp), parameter :: rVec(3) = [ 8.2500d0, -4.6400d0, 9.0200d0 ]
+    real(dp), parameter :: ls      =   -8.6900d0
+    real(dp), parameter :: rs      =   -4.1100d0
+
+    real(dp), parameter :: test1(3) = [ -16.9400d0, -4.0500d0, -17.7100d0 ]
+    real(dp), parameter :: test2(3) = [ -1.0300d0, 13.5700d0, 8.1300d0 ]
+    real(dp), parameter :: test3(3) = [ -13.3900d0, 14.1000d0, -5.0000d0 ]
+    real(dp), parameter :: test4(3) = [ -12.8300d0, 0.0600d0, -13.6000d0 ]
+    real(dp), parameter :: test5(3) = [ 12.3600d0, -0.5300d0, 13.1300d0 ]
+
+    type(Vector3D) :: lv, rv, V1, V2, V3, V4, V5
+
+    call copy( lv, lVec )
+    call copy( rv, rVec )
+
+    call V1%sub( ls, rv )
+    call V2%sub( lv, rs )
+    call V3%sub( lv, rv )
+
+    call copy( V4, V1 )
+    call copy( V5, V2 )
+
+    call V4%sub( rs )
+    call V5%sub( V3 )
+
+    @assertEqual( test1, V1%v, 1.0d-12 )
+    @assertEqual( test2, V2%v, 1.0d-12 )
+    @assertEqual( test3, V3%v, 1.0d-12 )
+    @assertEqual( test4, V4%v, 1.0d-12 )
+    @assertEqual( test5, V5%v, 1.0d-12 )
+
+  end subroutine test_v3_sub
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_mul
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: lVec(3) = [ -5.95000000d0, -1.51000000d0, 8.18000000d0 ]
+    real(dp), parameter :: rVec(3) = [ -1.21000000d0, 0.30000000d0, -4.70000000d0 ]
+    real(dp), parameter :: ls      =   2.29000000d0
+    real(dp), parameter :: rs      =   -6.20000000d0
+
+    real(dp), parameter :: test1(3) = [ -2.77090000d0, 0.68700000d0, -10.76300000d0 ]
+    real(dp), parameter :: test2(3) = [ 36.89000000d0, 9.36200000d0, -50.71600000d0 ]
+    real(dp), parameter :: test3(3) = [ 7.19950000d0, -0.45300000d0, -38.44600000d0 ]
+    real(dp), parameter :: test4(3) = [ 17.17958000d0, -4.25940000d0, 66.73060000d0 ]
+    real(dp), parameter :: test5(3) = [ 265.58955500d0, -4.24098600d0, 1949.82733600d0 ]
+
+    type(Vector3D) :: lv, rv, V1, V2, V3, V4, V5
+
+    call copy( lv, lVec )
+    call copy( rv, rVec )
+
+    call V1%mul( ls, rv )
+    call V2%mul( lv, rs )
+    call V3%mul( lv, rv )
+
+    call copy( V4, V1 )
+    call copy( V5, V2 )
+
+    call V4%mul( rs )
+    call V5%mul( V3 )
+
+    @assertEqual( test1, V1%v, 1.0d-10 )
+    @assertEqual( test2, V2%v, 1.0d-10 )
+    @assertEqual( test3, V3%v, 1.0d-10 )
+    @assertEqual( test4, V4%v, 1.0d-10 )
+    @assertEqual( test5, V5%v, 1.0d-10 )
+
+  end subroutine test_v3_mul
+
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_div
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: lVec(3) = [ 3.38d+00, 3.92d+00, 2.41d+00 ]
+    real(dp), parameter :: rVec(3) = [ 5.95d+00, -3.44d+00, 2.7d-01 ]
+    real(dp), parameter :: ls      =   7.82d+00
+    real(dp), parameter :: rs      =   -3.75d+00
+
+    real(dp), parameter :: test1(3) = [ 1.3142857142857143d+00, -2.2732558139534884d+00, 2.8962962962962962d+01 ]
+    real(dp), parameter :: test2(3) = [ -9.013333333333333d-01, -1.045333333333333d+00, -6.426666666666667d-01 ]
+    real(dp), parameter :: test3(3) = [ 5.6806722689075628d-01, -1.1395348837209303d+00, 8.925925925925926d+00 ]
+    real(dp), parameter :: test4(3) = [ -3.5047619047619050d-01, 6.062015503875969d-01, -7.723456790123456d+00 ]
+    real(dp), parameter :: test5(3) = [ -1.5866666666666667d+00, 9.173333333333333d-01, -7.200000000000000d-02 ]
+
+
+    type(Vector3D) :: lv, rv, V1, V2, V3, V4, V5
+
+    call copy( lv, lVec )
+    call copy( rv, rVec )
+
+    call V1%div( ls, rv )
+    call V2%div( lv, rs )
+    call V3%div( lv, rv )
+
+    call copy( V4, V1 )
+    call copy( V5, V2 )
+
+    call V4%div( rs )
+    call V5%div( V3 )
+
+    @assertEqual( test1, V1%v, 1.0d-06 )
+    @assertEqual( test2, V2%v, 1.0d-06 )
+    @assertEqual( test3, V3%v, 1.0d-06 )
+    @assertEqual( test4, V4%v, 1.0d-06 )
+    @assertEqual( test5, V5%v, 1.0d-06 )
+
+  end subroutine test_v3_div
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_dot
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: A1(3) = [ 1.23d0,  2.75d0, -3.82d0 ]
+    real(dp), parameter :: A2(3) = [ 9.12d0, -3.75d0,  4.11d0 ]
+    real(dp), parameter :: ans = -1.47951d1
+    type(Vector3D) :: V1, V2
+    real(dp) :: d3, d4
+
+    call V1%set( A1 )
+    call V2%set( A2 )
+
+    d3 = V1%dot( V2 )
+    d4 = V2%dot( V1 )
+
+    @assertEqual( ans, d3, 1.0d-13 )
+    @assertEqual( ans, d4, 1.0d-13 )
+
+  end subroutine test_v3_dot
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_mag
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: A(3) = [ 1.23d0,  2.75d0, -3.82d0 ]
+    real(dp), parameter :: test = sqrt(2.36678d1)
+    type(Vector3D)      :: V
+    call V%set(A)
+    @assertEqual( test, V%mag() )
+
+
+  end subroutine test_v3_mag
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_norm
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: A(3) = [ 1.23d0,  2.75d0, -3.82d0 ]
+    real(dp), parameter :: T(3) = [  2.52828580356766D-01,    &
+         &                           5.65267151204151D-01,    &
+         &                          -7.85207460945403D-01 ]
+    real(dp), parameter :: test = sqrt(2.36678d1)
+    type(Vector3D)      :: V1, V2
+    real(dp) :: mg
+    call V1%set(A)
+    call V2%set( VAL=1.2345d2 )
+
+    call norm( V2, V1, MAG=mg )
+
+    @assertEqual( test, mg )
+
+    mg = V2%dot( V2 )
+
+    @assertEqual( T, V2%v, 1.0d-14 )
+
+    @assertEqual( D_ONE, mg, 1.0d-14 )
+
+    !    write( *, 100 ) V2%X(),V2%Y(),V2%Z()
+    !    100 format( '[',3(1X,ES22.15),']' )
+  end subroutine test_v3_norm
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_LTest_internal
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: A(3) = [ 1.23d0,  2.75d0, -3.82d0 ]
+    real(dp), parameter :: test(10) = [ 7.80d0, 2.36678d1,             &
+         &                                -3.3085226d+1,             &
+         &                                 2.7241841042d+2,             &
+         &                                -6.533320133713999d+2,             &
+         &                                 3.543251317206338d+3,             &
+         &                                -1.067614199631002d+4,             &
+         &                                 4.861874637099210d+4,             &
+         &                                -1.642076244905423d+5,             &
+         &                                 6.864018749632692d+5]                     
+    type(Vector3D)      :: V
+    real(dp) :: mg
+    integer  :: i
+
+    call V%set(A)
+
+    @assertEqual( test(1), V%L1() )
+    @assertEqual( test(2), V%L2() )
+
+    do i=2,10
+       !      write( *, 100 ) i, V%LN(i)
+       @assertEqual( test(i), V%LN(i), 1.0d-9 )
+    end do
+    !    100 format( I0,1X,ES22.15 )
+
+  end subroutine test_v3_LTest_internal
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_LTest_external
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: A1(3) = [ 1.23d0,  2.75d0, -3.82d0 ]
+    real(dp), parameter :: A2(3) = [ 9.12d0, -3.75d0,  4.11d0 ]
+    real(dp), parameter :: test(10) = [ 2.232d1, &
+         &                                    1.673870000000000D2,     &
+         &                                   -7.152213259999997d2,     &
+         &                                    9.614897102419996D3,     &
+         &                                   -5.033266918901417D4,     &
+         &                                    5.653449516163706D5,     &
+         &                                   -3.385240992425375D6,     &
+         &                                    3.384273834575466D7,     &
+         &                                   -2.217917431516523D8,     &
+         &                                    2.052941701800152D9   ]
+
+    type(Vector3D) :: V1, V2
+    real(dp) :: d1, d2, d3, d4
+    integer  :: i
+
+    call V1%set( A1 )
+    call V2%set( A2 )
+
+    @assertEqual( test(1), L1_norm( V1, V2 ) )
+    @assertEqual( test(2), L2_norm( V1, V2 ), 1.0d-11 )
+
+    do i=2,10
+       !      write( *, 100 ) i, LN_norm(V1,V2,i)
+       @assertEqual( test(i), LN_norm(V1,V2,i), 1.0d-6 )
+    end do
+    !    100 format( I0,1X,ES22.15 )
+
+  end subroutine test_v3_LTest_external
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_cross
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), parameter :: A1(3) = [ 1.23d0,  2.75d0, -3.82d0 ]
+    real(dp), parameter :: A2(3) = [ 9.12d0, -3.75d0,  4.11d0 ]
+
+    real(dp), parameter :: ptest(3) = [ -3.0225d0, -39.8937d0, -29.6925d0 ]
+    real(dp), parameter :: ntest(3) = [ 3.0225d0, 39.8937d0, 29.6925d0 ]
+
+    type(Vector3D) :: V1, V2, VA, VB
+
+    call V1%set( A1 )
+    call V2%set( A2 )
+
+    call VA%cross( V1, V2 )
+    call VB%cross( V2, V1 )
+
+    @assertEqual( ptest, VA%v, 1.0d-13 )
+    @assertEqual( ntest, VB%v, 1.0d-13 )
+
+  end subroutine test_v3_cross
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_angle
+    !/ -----------------------------------------------------------------------------------
+    use string_tools, only : toString
+    implicit none
+
+    real(dp), parameter :: A1(3) = [ 1.23d0,  2.75d0, -3.82d0 ]
+    real(dp), parameter :: A2(3) = [ 9.12d0, -3.75d0,  4.11d0 ]
+
+    type(Vector3D) :: V1, V2, V3
+    real(dp) :: r1a, r1b, r2a, r2b
+
+    call V1%set( A1 )
+    call V2%set( A2 )
+
+    call V3%cross( V1, V2 )
+
+    !    print *, 'V1=', toString( V1%v, FMT='F8.4' )
+    !    print *, 'V2=', toString( V2%v, FMT='F8.4' )
+    !    print *, 'V3=', toString( V3%v, FMT='F8.4' )
+
+    r1a = angle( V3, V1 )
+    r1b = angle( V1, V3 )
+
+    r2a = angle( V3, V2 )
+    r2b = angle( V2, V3 )
+
+    !    print *, r1a
+    !    print *, r1b
+    !    print *, r2a
+    !    print *, r2b
+
+    !    @assertEqual( D_PI_2, r1a )
+    !    @assertEqual( D_PI_2, r1b )
+    !    @assertEqual( D_PI_2, r2a )
+    !    @assertEqual( D_PI_2, r2b )
+
+
+    ! SMALL
+    ! BIG
+    ! ZERO NORM
+  end subroutine test_v3_angle
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_azel
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    print *, '*** INSTALL TESTS HERE ***************************************************'
+  end subroutine test_v3_azel
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_compare
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: sv0(3) = [ 1.0d0, 2.0d0, 3.0d0 ]
+
+    real(dp), parameter :: sv1(3) = [ 1.0d0,  2.0d0,  3.0d0 ]
+    real(dp), parameter :: sv2(3) = [ 1.01d0, 2.0d0,  3.0d0 ]
+    real(dp), parameter :: sv3(3) = [ 1.0d0,  2.01d0, 3.0d0 ]
+    real(dp), parameter :: sv4(3) = [ 1.0d0,  2.0d0,  3.01d0 ]
+
+    type(Vector3D) :: v0, v1, v2, v3, v4
+
+    call v0%set( sv0 )
+    call v1%set( sv1 )
+    call v2%set( sv2 )
+    call v3%set( sv3 )
+    call v4%set( sv4 )
+
+
+    @assertTrue(  v0%equals( v1 ) )
+    @assertFalse( v0%equals( v2 ) )
+    @assertFalse( v0%equals( v3 ) )
+    @assertFalse( v0%equals( v4 ) )
+
+
+  end subroutine test_v3_compare
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_yyyy
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: sA(5) = [ 1.0d0, 2.0d0, 3.0d0, 4.0d0, 5.0d0 ]
+    type(vector3d) :: A
+
+    call A%set( sA )
+
+    !  print *, ''
+    !  print *, '-----------------------------'
+    !  print *, ''
+
+
+    !  print *, toString( A )
+    !  print *, toString( A, FMT='F8.4' )
+    !  print *, '-----------------------------'
+    !  print *, 'a = np.array( ', toString( A, FMT='F8.4' ), ')'
+    !  print *, 'b = np.array( ',toString( A, FMT='F8.4', TRANS=.true.  ), ')'
+
+
+    !  print *, ''
+    !  print *, '-----------------------------'
+    !  print *, ''
+
+
+  end subroutine test_v3_yyyy
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_zzzz
+    !/ -----------------------------------------------------------------------------------
+    use string_tools, only : toString
+    implicit none
+
+    real(dp), parameter :: A(3,4) = reshape( [ 1.1d0, 2.1d0, 3.1d0,  &
+         &                                       1.2d0, 2.2d0, 3.2d0,  &
+         &                                       1.3d0, 2.3d0, 3.3d0,  &
+         &                                       1.4d0, 2.4d0, 3.4d0   &
+         &                                      ], [3,4] )
+
+    character(:), allocatable :: RD
+
+    RD = '],['
+
+
+
+
+
+
+    !  print *, ''
+    !  print *, '-----------------------------'
+    !  print *, ''
+
+
+    !  print *, 'a = np.array( [[' // toString( A, FMT='F6.2', CDEL=', ', RDEL=RD ) // ']] )'
+
+
+    !  print *, ''
+    !  print *, '-----------------------------'
+    !  print *, ''
+
+
+  end subroutine test_v3_zzzz
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_v3_1111
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: A(4) = [ 1.1d0, 2.1d0, 3.1d0, 4.1d0 ]
+
+    type(Vector3D) :: V
+
+    call V%set( A )
+
+    !    print *, ''
+    !    print *, ''
+
+    !    print *, 'a=', V%numpy()
+    !    print *, 'b=', V%numpy(TRANS=.true.)
+
+    !    print *, ''
+
+    !    print *, 'a=', V%matlab()
+    !    print *, 'b=', V%matlab(TRANS=.true.)
+
+    !    print *, ''
+
+    !    print *, 'a=', V%sage()
+    !    print *, 'b=', V%sage(TRANS=.true.)
+
+    !    print *, ''
+
+  end subroutine test_v3_1111
+
+
+end module test_vec3d

@@ -34,9 +34,9 @@ module string_tools
   implicit none
   private
 
-  public :: string_splitter, split, toString, strcmp, find_any, find_in, count_char,    &
-       &    toUpper, toLower, containedBy, asInteger,  asReal4, asReal8, asIntegerList, &
-       &    asReal4List, asReal8List
+  public :: string_splitter, split, toString, toListString, strcmp, find_any, find_in, &
+       &    count_char, toUpper, toLower, containedBy, asInteger,  asReal4, asReal8,   &
+       &    asIntegerList, asReal4List, asReal8List
 
   !/ -------------------------------------------------------------------------------------
   type :: string_splitter
@@ -70,12 +70,27 @@ module string_tools
      procedure :: to_string_int16
      procedure :: to_string_real4
      procedure :: to_string_real8
-     procedure :: to_string_int32_vec
-     procedure :: to_string_int16_vec
-     procedure :: to_string_real4_vec
-     procedure :: to_string_real8_vec
+     procedure :: to_string_int32_1D
+     procedure :: to_string_int16_1D
+     procedure :: to_string_real4_1D
+     procedure :: to_string_real8_1D
+     procedure :: to_string_int32_2D
+     procedure :: to_string_int16_2D
+     procedure :: to_string_real4_2D
+     procedure :: to_string_real8_2D
   end interface toString
 
+  !/ -------------------------------------------------------------------------------------
+  interface toListString
+     !/ ----------------------------------------------------------------------------------
+     procedure :: to_list_string_int32_vec
+     procedure :: to_list_string_int16_vec
+     procedure :: to_list_string_real4_vec
+     procedure :: to_list_string_real8_vec
+  end interface toListString
+
+
+  
 
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
@@ -83,7 +98,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
 
-  
+
   !/ =====================================================================================
   function find_any( src, test, pos ) result( idx )
     !/ -----------------------------------------------------------------------------------
@@ -261,7 +276,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     n = count_char( ss%work_string, delim ) + 1
 
     if ( allocated( ss%cut ) ) deallocate( ss%cut )
-    
+
     allocate( integer :: ss%cut(n) )
 
     n = len(ss%work_string)
@@ -479,27 +494,10 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
   end function asReal8List
 
 
-  !/ =====================================================================================
-  function to_string_int32( num, fmt ) result( str )
-    !/ -----------------------------------------------------------------------------------
-    !! Convert 32 bit integer to string.
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    integer(int32),         intent(in) :: num !! number to convert.
-    character(*), optional, intent(in) :: fmt !! edit descriptor.
-    character(len=:),      allocatable :: str !! formated string.
-    !/ -----------------------------------------------------------------------------------
-    character(len=64) :: work
-    !/ -----------------------------------------------------------------------------------
-    
-    work = '(I0)'
-    if ( present( fmt ) ) then
-       write( work, "('(',A,')')" ) fmt
-    end if
-    write(work,trim(work)) num
-    str = trim(work)
-    
-  end function to_string_int32
+
+
+
+
 
 
   !/ =====================================================================================
@@ -514,15 +512,38 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     character(len=64) :: work
     !/ -----------------------------------------------------------------------------------
-    
+
     work = '(I0)'
     if ( present( fmt ) ) then
        write( work, "('(',A,')')" ) fmt
     end if
     write(work,trim(work)) num
     str = trim(work)
-    
+
   end function to_string_int16
+
+
+  !/ =====================================================================================
+  function to_string_int32( num, fmt ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Convert 32 bit integer to string.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer(int32),         intent(in) :: num !! number to convert.
+    character(*), optional, intent(in) :: fmt !! edit descriptor.
+    character(len=:),      allocatable :: str !! formated string.
+    !/ -----------------------------------------------------------------------------------
+    character(len=64) :: work
+    !/ -----------------------------------------------------------------------------------
+
+    work = '(I0)'
+    if ( present( fmt ) ) then
+       write( work, "('(',A,')')" ) fmt
+    end if
+    write(work,trim(work)) num
+    str = trim(work)
+
+  end function to_string_int32
 
 
   !/ =====================================================================================
@@ -537,14 +558,14 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     character(len=64) :: work
     !/ -----------------------------------------------------------------------------------
-    
+
     work = '(G0)'
     if ( present( fmt ) ) then
        write( work, "('(',A,')')" ) fmt
     end if
     write(work,trim(work)) num
     str = trim(work)
-    
+
   end function to_string_real4
 
 
@@ -560,51 +581,341 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     character(len=64) :: work
     !/ -----------------------------------------------------------------------------------
-    
+
     work = '(G0)'
     if ( present( fmt ) ) then
        write( work, "('(',A,')')" ) fmt
     end if
     write(work,trim(work)) num
     str = trim(work)
-    
+
   end function to_string_real8
 
 
+
+
+
+
+
+
   !/ =====================================================================================
-  function to_string_int32_vec( ary, fmt ) result( str )
+  function to_string_int16_1D( ary, fmt, del ) result( str )
     !/ -----------------------------------------------------------------------------------
-    !! Convert a vector of 32 bit integers into a list formatted string.
+    !! Convert a vector of 16 bit integers into a formatted string.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    integer(int32),         intent(in) :: ary(:) !! ary array of numbers to convert.
-    character(*), optional, intent(in) :: fmt    !! fmt output format.
-    character(len=:),      allocatable :: str    !! list representation.
+    integer(int16),         intent(in) :: ary(:) !! array of numbers to convert.
+    character(*), optional, intent(in) :: fmt    !! edit descriptor for elements
+    character(*), optional, intent(in) :: del    !! delimeter
+    character(len=:),      allocatable :: str    !! string representation.
     !/ -----------------------------------------------------------------------------------
     integer :: i, n
-    character(len=:), allocatable :: sfmt
+    character(len=:), allocatable :: sdel
     !/ -----------------------------------------------------------------------------------
 
-    sfmt = 'I0'
-    if ( present( fmt ) ) then
-       sfmt = fmt
+    sdel = ','
+
+    if ( present( del ) ) then
+       sdel = del
     end if
 
-    str = '[' // toString( ary(1), sfmt )
+    str = toString( ary(1), FMT=fmt )
 
     n = size(ary)
-    
+
     do i=2,n
-       str = str // ',' // toString( ary(i), sfmt )
+       str = str // sdel // toString( ary(i), FMT=fmt )
     end do
 
-    str = str // ']'
-    
-  end function to_string_int32_vec
+  end function to_string_int16_1D
 
 
   !/ =====================================================================================
-  function to_string_int16_vec( ary, fmt ) result( str )
+  function to_string_int32_1D( ary, fmt, del ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Convert a vector of 32 bit integers into a formatted string.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer(int32),         intent(in) :: ary(:) !! array of numbers to convert.
+    character(*), optional, intent(in) :: fmt    !! edit descriptor for elements
+    character(*), optional, intent(in) :: del    !! delimeter
+    character(len=:),      allocatable :: str    !! string representation.
+    !/ -----------------------------------------------------------------------------------
+    integer :: i, n
+    character(len=:), allocatable :: sdel
+    !/ -----------------------------------------------------------------------------------
+
+    sdel = ','
+
+    if ( present( del ) ) then
+       sdel = del
+    end if
+
+    str = toString( ary(1), FMT=fmt )
+
+    n = size(ary)
+
+    do i=2,n
+       str = str // sdel // toString( ary(i), FMT=fmt )
+    end do
+
+  end function to_string_int32_1D
+
+
+  !/ =====================================================================================
+  function to_string_real4_1D( ary, fmt, del ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Convert a vector of 32 bit reals into a formatted string.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(sp),               intent(in) :: ary(:) !! array of numbers to convert.
+    character(*), optional, intent(in) :: fmt    !! edit descriptor for elements
+    character(*), optional, intent(in) :: del    !! delimeter
+    character(len=:),      allocatable :: str    !! string representation.
+    !/ -----------------------------------------------------------------------------------
+    integer :: i, n
+    character(len=:), allocatable :: sdel
+    !/ -----------------------------------------------------------------------------------
+
+    sdel = ','
+
+    if ( present( del ) ) then
+       sdel = del
+    end if
+
+    str = toString( ary(1), FMT=fmt )
+
+    n = size(ary)
+
+    do i=2,n
+       str = str // sdel // toString( ary(i), FMT=fmt )
+    end do
+
+  end function to_string_real4_1D
+
+
+  !/ =====================================================================================
+  function to_string_real8_1D( ary, fmt, del ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Convert a vector of 64 bit reals into a formatted string.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp),               intent(in) :: ary(:) !! array of numbers to convert.
+    character(*), optional, intent(in) :: fmt    !! edit descriptor for elements
+    character(*), optional, intent(in) :: del    !! delimeter
+    character(len=:),      allocatable :: str    !! string representation.
+    !/ -----------------------------------------------------------------------------------
+    integer :: i, n
+    character(len=:), allocatable :: sdel
+    !/ -----------------------------------------------------------------------------------
+
+    sdel = ','
+
+    if ( present( del ) ) then
+       sdel = del
+    end if
+
+    str = toString( ary(1), FMT=fmt )
+
+    n = size(ary)
+
+    do i=2,n
+       str = str // sdel // toString( ary(i), FMT=fmt )
+    end do
+
+  end function to_string_real8_1D
+
+
+
+
+
+
+
+
+  !/ =====================================================================================
+  function to_string_int16_2D( ary, fmt, cdel, rdel, trans ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Convert a vector of 32 bit integers into a formatted string.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer(int16),         intent(in) :: ary(:,:) !! array of numbers to convert.
+    character(*), optional, intent(in) :: fmt      !! edit descriptor for elements
+    character(*), optional, intent(in) :: cdel     !! column delimeter
+    character(*), optional, intent(in) :: rdel     !! row    delimeter
+    logical,      optional, intent(in) :: TRANS    !! transpose (defualt: .false.).
+    character(len=:),      allocatable :: str      !! string representation.
+    !/ -----------------------------------------------------------------------------------
+    integer :: i, n
+    character(len=:), allocatable :: srdel
+    logical :: trp
+    !/ -----------------------------------------------------------------------------------
+
+    srdel = ';'
+
+    if ( present( rdel ) ) then
+       srdel = rdel
+    end if
+
+    trp = .false.
+    if ( present( TRANS ) ) trp = TRANS
+
+    n = size( ary, DIM=1 )
+
+    if ( trp ) then
+       str = toString( ary(:,1), FMT=fmt, DEL=cdel )
+       do i=2,n
+          str = str // srdel // toString( ary(:,i), FMT=fmt, DEL=cdel )
+       end do
+    else
+       str = toString( ary(1,:), FMT=fmt, DEL=cdel )
+       do i=2,n
+          str = str // srdel // toString( ary(i,:), FMT=fmt, DEL=cdel )
+       end do
+    end if
+    
+  end function to_string_int16_2D
+
+
+  !/ =====================================================================================
+  function to_string_int32_2D( ary, fmt, cdel, rdel, trans ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Convert a vector of 32 bit integers into a formatted string.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer(int32),         intent(in) :: ary(:,:) !! array of numbers to convert.
+    character(*), optional, intent(in) :: fmt      !! edit descriptor for elements
+    character(*), optional, intent(in) :: cdel     !! column delimeter
+    character(*), optional, intent(in) :: rdel     !! row    delimeter
+    logical,      optional, intent(in) :: TRANS    !! transpose (defualt: .false.).
+    character(len=:),      allocatable :: str      !! string representation.
+    !/ -----------------------------------------------------------------------------------
+    integer :: i, n
+    character(len=:), allocatable :: srdel
+    logical :: trp
+    !/ -----------------------------------------------------------------------------------
+
+    srdel = ';'
+
+    if ( present( rdel ) ) then
+       srdel = rdel
+    end if
+
+    trp = .false.
+    if ( present( TRANS ) ) trp = TRANS
+
+    n = size( ary, DIM=1 )
+
+    if ( trp ) then
+       str = toString( ary(:,1), FMT=fmt, DEL=cdel )
+       do i=2,n
+          str = str // srdel // toString( ary(:,i), FMT=fmt, DEL=cdel )
+       end do
+    else
+       str = toString( ary(1,:), FMT=fmt, DEL=cdel )
+       do i=2,n
+          str = str // srdel // toString( ary(i,:), FMT=fmt, DEL=cdel )
+       end do
+    end if
+    
+  end function to_string_int32_2D
+
+
+  !/ =====================================================================================
+  function to_string_real4_2D( ary, fmt, cdel, rdel, trans ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Convert a vector of 32 bit reals into a formatted string.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(sp),               intent(in) :: ary(:,:) !! array of numbers to convert.
+    character(*), optional, intent(in) :: fmt      !! edit descriptor for elements
+    character(*), optional, intent(in) :: cdel     !! column delimeter
+    character(*), optional, intent(in) :: rdel     !! row    delimeter
+    logical,      optional, intent(in) :: TRANS    !! transpose (defualt: .false.).
+    character(len=:),      allocatable :: str      !! string representation.
+    !/ -----------------------------------------------------------------------------------
+    integer :: i, n
+    character(len=:), allocatable :: srdel
+    logical :: trp
+    !/ -----------------------------------------------------------------------------------
+
+    srdel = ';'
+
+    if ( present( rdel ) ) then
+       srdel = rdel
+    end if
+
+    trp = .false.
+    if ( present( TRANS ) ) trp = TRANS
+
+    n = size( ary, DIM=1 )
+
+    if ( trp ) then
+       str = toString( ary(:,1), FMT=fmt, DEL=cdel )
+       do i=2,n
+          str = str // srdel // toString( ary(:,i), FMT=fmt, DEL=cdel )
+       end do
+    else
+       str = toString( ary(1,:), FMT=fmt, DEL=cdel )
+       do i=2,n
+          str = str // srdel // toString( ary(i,:), FMT=fmt, DEL=cdel )
+       end do
+    end if
+    
+  end function to_string_real4_2D
+
+
+  !/ =====================================================================================
+  function to_string_real8_2D( ary, fmt, cdel, rdel, trans ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Convert a vector of 64 bit reals into a formatted string.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp),               intent(in) :: ary(:,:) !! array of numbers to convert.
+    character(*), optional, intent(in) :: fmt      !! edit descriptor for elements
+    character(*), optional, intent(in) :: cdel     !! column delimeter
+    character(*), optional, intent(in) :: rdel     !! row    delimeter
+    logical,      optional, intent(in) :: TRANS    !! transpose (defualt: .false.).
+    character(len=:),      allocatable :: str      !! string representation.
+    !/ -----------------------------------------------------------------------------------
+    integer :: i, n
+    character(len=:), allocatable :: srdel
+    logical :: trp
+    !/ -----------------------------------------------------------------------------------
+
+    srdel = ';'
+
+    if ( present( rdel ) ) then
+       srdel = rdel
+    end if
+
+    trp = .false.
+    if ( present( TRANS ) ) trp = TRANS
+
+    n = size( ary, DIM=1 )
+
+    if ( trp ) then
+       str = toString( ary(:,1), FMT=fmt, DEL=cdel )
+       do i=2,n
+          str = str // srdel // toString( ary(:,i), FMT=fmt, DEL=cdel )
+       end do
+    else
+       str = toString( ary(1,:), FMT=fmt, DEL=cdel )
+       do i=2,n
+          str = str // srdel // toString( ary(i,:), FMT=fmt, DEL=cdel )
+       end do
+    end if
+    
+  end function to_string_real8_2D
+
+
+
+
+
+
+
+
+  !/ =====================================================================================
+  function to_list_string_int16_vec( ary, fmt ) result( str )
     !/ -----------------------------------------------------------------------------------
     !! Convert a vector of 16 bit integers into a list formatted string.
     !/ -----------------------------------------------------------------------------------
@@ -613,30 +924,26 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     character(*), optional, intent(in) :: fmt    !! fmt output format.
     character(len=:),      allocatable :: str    !! list representation.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
-    character(len=:), allocatable :: sfmt
-    !/ -----------------------------------------------------------------------------------
-
-    sfmt = 'I0'
-    if ( present( fmt ) ) then
-       sfmt = fmt
-    end if
-
-    str = '[' // toString( ary(1), sfmt )
-
-    n = size(ary)
-    
-    do i=2,n
-       str = str // ',' // toString( ary(i), sfmt )
-    end do
-
-    str = str // ']'
-    
-  end function to_string_int16_vec
+    str = '[' // toString( ary, fmt=fmt, del=',' ) // ']'   
+  end function to_list_string_int16_vec
 
 
   !/ =====================================================================================
-  function to_string_real4_vec( ary, fmt ) result( str )
+  function to_list_string_int32_vec( ary, fmt ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Convert a vector of 32 bit integers into a list formatted string.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer(int32),         intent(in) :: ary(:) !! ary array of numbers to convert.
+    character(*), optional, intent(in) :: fmt    !! fmt output format.
+    character(len=:),      allocatable :: str    !! list representation.
+    !/ -----------------------------------------------------------------------------------
+    str = '[' // toString( ary, fmt=fmt, del=',' ) // ']'   
+  end function to_list_string_int32_vec
+
+
+  !/ =====================================================================================
+  function to_list_string_real4_vec( ary, fmt ) result( str )
     !/ -----------------------------------------------------------------------------------
     !! Convert a vector of single precision numbers into a list formatted string.
     !/ -----------------------------------------------------------------------------------
@@ -645,30 +952,12 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     character(*), optional, intent(in) :: fmt    !! fmt output format.
     character(len=:),      allocatable :: str    !! list representation.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
-    character(len=:), allocatable :: sfmt
-    !/ -----------------------------------------------------------------------------------
+    str = '[' // toString( ary, fmt=fmt, del=',' ) // ']'   
+  end function to_list_string_real4_vec
 
-    sfmt = 'G0'
-    if ( present( fmt ) ) then
-       sfmt = fmt
-    end if
 
-    str = '[' // toString( ary(1), fmt )
-
-    n = size(ary)
-    
-    do i=2,n
-       str = str // ',' // toString( ary(i), fmt )
-    end do
-
-    str = str // ']'
-
-  end function to_string_real4_vec
-
-  
   !/ =====================================================================================
-  function to_string_real8_vec( ary, fmt ) result( str )
+  function to_list_string_real8_vec( ary, fmt ) result( str )
     !/ -----------------------------------------------------------------------------------
     !! Convert a vector of double precision numbers into a list formatted string.
     !/ -----------------------------------------------------------------------------------
@@ -677,26 +966,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     character(*), optional, intent(in) :: fmt    !! fmt output format.
     character(len=:),      allocatable :: str    !! list representation.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
-    character(len=:), allocatable :: sfmt
-    !/ -----------------------------------------------------------------------------------
-
-    sfmt = 'G0'
-    if ( present( fmt ) ) then
-       sfmt = fmt
-    end if
-
-    str = '[' // toString( ary(1), fmt )
-
-    n = size(ary)
-    
-    do i=2,n
-       str = str // ',' // toString( ary(i), fmt )
-    end do
-
-    str = str // ']'
-
-  end function to_string_real8_vec
+    str = '[' // toString( ary, fmt=fmt, del=',' ) // ']'   
+  end function to_list_string_real8_vec
 
 
 end module string_tools

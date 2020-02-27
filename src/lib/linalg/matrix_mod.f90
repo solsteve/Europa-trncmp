@@ -919,7 +919,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     nr = size(a,DIM=1)
     nc = size(a,DIM=2)
 
-    if ( nr.lt.MIN_V_PAR ) then
+    if ( nr.lt.MIN_M_PAR ) then
        do concurrent(r=1:nr,c=1:nc)
           t      = a(r,c)
           a(r,c) = b(r,c)

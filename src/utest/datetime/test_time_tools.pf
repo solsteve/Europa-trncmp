@@ -1,0 +1,571 @@
+module test_time_tools
+  use pfunit_mod
+  use time_tools_mod
+  implicit none
+
+  real(dp), parameter :: TOLL = 1.0d-12
+
+
+  integer, parameter :: SEED_MATTER(33) = [ &
+       &      -1801471813,  1788317000, -1462149533,  -860124838,  34087770,   &
+       &       1810661631,  1167165140,   615310049, -1503806350,  1534835474, &
+       &       1160466585,  1754152474,  1403939908,  1819351557, -1718753461, &
+       &      -1027751783,  -534960817,  1025794139,   770409478, -1781302095, &
+       &      -1647673960,    34920364,  1566050470,  1949389021,  1475959451, &
+       &       -246863941,  -525410570,  1406686281,  1245724764,  1442467745, &
+       &        -10672842, -1464040851,  1686143159 ]
+
+
+contains
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_tt_is_greg
+    !/ -----------------------------------------------------------------------------------
+
+    @assertTrue(  isGregorian( 2000,  1,  1 ) )
+    @assertTrue(  isGregorian( 1583, 10, 13 ) )
+    @assertTrue(  isGregorian( 1582, 11,  3 ) )
+    @assertTrue(  isGregorian( 1582, 10, 15 ) )
+    !@assertTrue(  isGregorian( 1582, 10, 14 ) )
+    !@assertTrue(  isGregorian( 1582, 10,  5 ) )
+    @assertFalse( isGregorian( 1582, 10,  4 ) )
+    @assertFalse( isGregorian( 1582,  8,  1 ) )
+    @assertFalse( isGregorian( 1581,  5,  3 ) )
+    @assertFalse( isGregorian(    1,  2,  3 ) )
+
+  end subroutine test_tt_is_greg
+
+
+  !@test
+  !/ =====================================================================================
+  subroutine test_tt_epoch_methods
+    !/ -----------------------------------------------------------------------------------
+
+    type(Epoch) :: epc
+
+    call epc%makeJD( JD=2.4501237D6 )
+    @assertEqual(2.4501237D6, epc%JD1)
+    @assertEqual(0.0d0,       epc%JD2)
+
+    call epc%makeJ2000( JD=2.4501237D6 )
+    @assertEqual(2.4515445D6, epc%JD1)
+    @assertEqual(-1.4213D3,  epc%JD2, 1.0d-8)
+
+    call epc%makeMJD( JD=2.4501237D6 )
+    @assertEqual(2.4000005D6, epc%JD1)
+    @assertEqual(50123.2D0,   epc%JD2, 1.0d-8)
+
+    call epc%makeDateTime( JD=2.4501237D6 )
+    @assertEqual(2.4501235D6, epc%JD1)
+    @assertEqual(2.0D-1,      epc%JD2, 1.0d-8)
+
+  end subroutine test_tt_epoch_methods
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_tt_to_and_from
+    !/ -----------------------------------------------------------------------------------
+    integer,  parameter :: year(20) = [ 1957,   333,  2000,  1999, 1987, 1987, 1988,  &
+         &                              1988,  1900,  1600,  1600,  837, -123, -122,  &
+         &                             -1000, -1000, -1001, -4712, 1910, 1986 ]
+
+    integer,  parameter :: month(20) = [ 10,  1, 1,  1, 1, 6, 1, 6, 1, &
+         &                                1, 12, 4, 12, 1, 7, 2, 8, 1, 4, 2 ]
+
+    integer,  parameter :: day(20)   = [ 4, 27,  1,  1, 27, 19, 27, 19, 1, &
+         &                               1, 31, 10, 31,  1, 12, 29, 17, 1, 20, 9 ]
+
+    real(dp), parameter :: dayf(20)  = [ 0.81d0, 0.5d0, 0.5d0, 0.0d0, 0.0d0, 0.5d0,  &
+         &                               0.0d0,  0.5d0, 0.0d0, 0.0d0, 0.0d0, 0.3d0,  &
+         &                               0.0d0,  0.0d0, 0.5d0, 0.0d0, 0.9d0, 0.5d0,  &
+         &                               0.0d0,  0.0d0 ]
+
+    real(dp), parameter :: jdy(20)   = [ 2.43611631d6, 1.84271300d6, 2.45154500d6,  &
+         &                               2.45117950d6, 2.44682250d6, 2.44696600d6,  &
+         &                               2.44718750d6, 2.44733200d6, 2.41502050d6,  &
+         &                               2.30544750d6, 2.30581250d6, 2.02687180d6,  &
+         &                               1.67649650d6, 1.67649750d6, 1.35600100d6,  &
+         &                               1.35586650d6, 1.35567140d6, 0.0d0,         &
+         &                               2.41878150d6, 2.44647050d6 ]
+
+    integer  :: i, n, yr, mn, dy
+    real(dp) :: df
+
+    type(Epoch) :: epc
+    !/ -----------------------------------------------------------------------------------
+
+    n = size( year )
+
+    do i=1,n
+       call epc%fromCal( year(i), month=month(i), day=day(i), dayf=dayf(i) )
+       @assertEqual( jdy(i), epc%JD1 + epc%JD2 )
+    end do
+
+    !/ -----------------------------------------------------------------------------------
+
+    do i=1,n
+       call epc%makeJD( JD=jdy(i) )
+       call epc%toCal( yr, MONTH=mn, DAY=dy, DAYF=df )
+       @assertEqual( year(i),  yr )
+       @assertEqual( month(i), mn )
+       @assertEqual( day(i),   dy )
+       @assertEqual( dayf(i),  df, 1.0d-9 )
+       @assertEqual( jdy(i),   epc%JD1 + epc%JD2 )
+    end do
+
+
+  end subroutine test_tt_to_and_from
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_tt_jd2dow
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer  :: day, ijd, dow
+    real(dp) :: jd
+
+    @assertEqual( 6, DayOfWeek( JD_1700       ) )
+    @assertEqual( 4, DayOfWeek( JD_1800       ) )
+    @assertEqual( 2, DayOfWeek( JD_1900       ) )
+    @assertEqual( 5, DayOfWeek( JD_UNIX_EPOCH ) )
+    @assertEqual( 7, DayOfWeek( JD_J2000      ) )
+    @assertEqual( 6, DayOfWeek( JD_2100       ) )
+
+    @assertEqual( 5, DayOfWeek( 2299159.5d0 ) )
+    @assertEqual( 6, DayOfWeek( 2299160.5d0 ) )
+
+
+    !/ -----------------------------------------------------------------------------------
+
+    day = 1
+    do ijd = 1721424,2459018
+       jd = real(ijd,dp) + D_HALF
+       dow = DayOfWeek( jd )
+       @assertEqual( day, dow )
+       day = day + 1
+       if ( 8.eq.day ) day = 1
+    end do
+
+  end subroutine test_tt_jd2dow
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_tt_mon_num
+    !/ -----------------------------------------------------------------------------------
+    character(3), parameter :: mstr(36) = [ 'jan', 'feb', 'mar', 'apr',    &
+         &                                  'may', 'jun', 'jul', 'aug',    &
+         &                                  'sep', 'oct', 'nov', 'dec',    &
+         &                                  'Jan', 'Feb', 'Mar', 'Apr',    &
+         &                                  'May', 'Jun', 'Jul', 'Aug',    &
+         &                                  'Sep', 'Oct', 'Nov', 'Dec',    &
+         &                                  'JAN', 'FEB', 'MAR', 'APR',    &
+         &                                  'MAY', 'JUN', 'JUL', 'AUG',    &
+         &                                  'SEP', 'OCT', 'NOV', 'DEC' ]
+
+    integer, parameter :: test(36) = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,  &
+         &                             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,  &
+         &                             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
+
+    integer :: i
+
+    do i=1,36
+       @assertEqual( test(i), GetMonthNumber( mstr(i) ) )
+    end do
+
+  end subroutine test_tt_mon_num
+
+
+
+  !@test
+  !/ =====================================================================================
+  subroutine test_tt_adddays
+    !/ -----------------------------------------------------------------------------------
+
+    integer :: year, month, day, i
+
+    year  = -1
+    month = 12
+    day   = 1
+
+    print *, year, month, day
+
+    do i=1,60
+       call IncrementDate( year, month, day, INCR=1 )
+       print *, year, month, day
+    end do
+
+    print *, '---------------------'
+
+    do i=1,60
+       call DecrementDate( year, month, day, DECR=1 )
+       print *, year, month, day
+    end do
+
+  end subroutine test_tt_adddays
+
+
+
+  !@test
+  !/ =====================================================================================
+  subroutine test_tt_checktime
+    !/ -----------------------------------------------------------------------------------
+
+    @assertFalse( CheckTime( -1, 30, 30.0d0 ) )
+    @assertTrue(  CheckTime(  0, 30, 30.0d0 ) )
+    @assertTrue(  CheckTime( 23, 30, 30.0d0 ) )
+    @assertFalse( CheckTime( 24, 30, 30.0d0 ) )
+
+    @assertFalse( CheckTime( 12, -1, 30.0d0 ) )
+    @assertTrue(  CheckTime( 12,  0, 30.0d0 ) )
+    @assertTrue(  CheckTime( 12, 59, 30.0d0 ) )
+    @assertFalse( CheckTime( 12, 60, 30.0d0 ) )
+
+    @assertFalse( CheckTime( 12, 30, 30.0d0 ) )
+    @assertTrue(  CheckTime( 12, 30,  0.0d0 ) )
+    @assertTrue(  CheckTime( 12, 30, 60.0d0 ) )
+    @assertFalse( CheckTime( 12, 30, 60.001d0 ) )
+
+  end subroutine test_tt_checktime
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_tt_checkdate
+    !/ -----------------------------------------------------------------------------------
+    integer :: i
+
+    @assertTrue(   CheckDate( -1964, 6, 18 ) )
+
+    @assertFalse(  CheckDate( -4714, 6, 18 ) )
+    @assertFalse(  CheckDate( 0, 6, 18 ) )
+
+    @assertTrue(   CheckDate( 1964, 6, 18 ) )
+
+    @assertFalse( CheckDate( 2020,  0, 15 ) )
+
+    @assertFalse( CheckDate( 2020,  1,  0 ) )
+    @assertTrue(  CheckDate( 2020,  1,  1 ) )
+    @assertTrue(  CheckDate( 2020,  1, 31 ) )
+    @assertFalse( CheckDate( 2020,  1, 32 ) )
+
+    @assertFalse( CheckDate( 2019,  2,  0 ) )
+    @assertTrue(  CheckDate( 2019,  2,  1 ) )
+    @assertTrue(  CheckDate( 2019,  2, 28 ) )
+    @assertFalse( CheckDate( 2019,  2, 29 ) )
+
+    @assertFalse( CheckDate( 2020,  2,  0 ) )
+    @assertTrue(  CheckDate( 2020,  2,  1 ) )
+    @assertTrue(  CheckDate( 2020,  2, 29 ) )
+    @assertFalse( CheckDate( 2020,  2, 30 ) )
+
+    @assertFalse( CheckDate( 2020,  3,  0 ) )
+    @assertTrue(  CheckDate( 2020,  3,  1 ) )
+    @assertTrue(  CheckDate( 2020,  3, 31 ) )
+    @assertFalse( CheckDate( 2020,  3, 32 ) )
+
+    @assertFalse( CheckDate( 2020,  4,  0 ) )
+    @assertTrue(  CheckDate( 2020,  4,  1 ) )
+    @assertTrue(  CheckDate( 2020,  4, 30 ) )
+    @assertFalse( CheckDate( 2020,  4, 31 ) )
+
+    @assertFalse( CheckDate( 2020,  5,  0 ) )
+    @assertTrue(  CheckDate( 2020,  5,  1 ) )
+    @assertTrue(  CheckDate( 2020,  5, 31 ) )
+    @assertFalse( CheckDate( 2020,  5, 32 ) )
+
+    @assertFalse( CheckDate( 2020,  6,  0 ) )
+    @assertTrue(  CheckDate( 2020,  6,  1 ) )
+    @assertTrue(  CheckDate( 2020,  6, 30 ) )
+    @assertFalse( CheckDate( 2020,  6, 31 ) )
+
+    @assertFalse( CheckDate( 2020,  7,  0 ) )
+    @assertTrue(  CheckDate( 2020,  7,  1 ) )
+    @assertTrue(  CheckDate( 2020,  7, 31 ) )
+    @assertFalse( CheckDate( 2020,  7, 32 ) )
+
+    @assertFalse( CheckDate( 2020,  8,  0 ) )
+    @assertTrue(  CheckDate( 2020,  8,  1 ) )
+    @assertTrue(  CheckDate( 2020,  8, 31 ) )
+    @assertFalse( CheckDate( 2020,  8, 32 ) )
+
+    @assertFalse( CheckDate( 2020,  9,  0 ) )
+    @assertTrue(  CheckDate( 2020,  9,  1 ) )
+    @assertTrue(  CheckDate( 2020,  9, 30 ) )
+    @assertFalse( CheckDate( 2020,  9, 31 ) )
+
+    @assertFalse( CheckDate( 2020, 10,  0 ) )
+    @assertTrue(  CheckDate( 2020, 10,  1 ) )
+    @assertTrue(  CheckDate( 2020, 10, 31 ) )
+    @assertFalse( CheckDate( 2020, 10, 32 ) )
+
+    @assertFalse( CheckDate( 2020, 11,  0 ) )
+    @assertTrue(  CheckDate( 2020, 11,  1 ) )
+    @assertTrue(  CheckDate( 2020, 11, 30 ) )
+    @assertFalse( CheckDate( 2020, 11, 31 ) )
+
+    @assertFalse( CheckDate( 2020, 12,  0 ) )
+    @assertTrue(  CheckDate( 2020, 12,  1 ) )
+    @assertTrue(  CheckDate( 2020, 12, 31 ) )
+    @assertFalse( CheckDate( 2020, 12, 32 ) )
+
+    @assertFalse( CheckDate( 2020, 13, 15 ) )
+
+
+    @assertTrue(   CheckDate( 1582, 10, 4 ) )
+    do i=5,14
+       @assertFalse( CheckDate( 1582, 10, i ) )
+    end do
+    @assertTrue(   CheckDate( 1582, 10, 15 ) )
+
+
+  end subroutine test_tt_checkdate
+
+
+
+  !@test
+  !/ =====================================================================================
+  subroutine test_tt_days
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer :: year, month, day
+    real(dp) :: JD
+    !/ -----------------------------------------------------------------------------------
+
+    JD    = JD_J2000
+    year  = 2000
+    month =    1
+    day   =    1
+
+    print *, year, month, day, day, JD
+
+1100 continue
+    if ( 1582.eq.year ) then
+       if ( 10.eq.month ) then
+          if ( 16.eq.day ) then
+             goto 1200
+          end if
+       end if
+    end if
+    call DecrementDate( year, month, day )
+    JD = JD - 1.0d0
+    goto 1100
+1200 continue
+    print *, year, month, day, day, JD, JD-2299161.5d0
+
+    !/ -----------------------------------------------------------------------------------
+
+2100 continue
+    if ( 1582.eq.year ) then
+       if ( 10.eq.month ) then
+          if ( 3.eq.day ) then
+             goto 2200
+          end if
+       end if
+    end if
+    call DecrementDate( year, month, day )
+    JD = JD - 1.0d0
+    goto 2100
+2200 continue
+    print *, year, month, day, day, JD, JD-2299158.5d0
+
+    !/ -----------------------------------------------------------------------------------
+
+3100 continue
+    if ( 1.eq.year ) then
+       if ( 1.eq.month ) then
+          if ( 1.eq.day ) then
+             goto 3200
+          end if
+       end if
+    end if
+    call DecrementDate( year, month, day )
+    JD = JD - 1.0d0
+    goto 3100
+3200 continue
+    print *, year, month, day, day, JD, JD-1721423.5d0
+
+    !/ -----------------------------------------------------------------------------------
+
+
+4100 continue
+    if ( -1.eq.year ) then
+       if ( 12.eq.month ) then
+          if ( 31.eq.day ) then
+             goto 4200
+          end if
+       end if
+    end if
+    call DecrementDate( year, month, day )
+    JD = JD - 1.0d0
+    goto 4100
+4200 continue
+    print *, year, month, day, day, JD, JD-1721422.5d0
+
+    !/ -----------------------------------------------------------------------------------
+
+5100 continue
+    if ( -4700.eq.year ) then
+       if ( 1.eq.month ) then
+          if ( 1.eq.day ) then
+             goto 5200
+          end if
+       end if
+    end if
+    call DecrementDate( year, month, day )
+    JD = JD - 1.0d0
+    goto 5100
+5200 continue
+    print *, year, month, day, day, JD, JD-4748.5d0
+
+    !/ -----------------------------------------------------------------------------------
+
+5300 continue
+    if ( JD.lt.0.0d0 ) goto 5400
+    call DecrementDate( year, month, day )
+    JD = JD - 1.0d0
+    goto 5300
+5400 continue
+    print *, year, month, day, day, JD, JD+0.5d0
+
+    !/ -----------------------------------------------------------------------------------
+
+    year  =       1
+    month =       1
+    day   =       1
+    JD    = JD_0001
+
+6100 continue
+    if ( 2000.eq.year ) then
+       if ( 1.eq.month ) then
+          if ( 1.eq.day ) then
+             goto 6200
+          end if
+       end if
+    end if
+    call IncrementDate( year, month, day )
+    JD = JD + 1.0d0
+    goto 6100
+6200 continue
+    print *, year, month, day, day, JD, JD-JD_J2000
+
+  end subroutine test_tt_days
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_tt_cal2doy
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    @assertEqual(  22, DayOfYear( 2021,  1, 22 ) )
+    @assertEqual(  48, DayOfYear( 2021,  2, 17 ) )
+    @assertEqual(  80, DayOfYear( 2021,  3, 21 ) )
+    @assertEqual( 100, DayOfYear( 2021,  4, 10 ) )
+    @assertEqual( 138, DayOfYear( 2021,  5, 18 ) )
+    @assertEqual( 169, DayOfYear( 2021,  6, 18 ) )
+    @assertEqual( 190, DayOfYear( 2021,  7,  9 ) )
+    @assertEqual( 235, DayOfYear( 2021,  8, 23 ) )
+    @assertEqual( 254, DayOfYear( 2021,  9, 11 ) )
+    @assertEqual( 292, DayOfYear( 2021, 10, 19 ) )
+    @assertEqual( 313, DayOfYear( 2021, 11,  9 ) )
+    @assertEqual( 359, DayOfYear( 2021, 12, 25 ) )
+
+    @assertEqual(   5, DayOfYear( 2020,  1,  5 ) )
+    @assertEqual(  40, DayOfYear( 2020,  2,  9 ) )
+    @assertEqual(  84, DayOfYear( 2020,  3, 24 ) )
+    @assertEqual( 102, DayOfYear( 2020,  4, 11 ) )
+    @assertEqual( 150, DayOfYear( 2020,  5, 29 ) )
+    @assertEqual( 173, DayOfYear( 2020,  6, 21 ) )
+    @assertEqual( 212, DayOfYear( 2020,  7, 30 ) )
+    @assertEqual( 231, DayOfYear( 2020,  8, 18 ) )
+    @assertEqual( 256, DayOfYear( 2020,  9, 12 ) )
+    @assertEqual( 287, DayOfYear( 2020, 10, 13 ) )
+    @assertEqual( 315, DayOfYear( 2020, 11, 10 ) )
+    @assertEqual( 359, DayOfYear( 2020, 12, 24 ) )
+
+  end subroutine test_tt_cal2doy
+
+
+
+  @test
+  subroutine test_tt_convert
+    use dice_mod
+    implicit none
+
+    type(Dice) :: dd
+    integer :: i
+    real(dp) :: degree, day, hour, minute, second, dg, hr, mn, sc, deg1, deg2
+
+    call dd%seed_set( SEED_MATTER )
+
+
+    do i=1,100
+       degree = real(dd%index(360)-1, dp)
+       hour   = real(dd%index(24)-1,  dp)
+       minute = real(dd%index(60)-1,  dp)
+       second = real(dd%index(60)-1,  dp)
+
+       day    = HMS2DAY( hour,   minute, second )
+       deg1   = HMS2DEG( hour,   minute, second )
+       deg2   = DMS2DEG( degree, minute, second )
+
+       hr = D_ZERO
+       mn = D_ZERO
+       sc = D_ZERO
+
+       call DAY2HMS( hr, mn, sc, day )
+       @assertEqual( hour,   hr )
+       @assertEqual( minute, mn )
+       @assertEqual( second, sc, 1.0d-10 )
+
+       hr = D_ZERO
+       mn = D_ZERO
+       sc = D_ZERO
+
+       call DEG2HMS( hr, mn, sc, deg1 )
+       @assertEqual( hour,   hr )
+       @assertEqual( minute, mn )
+       @assertEqual( second, sc, 1.0d-8 )
+
+       dg = D_ZERO
+       mn = D_ZERO
+       sc = D_ZERO
+
+       call DEG2DMS( dg, mn, sc, deg2 )
+       @assertEqual( degree, dg )
+       @assertEqual( minute, mn )
+       @assertEqual( second, sc, 1.0d-8 )
+
+    end do
+
+    print *, '** There is an EDGE CASE where seconds = 60 and minutes are one less **'
+
+  end subroutine test_tt_convert
+
+
+
+end module test_time_tools

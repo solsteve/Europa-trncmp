@@ -34,9 +34,12 @@ module statistics_mod
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
   use file_tools
+  use dice_mod
+  use entropy_mod
+  use tlogger
   implicit none
 
-  
+
   !/ =====================================================================================
   type :: running_stats
      !/ ----------------------------------------------------------------------------------
@@ -87,7 +90,7 @@ module statistics_mod
   end type running_stats
 
 
-  
+
 
   !/ =====================================================================================
   type :: histogram
@@ -120,115 +123,150 @@ module statistics_mod
   end type histogram
 
 
-  
+
 
   !/ =====================================================================================
   type :: single_stats
      !/ ----------------------------------------------------------------------------------
      !! Provives a histogram.
      !/ ----------------------------------------------------------------------------------
-    integer,  private :: t_num_var !!  Number of Variables.
-    integer,  private :: t_count   !!  Number of samples.
-    logical,  private :: t_level1  !!  Flag indicating that level one is complete.
-    logical,  private :: t_level2  !!  Flag indicating that level two is complete.
-    
-    !/ ----- level 1 ---------------------------------------------------------------------
-    
-    real(dp), private :: t_minv    !!  Minimum sample value.
-    real(dp), private :: t_maxv    !!  Maximum sample value.
-    integer,  private :: t_minidx  !!  Index of minimum value.
-    integer,  private :: t_maxidx  !!  Index of maximum value.
-    real(dp), private :: t_mean    !!  Mean value of sample.
-    real(dp), private :: t_var     !!  Sample variance.
-    
-    !/ ----- level 2 ---------------------------------------------------------------------
-    
-    real(dp), private :: t_std     !!  Standard deviation of the mean.
-    real(dp), private :: t_adev    !!  Absolute deviation of the mean.
-    real(dp), private :: t_skew    !!  Sample skew.
-    real(dp), private :: t_kurt    !!  Sample kurt.
+     integer,  private :: t_num_var !!  Number of Variables.
+     integer,  private :: t_count   !!  Number of samples.
+     logical,  private :: t_level1  !!  Flag indicating that level one is complete.
+     logical,  private :: t_level2  !!  Flag indicating that level two is complete.
+
+     !/ ----- level 1 ---------------------------------------------------------------------
+
+     real(dp), private :: t_minv    !!  Minimum sample value.
+     real(dp), private :: t_maxv    !!  Maximum sample value.
+     integer,  private :: t_minidx  !!  Index of minimum value.
+     integer,  private :: t_maxidx  !!  Index of maximum value.
+     real(dp), private :: t_mean    !!  Mean value of sample.
+     real(dp), private :: t_var     !!  Sample variance.
+
+     !/ ----- level 2 ---------------------------------------------------------------------
+
+     real(dp), private :: t_std     !!  Standard deviation of the mean.
+     real(dp), private :: t_adev    !!  Absolute deviation of the mean.
+     real(dp), private :: t_skew    !!  Sample skew.
+     real(dp), private :: t_kurt    !!  Sample kurt.
+
+
+   contains
+
+
+     procedure :: count   => single_count
+     procedure :: minv    => single_minv
+     procedure :: maxv    => single_maxv
+     procedure :: minidx  => single_minidx
+     procedure :: maxidx  => single_maxidx
+     procedure :: mean    => single_mean
+     procedure :: var     => single_var
+     procedure :: std     => single_std
+     procedure :: adev    => single_adev
+     procedure :: skew    => single_skew
+     procedure :: kurt    => single_kurt
+
+     procedure :: init    => single_init
+     procedure :: clear   => single_clear
+     procedure :: report  => single_report
+     procedure :: compile => single_compile
+     procedure :: extra   => single_extra
+
+  end type single_stats
+
+
+
+
+  !/ =====================================================================================
+  type :: multi_stats
+     !/ ----------------------------------------------------------------------------------
+     !! Provives a histogram.
+     !/ ----------------------------------------------------------------------------------
+
+     integer, private :: t_num_var =  0       !! number of dimensions.
+     logical, private :: t_level1  = .false.  !! flag indicating that level one was complete.
+     logical, private :: t_level2a = .false.  !! flag indicating that level two A was complete.
+     logical, private :: t_level2b = .false.  !! flag indicating that level two B was complete.
+
+     class(single_stats), private, allocatable :: SS(:)
+
+     real(dp), private, allocatable :: covariance(:,:)  !! Covariance  matrix.
+     real(dp), private, allocatable :: correlation(:,:) !! Correlation matrix.
+     real(dp), private, allocatable :: inv_cov(:,:)     !! Inverse covariance.
+
+
+   contains
+
+
+     procedure :: nvar       => multi_num_var
+     procedure :: count      => multi_count
+     procedure :: minv       => multi_minv
+     procedure :: maxv       => multi_maxv
+     procedure :: minidx     => multi_minidx
+     procedure :: maxidx     => multi_maxidx
+     procedure :: mean       => multi_mean
+     procedure :: var        => multi_var
+     procedure :: std        => multi_std
+     procedure :: adev       => multi_adev
+     procedure :: skew       => multi_skew
+     procedure :: kurt       => multi_kurt
+
+     procedure :: init       => multi_init
+     procedure :: clear      => multi_clear
+     procedure :: report     => multi_report
+     procedure :: compile    => multi_compile
+     procedure :: extra      => multi_extra
+     procedure :: correlate  => multi_correlate
+     procedure :: invert_cov => multi_invert_cov
+
+  end type multi_stats
+
+
+
+
+
+  !/ =====================================================================================
+  type Roulette
+     !/ ----------------------------------------------------------------------------------
+     integer, private               :: count = 0 !! number of weights
+     real(dp), private, allocatable :: weight(:) !! weights
+   contains
+     procedure, private :: roulette_set_all
+     procedure, private :: roulette_set_one
+     procedure, private :: roulette_renormalize
      
+     procedure :: select  => roulette_select
+     procedure :: destroy => roulette_destroy
+
+     procedure :: display => roulette_display
+
+     generic   :: set     => roulette_set_all, roulette_set_one
+
+     final :: roulette_final
      
-  contains
-
-    
-    procedure :: count   => single_count
-    procedure :: minv    => single_minv
-    procedure :: maxv    => single_maxv
-    procedure :: minidx  => single_minidx
-    procedure :: maxidx  => single_maxidx
-    procedure :: mean    => single_mean
-    procedure :: var     => single_var
-    procedure :: std     => single_std
-    procedure :: adev    => single_adev
-    procedure :: skew    => single_skew
-    procedure :: kurt    => single_kurt
-
-    procedure :: init    => single_init
-    procedure :: clear   => single_clear
-    procedure :: report  => single_report
-    procedure :: compile => single_compile
-    procedure :: extra   => single_extra
-
- end type single_stats
+  end type Roulette
 
 
 
-
- !/ =====================================================================================
- type :: multi_stats
-    !/ ----------------------------------------------------------------------------------
-    !! Provives a histogram.
-    !/ ----------------------------------------------------------------------------------
-
-    integer, private :: t_num_var =  0       !! number of dimensions.
-    logical, private :: t_level1  = .false.  !! flag indicating that level one was complete.
-    logical, private :: t_level2a = .false.  !! flag indicating that level two A was complete.
-    logical, private :: t_level2b = .false.  !! flag indicating that level two B was complete.
-
-    class(single_stats), private, allocatable :: SS(:)
-
-    real(dp), private, allocatable :: covariance(:,:)  !! Covariance  matrix.
-    real(dp), private, allocatable :: correlation(:,:) !! Correlation matrix.
-    real(dp), private, allocatable :: inv_cov(:,:)     !! Inverse covariance.
-
-    
-  contains
+  !/ -------------------------------------------------------------------------------------
+  interface mean_variance
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: fast_mean_variance
+  end interface mean_variance
 
 
-    procedure :: nvar       => multi_num_var
-    procedure :: count      => multi_count
-    procedure :: minv       => multi_minv
-    procedure :: maxv       => multi_maxv
-    procedure :: minidx     => multi_minidx
-    procedure :: maxidx     => multi_maxidx
-    procedure :: mean       => multi_mean
-    procedure :: var        => multi_var
-    procedure :: std        => multi_std
-    procedure :: adev       => multi_adev
-    procedure :: skew       => multi_skew
-    procedure :: kurt       => multi_kurt
-
-    procedure :: init       => multi_init
-    procedure :: clear      => multi_clear
-    procedure :: report     => multi_report
-    procedure :: compile    => multi_compile
-    procedure :: extra      => multi_extra
-    procedure :: correlate  => multi_correlate
-    procedure :: invert_cov => multi_invert_cov
-
- end type multi_stats
-
-
- !/ -------------------------------------------------------------------------------------
+  
+  !/ -------------------------------------------------------------------------------------
   interface size
      !/ ----------------------------------------------------------------------------------
      module procedure :: histrogram_size
+     module procedure :: roulette_size
   end interface size
 
 
 
-  
+
   !/ =====================================================================================
 contains !/**                   P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
@@ -490,7 +528,7 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
 
-  
+
   !/ =====================================================================================
   subroutine running_sample_list_real8( dts, list )
     !/ -----------------------------------------------------------------------------------
@@ -907,8 +945,8 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
 
 
 
- !/ =====================================================================================
-function single_count( dts ) result( n )
+  !/ =====================================================================================
+  function single_count( dts ) result( n )
     !/ -----------------------------------------------------------------------------------
     !! Number of samples.
     !/ -----------------------------------------------------------------------------------
@@ -921,7 +959,7 @@ function single_count( dts ) result( n )
 
 
   !/ =====================================================================================
-    function single_minv( dts ) result( v )
+  function single_minv( dts ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Minimum sample value.
     !/ -----------------------------------------------------------------------------------
@@ -934,7 +972,7 @@ function single_count( dts ) result( n )
 
 
   !/ =====================================================================================
-function single_maxv( dts ) result( v )
+  function single_maxv( dts ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Maximum sample value.
     !/ -----------------------------------------------------------------------------------
@@ -947,7 +985,7 @@ function single_maxv( dts ) result( v )
 
 
   !/ =====================================================================================
-function single_minidx( dts ) result( n )
+  function single_minidx( dts ) result( n )
     !/ -----------------------------------------------------------------------------------
     !! Index of minimum value.
     !/ -----------------------------------------------------------------------------------
@@ -960,7 +998,7 @@ function single_minidx( dts ) result( n )
 
 
   !/ =====================================================================================
-function single_maxidx( dts ) result( n )
+  function single_maxidx( dts ) result( n )
     !/ -----------------------------------------------------------------------------------
     !! Index of maximum value.
     !/ -----------------------------------------------------------------------------------
@@ -973,7 +1011,7 @@ function single_maxidx( dts ) result( n )
 
 
   !/ =====================================================================================
-function single_mean( dts ) result( v )
+  function single_mean( dts ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Mean value of sample.
     !/ -----------------------------------------------------------------------------------
@@ -986,7 +1024,7 @@ function single_mean( dts ) result( v )
 
 
   !/ =====================================================================================
-function single_var( dts ) result( v )
+  function single_var( dts ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Sample variance.
     !/ -----------------------------------------------------------------------------------
@@ -999,7 +1037,7 @@ function single_var( dts ) result( v )
 
 
   !/ =====================================================================================
-function single_std( dts ) result( v )
+  function single_std( dts ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Standard deviation of the mean.
     !/ -----------------------------------------------------------------------------------
@@ -1012,7 +1050,7 @@ function single_std( dts ) result( v )
 
 
   !/ =====================================================================================
-function single_adev( dts ) result( v )
+  function single_adev( dts ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Absolute deviation of the mean.
     !/ -----------------------------------------------------------------------------------
@@ -1025,7 +1063,7 @@ function single_adev( dts ) result( v )
 
 
   !/ =====================================================================================
-function single_skew( dts ) result( v )
+  function single_skew( dts ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Sample skew.
     !/ -----------------------------------------------------------------------------------
@@ -1038,7 +1076,7 @@ function single_skew( dts ) result( v )
 
 
   !/ =====================================================================================
-function single_kurt( dts ) result( v )
+  function single_kurt( dts ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Sample kurt.
     !/ -----------------------------------------------------------------------------------
@@ -1051,7 +1089,7 @@ function single_kurt( dts ) result( v )
 
 
   !/ =====================================================================================
-subroutine single_init( dts )
+  subroutine single_init( dts )
     !/ -----------------------------------------------------------------------------------
     !! Initialize the Statistics.
     !/ -----------------------------------------------------------------------------------
@@ -1063,7 +1101,7 @@ subroutine single_init( dts )
 
 
   !/ =====================================================================================
-subroutine single_clear( dts )
+  subroutine single_clear( dts )
     !/ -----------------------------------------------------------------------------------
     !! Clear the Statistics.
     !/ -----------------------------------------------------------------------------------
@@ -1087,7 +1125,7 @@ subroutine single_clear( dts )
 
 
   !/ =====================================================================================
-subroutine single_report( dts, FILE, UNIT, IOSTAT, FMT, EMSG )
+  subroutine single_report( dts, FILE, UNIT, IOSTAT, FMT, EMSG )
     !/ -----------------------------------------------------------------------------------
     !! Report the compiled statistics.
     !/ -----------------------------------------------------------------------------------
@@ -1141,12 +1179,12 @@ subroutine single_report( dts, FILE, UNIT, IOSTAT, FMT, EMSG )
        call standard_error( 'single_report: no samples were compiled', 1, &
             &               IERR=IOSTAT, EMSG=EMSG )
     end if
-    
+
   end subroutine single_report
 
 
   !/ =====================================================================================
-subroutine single_compile( dts, samples, IERR, EMSG )
+  subroutine single_compile( dts, samples, IERR, EMSG )
     !/ -----------------------------------------------------------------------------------
     !! Compile the statistics data structure for a single dimensional data set.
     !/ -----------------------------------------------------------------------------------
@@ -1187,39 +1225,39 @@ subroutine single_compile( dts, samples, IERR, EMSG )
        end if
     end do
 
-  fn = real(dts%t_count,dp)
-  dts%t_mean = dts%t_mean / fn
+    fn = real(dts%t_count,dp)
+    dts%t_mean = dts%t_mean / fn
 
-  dts%t_var = D_ZERO
+    dts%t_var = D_ZERO
 
-  do i=1,num_samples
-    x = samples(i) - dts%t_mean
-    dts%t_var = dts%t_var + (x*x)
- end do
+    do i=1,num_samples
+       x = samples(i) - dts%t_mean
+       dts%t_var = dts%t_var + (x*x)
+    end do
 
-  dts%t_var = dts%t_var / (fn-D_ONE)
+    dts%t_var = dts%t_var / (fn-D_ONE)
 
-  if ( num_samples.lt.dts%t_minidx ) then
-     call standard_error( 'single_compile: minimum value/index could not be found', &
-          &               1, IERR=IERR, EMSG=EMSG )
-    goto 999
- end if
+    if ( num_samples.lt.dts%t_minidx ) then
+       call standard_error( 'single_compile: minimum value/index could not be found', &
+            &               1, IERR=IERR, EMSG=EMSG )
+       goto 999
+    end if
 
-  if ( num_samples.lt.dts%t_maxidx ) then
-     call standard_error( 'single_compile: maximum value/index could not be found', &
-          &               1, IERR=IERR, EMSG=EMSG )
-    goto 999
- end if
+    if ( num_samples.lt.dts%t_maxidx ) then
+       call standard_error( 'single_compile: maximum value/index could not be found', &
+            &               1, IERR=IERR, EMSG=EMSG )
+       goto 999
+    end if
 
- dts%t_level1 = .true.
+    dts%t_level1 = .true.
 
 999 continue
-    
+
   end subroutine single_compile
 
 
   !/ =====================================================================================
-subroutine single_extra( dts, samples, IERR, EMSG )
+  subroutine single_extra( dts, samples, IERR, EMSG )
     !/ -----------------------------------------------------------------------------------
     !! Compile the extra statistics data structure for a single dimensional data set.
     !/ -----------------------------------------------------------------------------------
@@ -1252,44 +1290,44 @@ subroutine single_extra( dts, samples, IERR, EMSG )
             &               0, IERR=IERR, EMSG=EMSG )
     end if
 
-  if ( num_samples.ne.dts%t_count ) then
-     call standard_error( 'single_extra: you should run extra with the same data count as compile', &
-          &               3, IERR=IERR, EMSG=EMSG )
-     goto 999
-  end if
+    if ( num_samples.ne.dts%t_count ) then
+       call standard_error( 'single_extra: you should run extra with the same data count as compile', &
+            &               3, IERR=IERR, EMSG=EMSG )
+       goto 999
+    end if
 
-  dts%t_std = sqrt(dts%t_var)
+    dts%t_std = sqrt(dts%t_var)
 
-  dts%t_adev = D_ZERO
-  dts%t_skew = D_ZERO
-  dts%t_kurt = D_ZERO
+    dts%t_adev = D_ZERO
+    dts%t_skew = D_ZERO
+    dts%t_kurt = D_ZERO
 
-  if (.not.isZero(dts%t_std)) then
-    do i=1,num_samples
-      sd = samples(i) - dts%t_mean
-      x  = sd / dts%t_std
-      x3 = x*x*x
-      dts%t_adev = dts%t_adev + Abs(sd)
-      dts%t_skew = dts%t_skew + x3
-      dts%t_kurt = dts%t_kurt + (x3*x)
-   end do
-   
-    fn = real(dts%t_count,dp)
+    if (.not.isZero(dts%t_std)) then
+       do i=1,num_samples
+          sd = samples(i) - dts%t_mean
+          x  = sd / dts%t_std
+          x3 = x*x*x
+          dts%t_adev = dts%t_adev + Abs(sd)
+          dts%t_skew = dts%t_skew + x3
+          dts%t_kurt = dts%t_kurt + (x3*x)
+       end do
 
-    dts%t_adev = dts%t_adev / fn
-    dts%t_skew = dts%t_skew / fn
-    dts%t_kurt = dts%t_kurt / fn
-    dts%t_kurt = dts%t_kurt - D_THREE
-  else
-     call standard_error( 'Standard deviation was ZERO, no values computed', &
-          &               4, IERR=IERR, EMSG=EMSG )
-    goto 999
- end if
+       fn = real(dts%t_count,dp)
 
-  dts%t_level2 = .true.
+       dts%t_adev = dts%t_adev / fn
+       dts%t_skew = dts%t_skew / fn
+       dts%t_kurt = dts%t_kurt / fn
+       dts%t_kurt = dts%t_kurt - D_THREE
+    else
+       call standard_error( 'Standard deviation was ZERO, no values computed', &
+            &               4, IERR=IERR, EMSG=EMSG )
+       goto 999
+    end if
+
+    dts%t_level2 = .true.
 
 999 continue
-    
+
   end subroutine single_extra
 
 
@@ -1301,8 +1339,8 @@ subroutine single_extra( dts, samples, IERR, EMSG )
 
 
 
- !/ =====================================================================================
-function multi_num_var( dts ) result( n )
+  !/ =====================================================================================
+  function multi_num_var( dts ) result( n )
     !/ -----------------------------------------------------------------------------------
     !! Number of variables.
     !/ -----------------------------------------------------------------------------------
@@ -1314,8 +1352,8 @@ function multi_num_var( dts ) result( n )
   end function multi_num_var
 
 
- !/ =====================================================================================
-function multi_count( dts ) result( n )
+  !/ =====================================================================================
+  function multi_count( dts ) result( n )
     !/ -----------------------------------------------------------------------------------
     !! Number of samples.
     !/ -----------------------------------------------------------------------------------
@@ -1328,7 +1366,7 @@ function multi_count( dts ) result( n )
 
 
   !/ =====================================================================================
-    function multi_minv( dts, index ) result( v )
+  function multi_minv( dts, index ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Minimum sample value.
     !/ -----------------------------------------------------------------------------------
@@ -1342,7 +1380,7 @@ function multi_count( dts ) result( n )
 
 
   !/ =====================================================================================
-function multi_maxv( dts, index ) result( v )
+  function multi_maxv( dts, index ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Maximum sample value.
     !/ -----------------------------------------------------------------------------------
@@ -1356,7 +1394,7 @@ function multi_maxv( dts, index ) result( v )
 
 
   !/ =====================================================================================
-function multi_minidx( dts, index ) result( n )
+  function multi_minidx( dts, index ) result( n )
     !/ -----------------------------------------------------------------------------------
     !! Index of minimum value.
     !/ -----------------------------------------------------------------------------------
@@ -1370,7 +1408,7 @@ function multi_minidx( dts, index ) result( n )
 
 
   !/ =====================================================================================
-function multi_maxidx( dts, index ) result( n )
+  function multi_maxidx( dts, index ) result( n )
     !/ -----------------------------------------------------------------------------------
     !! Index of maximum value.
     !/ -----------------------------------------------------------------------------------
@@ -1384,7 +1422,7 @@ function multi_maxidx( dts, index ) result( n )
 
 
   !/ =====================================================================================
-function multi_mean( dts, index ) result( v )
+  function multi_mean( dts, index ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Mean value of sample.
     !/ -----------------------------------------------------------------------------------
@@ -1398,7 +1436,7 @@ function multi_mean( dts, index ) result( v )
 
 
   !/ =====================================================================================
-function multi_var( dts, index ) result( v )
+  function multi_var( dts, index ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Sample variance.
     !/ -----------------------------------------------------------------------------------
@@ -1412,7 +1450,7 @@ function multi_var( dts, index ) result( v )
 
 
   !/ =====================================================================================
-function multi_std( dts, index ) result( v )
+  function multi_std( dts, index ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Standard deviation of the mean.
     !/ -----------------------------------------------------------------------------------
@@ -1426,7 +1464,7 @@ function multi_std( dts, index ) result( v )
 
 
   !/ =====================================================================================
-function multi_adev( dts, index ) result( v )
+  function multi_adev( dts, index ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Absolute deviation of the mean.
     !/ -----------------------------------------------------------------------------------
@@ -1440,7 +1478,7 @@ function multi_adev( dts, index ) result( v )
 
 
   !/ =====================================================================================
-function multi_skew( dts, index ) result( v )
+  function multi_skew( dts, index ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Sample skew.
     !/ -----------------------------------------------------------------------------------
@@ -1454,7 +1492,7 @@ function multi_skew( dts, index ) result( v )
 
 
   !/ =====================================================================================
-function multi_kurt( dts, index ) result( v )
+  function multi_kurt( dts, index ) result( v )
     !/ -----------------------------------------------------------------------------------
     !! Sample kurt.
     !/ -----------------------------------------------------------------------------------
@@ -1468,7 +1506,7 @@ function multi_kurt( dts, index ) result( v )
 
 
   !/ =====================================================================================
-subroutine multi_init( dts )
+  subroutine multi_init( dts )
     !/ -----------------------------------------------------------------------------------
     !! Initialize the Statistics.
     !/ -----------------------------------------------------------------------------------
@@ -1496,7 +1534,7 @@ subroutine multi_init( dts )
 
 
   !/ =====================================================================================
-    subroutine multi_report( dts, FILE, UNIT, IOSTAT, FMT, EMSG )
+  subroutine multi_report( dts, FILE, UNIT, IOSTAT, FMT, EMSG )
     !/ -----------------------------------------------------------------------------------
     !! Report the compiled statistics.
     !/ -----------------------------------------------------------------------------------
@@ -1555,12 +1593,12 @@ subroutine multi_init( dts )
     else
        call standard_error( 'SingleStat: no samples were compiled', 1, IERR=IOSTAT, EMSG=EMSG )
     end if
-    
+
   end subroutine multi_report
 
-      
+
   !/ =====================================================================================
-      subroutine multi_compile( dts, samples, IERR, EMSG )
+  subroutine multi_compile( dts, samples, IERR, EMSG )
     !/ -----------------------------------------------------------------------------------
     !! Compile the statistics data structure for a single dimensional data set.
     !/ -----------------------------------------------------------------------------------
@@ -1575,7 +1613,7 @@ subroutine multi_init( dts )
 
     if ( present( IERR ) ) IERR=0
     if ( present( EMSG ) ) EMSG='success'
-    
+
     m = size(samples,DIM=2)
     if (m.lt.dts%t_num_var) then
        do i=1,dts%t_num_var
@@ -1586,9 +1624,9 @@ subroutine multi_init( dts )
     end if
   end subroutine multi_compile
 
-        
+
   !/ =====================================================================================
-        subroutine multi_extra( dts, samples, IERR, EMSG )
+  subroutine multi_extra( dts, samples, IERR, EMSG )
     !/ -----------------------------------------------------------------------------------
     !! Compile the extra statistics data structure for a single dimensional data set.
     !/ -----------------------------------------------------------------------------------
@@ -1603,7 +1641,7 @@ subroutine multi_init( dts )
 
     if ( present( IERR ) ) IERR=0
     if ( present( EMSG ) ) EMSG='success'
-    
+
     m = size(samples,DIM=2)
     if (m.lt.dts%t_num_var) then
        do i=1,dts%t_num_var
@@ -1614,9 +1652,9 @@ subroutine multi_init( dts )
     end if
   end subroutine multi_extra
 
-          
+
   !/ =====================================================================================
-          subroutine multi_correlate( dts, samples, IERR, EMSG )
+  subroutine multi_correlate( dts, samples, IERR, EMSG )
     !/ -----------------------------------------------------------------------------------
     !! Compute covariance and correlation matrices.
     !/ -----------------------------------------------------------------------------------
@@ -1630,12 +1668,12 @@ subroutine multi_init( dts )
 
     if ( present( IERR ) ) IERR=0
     if ( present( EMSG ) ) EMSG='success'
-    
+
   end subroutine multi_correlate
 
-            
+
   !/ =====================================================================================
-    subroutine multi_invert_cov( dts, IERR, EMSG )
+  subroutine multi_invert_cov( dts, IERR, EMSG )
     !/ -----------------------------------------------------------------------------------
     !! Compute the inverse of the covariance matrix.
     !/ -----------------------------------------------------------------------------------
@@ -1650,11 +1688,226 @@ subroutine multi_init( dts )
 
     write(*,*) 'multi_invert_cov: not yet available'
     stop
-    
+
   end subroutine multi_invert_cov
 
 
 
+
+
+  !/ =====================================================================================
+  function roulette_size( dts ) result( n )
+    !/ -----------------------------------------------------------------------------------
+    !! Number of weights.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(Roulette), intent(in) :: dts !! reference to this Roulette object.
+    integer                     :: n   !! number of weights.
+    !/ -----------------------------------------------------------------------------------
+    n = dts%count
+  end function roulette_size
+
+  
+  !/ =====================================================================================
+  subroutine roulette_destroy( dts )
+    !/ -----------------------------------------------------------------------------------
+    !! Destroy allocation.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(Roulette), intent(inout) :: dts !! reference to this Roulette object.
+    !/ -----------------------------------------------------------------------------------
+    if ( allocated( dts%weight ) ) then
+       deallocate( dts%weight )
+    end if
+    dts%count = 0
+  end subroutine roulette_destroy
+
+  
+  !/ =====================================================================================
+  subroutine roulette_final( rtp )  
+    !/ -----------------------------------------------------------------------------------
+    !! Destructor.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(Roulette), intent(inout) :: rtp !! reference to a Roulette object.
+    !/ -----------------------------------------------------------------------------------
+    call rtp%destroy
+  end subroutine roulette_final
+
+  
+  !/ =====================================================================================
+  subroutine roulette_set_all( dts, W )
+    !/ -----------------------------------------------------------------------------------
+    !! Set all weights.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(Roulette), intent(inout) :: dts  !! reference to this Roulette object.
+    real(dp),        intent(in)    :: W(:) !! list of weights.
+    !/ -----------------------------------------------------------------------------------
+    integer :: i, n
+    !/ -----------------------------------------------------------------------------------
+    call dts%destroy
+    n = size( W )
+    allocate( dts%weight(n) )
+    dts%count = n
+    do i=1,n
+       dts%weight(i) = W(i)
+    end do
+
+    call dts%roulette_renormalize
+
+  end subroutine roulette_set_all
+
+  
+  !/ =====================================================================================
+  subroutine roulette_set_one( dts, W, idx )
+    !/ -----------------------------------------------------------------------------------
+    !! Set a single weight.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(Roulette), intent(inout) :: dts  !! reference to this Roulette object.
+    real(dp),        intent(in)    :: W    !! weight
+    integer,         intent(in)    :: idx  !! index
+    !/ -----------------------------------------------------------------------------------
+    if ( 1.gt.idx ) then
+       call log_error( 'Roulette%set: index below bounds', I4=idx )
+       goto 999
+    end if
+
+    if ( dts%count.lt.idx ) then
+       call log_error( 'Roulette%set: index above bounds', I4=idx )
+       goto 999
+    end if
+
+    dts%weight(idx) = W
+    call dts%roulette_renormalize
+    
+999 continue
+  end subroutine roulette_set_one
+
+  
+  !/ =====================================================================================
+  subroutine roulette_display( dts, UNIT )
+    !/ -----------------------------------------------------------------------------------
+    !! Renormalize the weights.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(Roulette),   intent(inout) :: dts  !! reference to this Roulette object.
+    integer, optional, intent(in)    :: UNIT
+    !/ -----------------------------------------------------------------------------------
+    integer :: un, i
+    !/ -----------------------------------------------------------------------------------
+    
+    if ( present( UNIT ) ) then
+       un = UNIT
+    else
+       un = OUTPUT_UNIT
+    end if
+
+    write( un, 100 ) dts%count
+
+    do i=1,dts%count
+       write( un, 200 ) i, dts%weight(i)
+    end do
+
+100 format( 'Count = ',I0 )
+200 format( '  W(',I0,') = ',ES15.8 )
+
+  end subroutine roulette_display
+
+  
+  !/ =====================================================================================
+  subroutine roulette_renormalize( dts )
+    !/ -----------------------------------------------------------------------------------
+    !! Renormalize the weights.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(Roulette), intent(inout) :: dts  !! reference to this Roulette object.
+    !/ -----------------------------------------------------------------------------------
+    integer  :: i
+    real(dp) :: s
+    !/ -----------------------------------------------------------------------------------
+
+    s = D_ZERO
+    
+    do i=1,dts%count
+       s = s + dts%weight(i)
+    end do
+
+    do i=1,dts%count
+       dts%weight(i) = dts%weight(i) / s
+    end do
+
+  end subroutine roulette_renormalize
+  
+    
+  !/ =====================================================================================
+  function roulette_select( dts, DD, ENT ) result( idx )
+    !/ -----------------------------------------------------------------------------------
+    !! Select an index distributed by weights.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(Roulette),                intent(inout) :: dts !! reference to this Roulette object.
+    type(Dice),           optional, intent(inout) :: DD  !! reference to a Dice object.
+    type(entropy_source), optional, intent(inout) :: ENT !! reference to an entropy source.
+    integer                                       :: idx !! selected index
+    !/ -----------------------------------------------------------------------------------
+    integer  :: i
+    real(dp) :: accum, test
+    !/ -----------------------------------------------------------------------------------
+
+     if ( present( ENT ) ) then
+        test = ENT%R64()
+     else if ( present( DD ) ) then
+        test = DD%uniform()
+     else
+        call random_number( test )
+     end if
+
+     accum = D_ZERO
+     idx   = 0
+     
+     do i=1,dts%count
+        accum = accum + dts%weight(i)
+        if ( accum.gt.test ) then
+           idx = i
+           exit
+        end if
+     end do
+     
+  end function roulette_select
+
+
+  !/ =====================================================================================
+ subroutine fast_mean_variance( mean, var, data )
+    !/ -----------------------------------------------------------------------------------
+    !! Compute fast mean and variance of a column of data
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(out) :: mean
+    real(dp), intent(out) :: var
+    real(dp), intent(in)  :: data(:)
+    !/ -----------------------------------------------------------------------------------
+    integer  :: i, n
+    real(dp) :: dif
+    !/ -----------------------------------------------------------------------------------
+    n = size(data)
+
+    mean = D_ZERO
+    do concurrent(i=1:n)
+       mean = mean + data(i)
+    end do
+    mean = mean / real(n,dp)
+
+    var = D_ZERO
+    do concurrent(i=1:n)
+       dif = data(i) - mean
+       var = var + (dif*dif)
+    end do
+    var = var / real(n-1,dp)
+  end subroutine fast_mean_variance
+    
+  
 end module statistics_mod
 
 

@@ -1,0 +1,249 @@
+module test_roulette
+    use pfunit_mod
+    use statistics_mod
+    use entropy_mod
+    use stopwatch_class
+    implicit none
+
+    real(dp), parameter :: TOLL = 1.0d-12
+  
+contains
+  
+  @test
+  !/ =====================================================================================
+  subroutine test_roulette_full
+    !/ -----------------------------------------------------------------------------------
+    integer,  parameter :: NN   = 1000000
+    real(dp), parameter :: W(3) = [ 2.0d0, 13.0d0, 5.0d0 ]
+    !/ -----------------------------------------------------------------------------------
+    integer :: hist(3)
+    integer :: i, idx
+    type(Roulette) :: R
+    !/ -----------------------------------------------------------------------------------
+
+    call R%display
+    call R%set( W )
+    call R%display
+
+    idx  = 0
+    hist = 0
+    
+    do i=1,NN
+       idx = R%select()
+       hist(idx) = hist(idx) + 1
+    end do
+
+    write(*,100) 0.10d0, real(hist(1),dp) / real(NN,dp), hist(1)
+    write(*,100) 0.65d0, real(hist(2),dp) / real(NN,dp), hist(2)
+    write(*,100) 0.25d0, real(hist(3),dp) / real(NN,dp), hist(3)
+
+100 format( 'expected ',F10.6,' got ',F10.6,5X,I0 )
+    
+  end subroutine test_roulette_full
+
+  @test
+  !/ =====================================================================================
+  subroutine test_roulette_fast_stats_storage
+    !/ -----------------------------------------------------------------------------------
+    integer,  parameter :: MM    = 1000
+    integer,  parameter :: NN    = 1000000
+
+    real(dp), parameter :: mu    = 3.00d0
+    real(dp), parameter :: sigma = 0.12d0
+
+    type(stopwatch) :: SW
+    type(Dice) :: dd
+    real(dp)   :: dif, mean, var, elp, master_mean, master_var
+    integer    :: i, j
+
+    real(dp), allocatable :: data(:)
+
+    allocate( data(NN) )
+
+    do i=1,NN
+       data(i) = mu + sigma * dd%normal()
+    end do
+
+    call SW%reset
+    master_mean = D_ZERO
+    master_VAR  = D_ZERO
+    do j = 1,MM
+       mean = D_ZERO
+       
+       do i=1,NN
+          mean = mean + data(i)
+       end do
+
+       mean = mean / real(NN,dp)
+
+       var = D_ZERO
+       
+       do i=1,NN
+          dif = mean - data(i)
+          var = var + (dif*dif)
+       end do
+
+       var = var / real(NN-1,dp)
+
+       master_mean = master_mean + mean
+       master_var  = master_var  + var
+    end do
+
+    master_mean = master_mean / real(MM,dp)
+    master_var  = master_var  / real(MM,dp)
+
+    elp = SW%check()
+
+    write( OUTPUT_UNIT, * )
+    write( OUTPUT_UNIT, * )
+    write( OUTPUT_UNIT, * ) 'Storage'
+    write( OUTPUT_UNIT, * ) '  elapsed time =', elp, 'seconds'
+    write( OUTPUT_UNIT, * ) '  rate         =', real(NN*MM,dp) / elp, 'numbers per seconds'
+    write( OUTPUT_UNIT, * ) '  mean         =', master_mean
+    write( OUTPUT_UNIT, * ) '  stddev       =', sqrt(master_var)
+    write( OUTPUT_UNIT, * )
+
+    deallocate( data )
+
+  end subroutine test_roulette_fast_stats_storage
+
+  @test
+  !/ =====================================================================================
+  subroutine test_roulette_fast_stats_running
+    !/ -----------------------------------------------------------------------------------
+    integer,  parameter :: MM    = 1000
+    integer,  parameter :: NN    = 1000000
+
+    real(dp), parameter :: mu    = 3.00d0
+    real(dp), parameter :: sigma = 0.12d0
+
+    type(stopwatch) :: SW
+    type(Dice     ) :: dd
+    real(dp)        :: dif, mean, var, elp, t, t2, fn, fnp1
+    integer         :: i, j
+
+    real(dp), allocatable :: data(:)
+    
+    !/ -----------------------------------------------------------------------------------
+    real(dp) :: mean_val, mean_sq_val
+    integer  :: num_samp
+    logical  :: is_first
+
+    mean_val    = D_ZERO
+    mean_sq_val = D_ZERO
+    num_samp    = 0
+    is_first    = .true.
+    !/ -----------------------------------------------------------------------------------
+
+    allocate( data(NN) )
+
+    do i=1,NN
+       data(i) = mu + sigma * dd%normal()
+    end do
+
+    call SW%reset
+    do j = 1,MM
+       do i = 1,NN
+          if ( is_first ) then
+             mean_val    = data(i)
+             mean_sq_val = data(i)*data(i)
+             num_samp    = 1
+             is_first    = .false.
+          else
+             
+             fn   = real(num_samp,dp)
+             fnp1 = real(num_samp+1,dp)
+
+             t  = fn * mean_val
+             t2 = fn * mean_sq_val 
+
+             mean_val    = (data(i)         + t  ) / fnp1
+             mean_sq_val = (data(i)*data(i) + t2 ) / fnp1
+
+             num_samp = num_samp + 1
+          end if
+       end do
+    end do
+    elp = SW%check()
+
+    mean = mean_val
+    var  = mean_sq_val - (mean_val*mean_val)
+
+    write( OUTPUT_UNIT, * )
+    write( OUTPUT_UNIT, * ) 'Running'
+    write( OUTPUT_UNIT, * ) '  elapsed time =', elp, 'seconds'
+    write( OUTPUT_UNIT, * ) '  rate         =', real(NN*MM,dp) / elp, 'numbers per seconds'
+    write( OUTPUT_UNIT, * ) '  mean         =', mean
+    write( OUTPUT_UNIT, * ) '  stddev       =', sqrt(var)
+    write( OUTPUT_UNIT, * )
+    write( OUTPUT_UNIT, * )
+
+    deallocate( data )
+
+  end subroutine test_roulette_fast_stats_running
+
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_roulette_fast_stats_builtin
+    !/ -----------------------------------------------------------------------------------
+    integer,  parameter :: MM    = 1000
+    integer,  parameter :: NN    = 1000000
+
+    real(dp), parameter :: mu    = 3.00d0
+    real(dp), parameter :: sigma = 0.12d0
+
+    type(stopwatch) :: SW
+    type(Dice) :: dd
+    real(dp)   :: mean, var, elp, master_mean, master_var
+    integer    :: i, j
+
+    real(dp), allocatable :: data(:)
+
+    allocate( data(NN) )
+
+    do i=1,NN
+       data(i) = mu + sigma * dd%normal()
+    end do
+
+    call SW%reset
+    master_mean = D_ZERO
+    master_VAR  = D_ZERO
+    do j = 1,MM
+
+       call mean_variance( mean, var, data )
+       
+       master_mean = master_mean + mean
+       master_var  = master_var  + var
+    end do
+
+    master_mean = master_mean / real(MM,dp)
+    master_var  = master_var  / real(MM,dp)
+
+    elp = SW%check()
+
+    write( OUTPUT_UNIT, * )
+    write( OUTPUT_UNIT, * )
+    write( OUTPUT_UNIT, * ) 'Built-in'
+    write( OUTPUT_UNIT, * ) '  elapsed time =', elp, 'seconds'
+    write( OUTPUT_UNIT, * ) '  rate         =', real(NN*MM,dp) / elp, 'numbers per seconds'
+    write( OUTPUT_UNIT, * ) '  mean         =', master_mean
+    write( OUTPUT_UNIT, * ) '  stddev       =', sqrt(master_var)
+    write( OUTPUT_UNIT, * )
+
+    deallocate( data )
+
+  end
+
+
+
+
+
+
+
+
+  
+end module test_roulette

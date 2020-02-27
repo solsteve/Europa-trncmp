@@ -1,0 +1,1035 @@
+module test_mat3d
+  use pfunit_mod
+  use trncmp_ENV
+  use matrix3d_mod
+
+contains
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_comp
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: CM(9) = [ 1.1d0, 2.1d0, 3.1d0, 1.2d0, 2.2d0, &
+         &                           3.2d0, 1.3d0, 2.3d0, 3.3d0 ]
+
+    real(dp), parameter :: RM(9) = [ 1.1d0, 1.2d0, 1.3d0, 2.1d0, 2.2d0, &
+         &                           2.3d0, 3.1d0, 3.2d0, 3.3d0 ]
+
+    real(dp), parameter :: TT(3,3) = reshape( [ 1.1d0, 2.1d0, 3.1d0, &
+         &                                      1.2d0, 2.2d0, 3.2d0, &
+         &                                      1.3d0, 2.3d0, 3.3d0  &
+         &                                    ], [3,3] )
+
+    real(dp), parameter :: ZZ(3,3) = reshape( [ D_ZERO, D_ZERO, D_ZERO, &
+         &                                      D_ZERO, D_ZERO, D_ZERO, &
+         &                                      D_ZERO, D_ZERO, D_ZERO  &
+         &                                    ], [3,3] )
+
+    real(dp), parameter :: ID(3,3) = reshape( [ D_ONE,  D_ZERO, D_ZERO, &
+         &                                      D_ZERO, D_ONE,  D_ZERO, &
+         &                                      D_ZERO, D_ZERO, D_ONE   &
+         &                                    ], [3,3] )
+
+    real(dp), parameter :: XX(3,3) = reshape( [ 7.7d0, 7.7d0, 7.7d0, &
+         &                                      7.7d0, 7.7d0, 7.7d0, &
+         &                                      7.7d0, 7.7d0, 7.7d0  &
+         &                                    ], [3,3] )
+
+    type(Matrix3D) :: M1, M2, M3, M4, M5, M6, M7
+
+
+    call M1%set( CM )
+    call M2%set( CM, ORDER='C' )
+    call M3%set( CM, ORDER='c' )
+    call M4%set( RM, ORDER='R' )
+    call M5%set( RM, ORDER='r' )
+    call M6%set( TT )
+
+    @assertEqual( M1%m, TT )
+    @assertEqual( M2%m, TT )
+    @assertEqual( M3%m, TT )
+    @assertEqual( M4%m, TT )
+    @assertEqual( M5%m, TT )
+    @assertEqual( M6%m, TT )
+
+    call M6%zero()
+    @assertEqual( M6%m, ZZ )
+
+    call M5%set( 7.7d0 )
+    @assertEqual( M5%m, XX )
+
+    call M7%zero
+    @assertEqual( M7%m, ZZ )
+    call M7%ident
+    @assertEqual( M7%m, ID )
+
+
+  end subroutine test_m3_comp
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_copy
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: TT(3,3) = reshape( [ 1.1d0, 2.1d0, 3.1d0, &
+         &                                      1.2d0, 2.2d0, 3.2d0, &
+         &                                      1.3d0, 2.3d0, 3.3d0  &
+         &                                    ], [3,3] )
+
+    real(dp), parameter :: ZZ(3,3) = reshape( [ D_ZERO, D_ZERO, D_ZERO, &
+         &                                      D_ZERO, D_ZERO, D_ZERO, &
+         &                                      D_ZERO, D_ZERO, D_ZERO  &
+         &                                    ], [3,3] )
+
+    type(Matrix3D) :: M1, M2
+
+    call M1%zero
+    call M2%zero
+    @assertEqual( M1%m, ZZ )
+    @assertEqual( M2%m, ZZ )
+
+    call M1%set( TT )
+    @assertEqual( M1%m, TT )
+
+    call M2%copy( M1 )
+    @assertEqual( M2%m, TT )
+  end subroutine test_m3_copy
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_compare
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: TT(3,3) = reshape( [ 1.1d0, 2.1d0, 3.1d0, &
+         &                                      1.2d0, 2.2d0, 3.2d0, &
+         &                                      1.3d0, 2.3d0, 3.3d0  &
+         &                                    ], [3,3] )
+
+    real(dp), parameter :: ZZ(3,3) = reshape( [ D_ZERO, D_ZERO, D_ZERO, &
+         &                                      D_ZERO, D_ZERO, D_ZERO, &
+         &                                      D_ZERO, D_ZERO, D_ZERO  &
+         &                                    ], [3,3] )
+
+    type(Matrix3D) :: M1, M2
+
+    call M1%zero
+    call M2%zero
+    @assertEqual( M1%m, ZZ )
+    @assertEqual( M2%m, ZZ )
+
+    call M1%set( TT )
+    @assertEqual( M1%m, TT )
+
+    @assertFalse( M1%equals( M2 ) )
+
+    call M2%set( TT )
+    @assertEqual( M2%m, TT )
+
+    @assertTrue( M1%equals( M2 ) )
+
+
+  end subroutine test_m3_compare
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_string
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: TT(3,3) = reshape( [ 1.1d0, 2.1d0, 3.1d0, &
+         &                                      1.2d0, 2.2d0, 3.2d0, &
+         &                                      1.3d0, 2.3d0, 3.3d0  &
+         &                                    ], [3,3] )
+
+    type(Matrix3D)            :: M
+    character(*), parameter   :: test  = '[[1.1#1.2#1.3|2.1#2.2#2.3|3.1#3.2#3.3]]'
+    character(*), parameter   :: testT = '[[1.1#2.1#3.1|1.2#2.2#3.2|1.3#2.3#3.3]]'
+    character(:), allocatable :: str
+
+    call M%set( TT )
+
+    str = toString( M, FMT='F3.1', RDEL='|', CDEL='#' )
+    @assertEqual( test, str )
+
+    !print 100, test
+    !print 100, str
+
+    str = toString( M, FMT='F3.1', RDEL='|', CDEL='#', TRANS=.true. )
+    @assertEqual( testT, str )
+
+    str = toString( M, FMT='F3.1', RDEL='|', CDEL='#', TRANS=.false. )
+    @assertEqual( test, str )
+
+    !100 format( '>>',A,'<<' )
+
+  end subroutine test_m3_string
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_extern
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: TT(3,3) = reshape( [ 1.1d0, 2.1d0, 3.1d0, &
+         &                                      1.2d0, 2.2d0, 3.2d0, &
+         &                                      1.3d0, 2.3d0, 3.3d0  &
+         &                                    ], [3,3] )
+
+    character(*), parameter :: NR = 'np.array( [[1.1,1.2,1.3],[2.1,2.2,2.3],[3.1,3.2,3.3]] )'
+    character(*), parameter :: NT = 'np.array( [[1.1,2.1,3.1],[1.2,2.2,3.2],[1.3,2.3,3.3]] )'
+
+    character(*), parameter :: SR = 'Matrix(SR, [[1.1,1.2,1.3],[2.1,2.2,2.3],[3.1,3.2,3.3]] )'
+    character(*), parameter :: ST = 'Matrix(SR, [[1.1,2.1,3.1],[1.2,2.2,3.2],[1.3,2.3,3.3]] )'
+
+    character(*), parameter :: MR = '[1.1 1.2 1.3 ; 2.1 2.2 2.3 ; 3.1 3.2 3.3]'
+    character(*), parameter :: MT = '[1.1 2.1 3.1 ; 1.2 2.2 3.2 ; 1.3 2.3 3.3]'
+
+    type(Matrix3D) :: M
+
+    call M%set( TT )
+
+    @assertEqual( NR,  M%numpy(FMT='F3.1') )
+    @assertEqual( NR,  M%numpy(FMT='F3.1',TRANS=.false.) )
+    @assertEqual( NT,  M%numpy(FMT='F3.1',TRANS=.true.) )
+
+    @assertEqual( SR,  M%sage(FMT='F3.1') )
+    @assertEqual( SR,  M%sage(FMT='F3.1',TRANS=.false.) )
+    @assertEqual( ST,  M%sage(FMT='F3.1',TRANS=.true.) )
+
+    @assertEqual( MR,  M%matlab(FMT='F3.1') )
+    @assertEqual( MR,  M%matlab(FMT='F3.1',TRANS=.false.) )
+    @assertEqual( MT,  M%matlab(FMT='F3.1',TRANS=.true.) )
+
+  end subroutine test_m3_extern
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_add_internal
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: test1(3,3) = reshape( [    &
+         &  [  8.57d0,  1.84d0, -2.83d0 ],  &
+         &  [ -2.10d0,  4.11d0,  8.91d0 ],  &
+         &  [ -5.78d0,  3.25d0, -6.83d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test2(3,3) = reshape( [    &
+         &  [ -9.05d0, -4.30d0,  4.74d0 ],  &
+         &  [  9.80d0,  1.47d0, -9.07d0 ],  &
+         &  [ -4.54d0, -6.97d0, -8.54d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: testS =  6.79d0
+
+    real(dp), parameter :: test3(3,3) = reshape( [    &
+         &  [ -0.48d0, -2.46d0,  1.91d0 ],  &
+         &  [  7.70d0,  5.58d0, -0.16d0 ],  &
+         &  [ -10.32d0, -3.72d0, -15.37d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test4(3,3) = reshape( [    &
+         &  [ -2.26d0,  2.49d0, 11.53d0 ],  &
+         &  [ 16.59d0,  8.26d0, -2.28d0 ],  &
+         &  [  2.25d0, -0.18d0, -1.75d0 ]   &
+         &  ], [3,3] )
+
+    type(Matrix3D) :: m1, m2
+
+    call m1%set( test1 )
+    call m2%set( test2 )
+
+    call m1%add( m2 )
+    call m2%add( testS )
+
+    @assertEqual( test3, m1%m, 1.0d-14 )
+    @assertEqual( test4, m2%m, 1.0d-12 )
+
+  end subroutine test_m3_add_internal
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_sub_internal
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: test1(3,3) = reshape( [    &
+         &  [  0.54d0, -1.51d0,  5.17d0 ],  &
+         &  [ -1.34d0,  6.74d0, -8.55d0 ],  &
+         &  [  9.96d0,  8.51d0,  7.87d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test2(3,3) = reshape( [    &
+         &  [  8.73d0, -6.64d0,  0.34d0 ],  &
+         &  [ -7.24d0, -6.60d0, -2.09d0 ],  &
+         &  [  4.49d0, -3.06d0,  8.71d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: testS =  0.26d0
+
+    real(dp), parameter :: test3(3,3) = reshape( [    &
+         &  [ -8.19d0,  5.13d0,  4.83d0 ],  &
+         &  [  5.90d0, 13.34d0, -6.46d0 ],  &
+         &  [  5.47d0, 11.57d0, -0.84d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test4(3,3) = reshape( [    &
+         &  [  8.47d0, -6.90d0,  0.08d0 ],  &
+         &  [ -7.50d0, -6.86d0, -2.35d0 ],  &
+         &  [  4.23d0, -3.32d0,  8.45d0 ]   &
+         &  ], [3,3] )
+
+    type(Matrix3D) :: m1, m2
+
+    call m1%set( test1 )
+    call m2%set( test2 )
+
+    call m1%sub( m2 )
+    call m2%sub( testS )
+
+    @assertEqual( test3, m1%m, 1.0d-14 )
+    @assertEqual( test4, m2%m, 1.0d-12 )
+
+  end subroutine test_m3_sub_internal
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_mul_internal
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: test1(3,3) = reshape( [    &
+         &  [  8.85d0,  3.67d0, -1.82d0 ],  &
+         &  [ -8.63d0, -2.42d0, -9.28d0 ],  &
+         &  [ -6.46d0, -8.73d0,  7.12d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test2(3,3) = reshape( [    &
+         &  [ -1.66d0,  4.01d0,  7.12d0 ],  &
+         &  [  9.62d0, -8.05d0, -2.03d0 ],  &
+         &  [ -0.70d0,  1.47d0, -8.31d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: testS = -4.71d0
+
+    real(dp), parameter :: test3(3,3) = reshape( [    &
+         &  [ -14.6910d0, 14.7167d0, -12.9584d0 ],  &
+         &  [ -83.0206d0, 19.4810d0, 18.8384d0 ],  &
+         &  [  4.5220d0, -12.8331d0, -59.1672d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test4(3,3) = reshape( [    &
+         &  [  7.8186d0, -18.8871d0, -33.5352d0 ],  &
+         &  [ -45.3102d0, 37.9155d0,  9.5613d0 ],  &
+         &  [  3.2970d0, -6.9237d0, 39.1401d0 ]   &
+         &  ], [3,3] )
+
+
+    type(Matrix3D) :: m1, m2
+
+    call m1%set( test1 )
+    call m2%set( test2 )
+
+    call m1%mul( m2 )
+    call m2%mul( testS )
+
+    @assertEqual( test3, m1%m, 1.0d-13 )
+    @assertEqual( test4, m2%m, 1.0d-13 )
+
+  end subroutine test_m3_mul_internal
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_div_internal
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: test1(3,3) = reshape( [    &
+         &  [ -35.160944d0, 106.028832d0, -15.200640d0 ],  &
+         &  [ 191.659104d0, -167.469120d0, 68.996928d0 ],  &
+         &  [  2.518516d0, -4.209660d0, -34.168680d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test2(3,3) = reshape( [    &
+         &  [ -21.4396d0, -11.5752d0, -26.2080d0 ],  &
+         &  [ 31.0128d0, -23.5872d0, -19.2192d0 ],  &
+         &  [ -22.8956d0, -9.3548d0,  3.8220d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: testS = -3.64d0
+
+    real(dp), parameter :: test3(3,3) = reshape( [    &
+         &  [  1.64d0, -9.16d0,  0.58d0 ],  &
+         &  [  6.18d0,  7.10d0, -3.59d0 ],  &
+         &  [ -0.11d0,  0.45d0, -8.94d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test4(3,3) = reshape( [    &
+         &  [  5.89d0,  3.18d0,  7.20d0 ],  &
+         &  [ -8.52d0,  6.48d0,  5.28d0 ],  &
+         &  [  6.29d0,  2.57d0, -1.05d0 ]   &
+         &  ], [3,3] )
+
+    type(Matrix3D) :: m1, m2
+
+    call m1%set( test1 )
+    call m2%set( test2 )
+
+    call m1%div( m2 )
+    call m2%div( testS )
+
+    @assertEqual( test3, m1%m, 1.0d-14 )
+    @assertEqual( test4, m2%m, 1.0d-14 )
+
+  end subroutine test_m3_div_internal
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_extern_misc
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: TT(3,3) = reshape( [ 1.1d0, 2.1d0, 3.1d0, &
+         &                                      1.2d0, 2.2d0, 3.2d0, &
+         &                                      1.3d0, 2.3d0, 3.3d0  &
+         &                                    ], [3,3] )
+
+    real(dp), parameter :: A1(3,3) = reshape( [ 1.3d0, 3.2d0, 5.1d0, &
+         &                                      2.2d0, 3.3d0, 4.4d0, &
+         &                                      6.2d0, 8.4d0, 2.9d0  &
+         &                                    ], [3,3] )
+
+    real(dp), parameter :: ZZ(3,3) = reshape( [ D_ZERO, D_ZERO, D_ZERO, &
+         &                                      D_ZERO, D_ZERO, D_ZERO, &
+         &                                      D_ZERO, D_ZERO, D_ZERO  &
+         &                                    ], [3,3] )
+
+    type(Matrix3D)            :: M1, M2, M3
+    real(dp) :: A2(3,3)
+
+    A2 = D_ZERO
+
+    @assertEqual( ZZ, A2 )
+
+    call M1%set( TT )
+    call M2%zero
+
+    @assertEqual( TT, M1%m )
+    @assertEqual( ZZ, M2%m )
+
+    call copy(M2,M1)
+    call copy(A2,M1)
+    call copy(M3,A1)
+
+    @assertEqual( TT, M2%m )
+    @assertEqual( TT, A2 )
+    @assertEqual( A1, M3%m )
+
+    @assertEqual( 3, size( M1 ) )
+    @assertEqual( 3, size( M1, DIM=1 ) )
+    @assertEqual( 3, size( M1, DIM=2 ) )
+
+
+  end subroutine test_m3_extern_misc
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_add2
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: lsrc(3,3) = reshape( [    &
+         &  [ -4.21d0, -2.87d0,  1.33d0 ],  &
+         &  [ -1.54d0, -3.75d0, -7.10d0 ],  &
+         &  [ -9.23d0, -3.69d0, -6.14d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: rsrc(3,3) = reshape( [    &
+         &  [  2.73d0, -7.02d0,  0.20d0 ],  &
+         &  [  9.85d0,  3.25d0, -5.77d0 ],  &
+         &  [ -1.99d0,  1.63d0,  8.55d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: ls = -9.98d0
+
+    real(dp), parameter :: rs = -5.03d0
+
+    real(dp), parameter :: test1(3,3) = reshape( [    &
+         &  [ -1.48d0, -9.89d0,  1.53d0 ],  &
+         &  [  8.31d0, -0.50d0, -12.87d0 ],  &
+         &  [ -11.22d0, -2.06d0,  2.41d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test2(3,3) = reshape( [    &
+         &  [ -7.25d0, -17.00d0, -9.78d0 ],  &
+         &  [ -0.13d0, -6.73d0, -15.75d0 ],  &
+         &  [ -11.97d0, -8.35d0, -1.43d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test3(3,3) = reshape( [    &
+         &  [ -9.24d0, -7.90d0, -3.70d0 ],  &
+         &  [ -6.57d0, -8.78d0, -12.13d0 ],  &
+         &  [ -14.26d0, -8.72d0, -11.17d0 ]   &
+         &  ], [3,3] )
+
+
+    type(Matrix3D) :: m1, m2, m3, lm, rm
+
+    call lm%set( lsrc )
+    call rm%set( rsrc )
+
+    call m1%add( lm, rm )
+    call m2%add( ls, rm )
+    call m3%add( lm, rs )
+
+    @assertEqual( test1, m1%m, 1.0d-13 )
+    @assertEqual( test2, m2%m, 1.0d-13 )
+    @assertEqual( test3, m3%m, 1.0d-13 )
+
+  end subroutine test_m3_add2
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_sub2
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: lsrc(3,3) = reshape( [    &
+         &  [ -4.34d0, -4.60d0, -2.38d0 ],  &
+         &  [ -7.26d0, -7.71d0,  1.01d0 ],  &
+         &  [ -4.42d0, -3.33d0,  2.93d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: rsrc(3,3) = reshape( [    &
+         &  [  6.74d0, -0.29d0, -6.87d0 ],  &
+         &  [ -3.14d0, -2.02d0,  9.32d0 ],  &
+         &  [  8.21d0, -7.01d0, -5.31d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: ls = -8.32d0
+
+    real(dp), parameter :: rs = -5.56d0
+
+    real(dp), parameter :: test1(3,3) = reshape( [    &
+         &  [ -11.08d0, -4.31d0,  4.49d0 ],  &
+         &  [ -4.12d0, -5.69d0, -8.31d0 ],  &
+         &  [ -12.63d0,  3.68d0,  8.24d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test2(3,3) = reshape( [    &
+         &  [ -15.06d0, -8.03d0, -1.45d0 ],  &
+         &  [ -5.18d0, -6.30d0, -17.64d0 ],  &
+         &  [ -16.53d0, -1.31d0, -3.01d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test3(3,3) = reshape( [    &
+         &  [  1.22d0,  0.96d0,  3.18d0 ],  &
+         &  [ -1.70d0, -2.15d0,  6.57d0 ],  &
+         &  [  1.14d0,  2.23d0,  8.49d0 ]   &
+         &  ], [3,3] )
+
+    type(Matrix3D) :: m1, m2, m3, lm, rm
+
+    call lm%set( lsrc )
+    call rm%set( rsrc )
+
+    call m1%sub( lm, rm )
+    call m2%sub( ls, rm )
+    call m3%sub( lm, rs )
+
+    @assertEqual( test1, m1%m, 1.0d-13 )
+    @assertEqual( test2, m2%m, 1.0d-13 )
+    @assertEqual( test3, m3%m, 1.0d-13 )
+
+  end subroutine test_m3_sub2
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_mul2
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: lsrc(3,3) = reshape( [    &
+         &  [ -2.18d0,  2.40d0, -7.66d0 ],  &
+         &  [ -9.98d0, -9.38d0,  0.29d0 ],  &
+         &  [ -9.76d0,  9.68d0, -3.84d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: rsrc(3,3) = reshape( [    &
+         &  [ -6.00d0, -3.63d0,  8.64d0 ],  &
+         &  [ -0.40d0, -2.26d0,  7.41d0 ],  &
+         &  [  3.04d0,  3.24d0, -3.09d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: ls =  0.38d0
+
+    real(dp), parameter :: rs = -4.43d0
+
+    real(dp), parameter :: test1(3,3) = reshape( [    &
+         &  [ 13.0800d0, -8.7120d0, -66.1824d0 ],  &
+         &  [  3.9920d0, 21.1988d0,  2.1489d0 ],  &
+         &  [ -29.6704d0, 31.3632d0, 11.8656d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test2(3,3) = reshape( [    &
+         &  [ -2.2800d0, -1.3794d0,  3.2832d0 ],  &
+         &  [ -0.1520d0, -0.8588d0,  2.8158d0 ],  &
+         &  [  1.1552d0,  1.2312d0, -1.1742d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test3(3,3) = reshape( [    &
+         &  [  9.6574d0, -10.6320d0, 33.9338d0 ],  &
+         &  [ 44.2114d0, 41.5534d0, -1.2847d0 ],  &
+         &  [ 43.2368d0, -42.8824d0, 17.0112d0 ]   &
+         &  ], [3,3] )
+
+    type(Matrix3D) :: m1, m2, m3, lm, rm
+
+    call lm%set( lsrc )
+    call rm%set( rsrc )
+
+    call m1%mul( lm, rm )
+    call m2%mul( ls, rm )
+    call m3%mul( lm, rs )
+
+    @assertEqual( test1, m1%m, 1.0d-13 )
+    @assertEqual( test2, m2%m, 1.0d-13 )
+    @assertEqual( test3, m3%m, 1.0d-13 )
+
+  end subroutine test_m3_mul2
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_div2
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: lsrc(3,3) = reshape( [    &
+         &  [ 24.5604d0, -3.5504d0, -34.3672d0 ],  &
+         &  [ -8.2792d0, -6.1180d0, 48.3336d0 ],  &
+         &  [ -61.0236d0, -47.4545d0, 27.9128d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: rsrc(3,3) = reshape( [    &
+         &  [  4.22d0, -3.17d0, -9.52d0 ],  &
+         &  [ -1.58d0, -8.74d0, -5.48d0 ],  &
+         &  [  7.59d0,  8.87d0,  9.43d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: ls =  2.90d0
+
+    real(dp), parameter :: rs = -2.97d0
+
+    real(dp), parameter :: test1(3,3) = reshape( [    &
+         &  [  5.82d0,  1.12d0,  3.61d0 ],  &
+         &  [  5.24d0,  0.70d0, -8.82d0 ],  &
+         &  [ -8.04d0, -5.35d0,  2.96d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test2(3,3) = reshape( [    &
+         &  [ 0.687203791469d0, -0.914826498423d0, -0.304621848739d0 ],  &
+         &  [ -1.835443037975d0, -0.331807780320d0, -0.529197080292d0 ],  &
+         &  [ 0.382081686430d0, 0.326944757610d0, 0.307529162248d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test3(3,3) = reshape( [    &
+         &  [ -8.269494949495d0, 1.195420875421d0, 11.571447811448d0 ],  &
+         &  [ 2.787609427609d0, 2.059932659933d0, -16.273939393939d0 ],  &
+         &  [ 20.546666666667d0, 15.977946127946d0, -9.398249158249d0 ]   &
+         &  ], [3,3] )
+
+
+    type(Matrix3D) :: m1, m2, m3, lm, rm
+
+    call lm%set( lsrc )
+    call rm%set( rsrc )
+
+    call m1%div( lm, rm )
+    call m2%div( ls, rm )
+    call m3%div( lm, rs )
+
+    @assertEqual( test1, m1%m, 1.0d-13 )
+    @assertEqual( test2, m2%m, 1.0d-11 )
+    @assertEqual( test3, m3%m, 1.0d-11 )
+
+  end subroutine test_m3_div2
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_dot
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: asrc(3,3) = reshape( [    &
+         &  [ -1.21d0,  0.95d0, -1.93d0 ],  &
+         &  [  4.54d0, -1.11d0, -7.88d0 ],  &
+         &  [ -8.04d0, -2.13d0,  2.45d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: bsrc(3,3) = reshape( [    &
+         &  [ -8.96d0,  3.68d0, -3.77d0 ],  &
+         &  [  5.23d0, -8.98d0,  3.85d0 ],  &
+         &  [ -5.42d0,  6.11d0,  0.81d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: csrc(3,3) = reshape( [    &
+         &  [ -7.61d0,  0.73d0,  1.32d0 ],  &
+         &  [ -2.28d0,  4.95d0,  0.20d0 ],  &
+         &  [  3.50d0, -5.96d0, -2.09d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test1(3,3) = reshape( [    &
+         &  [   57.8596d0,   -4.5667d0,  -20.9421d0 ],  &
+         &  [  -78.0515d0,    6.7358d0,   70.1010d0 ],  &
+         &  [   27.7852d0,  -13.6564d0,  -35.7017d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: test2(3,3) = reshape( [    &
+         &  [ -460.612687d0,   21.643273d0,  163.416867d0 ],  &
+         &  [ -512.717773d0,   41.023006d0,  387.607598d0 ],  &
+         &  [  609.624472d0,  -27.586942d0, -416.482757d0 ]   &
+         &  ], [3,3] )
+
+    type(Matrix3D) :: A, B, C, D
+
+    call A%set( asrc )
+    call B%set( bsrc )
+    call C%set( csrc )
+
+    call D%dot( A, B )
+    @assertEqual( test1, D%m, 1.0d-13 )
+
+    call D%dot( C )
+    @assertEqual( test2, D%m, 1.0d-12 )
+
+  end subroutine test_m3_dot
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_trans
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: M(3,3) = reshape( [    &
+         &  [  6.286d0, -8.374d0, -9.833d0 ],  &
+         &  [  2.568d0, -5.117d0,  6.626d0 ],  &
+         &  [  2.775d0,  7.066d0, -8.087d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: MT(3,3) = reshape( [    &
+         &  [  6.286d0,  2.568d0,  2.775d0 ],  &
+         &  [ -8.374d0, -5.117d0,  7.066d0 ],  &
+         &  [ -9.833d0,  6.626d0, -8.087d0 ]   &
+         &  ], [3,3] )
+
+    type(Matrix3D) :: A, B
+
+    call A%set( M )
+    call B%transpose( A )
+
+    @assertEqual( M,  A%m )
+    @assertEqual( MT, B%m )
+
+    call B%transpose
+    @assertEqual( M, B%m )
+
+  end subroutine test_m3_trans
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_diag
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: s1(3,3) = reshape( [ 1.1d0, 2.1d0, 3.1d0, &
+         &                                      1.2d0, 2.2d0, 3.2d0, &
+         &                                      1.3d0, 2.3d0, 3.3d0  &
+         &                                    ], [3,3] )
+
+    real(dp), parameter :: s2(3,3) = reshape( [ 9.9d0, 2.1d0, 3.1d0, &
+         &                                      1.2d0, 8.8d0, 3.2d0, &
+         &                                      1.3d0, 2.3d0, 7.7d0  &
+         &                                    ], [3,3] )
+
+    real(dp), parameter :: s1z(3,3) = reshape( [ 1.1d0, D_ZERO, D_ZERO, &
+         &                                       D_ZERO, 2.2d0, D_ZERO, &
+         &                                       D_ZERO, D_ZERO, 3.3d0  &
+         &                                    ], [3,3] )
+
+    real(dp), parameter :: s2z(3,3) = reshape( [ 9.9d0, D_ZERO, D_ZERO, &
+         &                                       D_ZERO, 8.8d0, D_ZERO, &
+         &                                       D_ZERO, D_ZERO, 7.7d0  &
+         &                                    ], [3,3] )
+
+    real(dp), parameter :: t0(3) = [ D_ZERO, D_ZERO, D_ZERO ]
+    real(dp), parameter :: t1(3) = [ 1.1d0, 2.2d0, 3.3d0 ]
+    real(dp), parameter :: t2(3) = [ 9.9d0, 8.8d0, 7.7d0 ]
+
+    type(Matrix3D) :: M
+    real(dp)       :: dia(3)
+
+    !/ -----------------------------------------------------------------------------------
+
+    call zero( dia )
+    call M%set( s1 )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    call M%diagonal
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    !/ -----------------------------------------------------------------------------------    
+
+    call zero( dia )
+    call M%set( s1 )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    call M%diagonal( ZERO=.false. )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    !/ -----------------------------------------------------------------------------------    
+
+    call zero( dia )
+    call M%set( s1 )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    call M%diagonal( ZERO=.true. )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1z, M%m )
+
+    !/ -----------------------------------------------------------------------------------    
+
+    call zero( dia )
+    call M%set( s1 )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    call M%diagonal( SET=t2 )
+
+    @assertEqual( t0, dia )
+    @assertEqual( M%m, s2 )
+
+    !/ -----------------------------------------------------------------------------------    
+
+    call zero( dia )
+    call M%set( s1 )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    call M%diagonal( SET=t2, ZERO=.false. )
+
+    @assertEqual( t0, dia )
+    @assertEqual( M%m, s2 )
+
+    !/ -----------------------------------------------------------------------------------    
+
+    call zero( dia )
+    call M%set( s1 )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    call M%diagonal( SET=t2, ZERO=.true. )
+
+    @assertEqual( t0, dia )
+    @assertEqual( M%m, s2z )
+
+    !/ -----------------------------------------------------------------------------------    
+
+    call zero( dia )
+    call M%set( s1 )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    call M%diagonal( GET=dia )
+
+    @assertEqual( t1, dia )
+    @assertEqual( M%m, s1 )
+
+    !/ -----------------------------------------------------------------------------------
+
+    call zero( dia )
+    call M%set( s1 )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    call M%diagonal( GET=dia, ZERO=.false. )
+
+    @assertEqual( t1, dia )
+    @assertEqual( M%m, s1 )
+
+    !/ -----------------------------------------------------------------------------------    
+
+    call zero( dia )
+    call M%set( s1 )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    call M%diagonal( GET=dia, ZERO=.true. )
+
+    @assertEqual( t1, dia )
+    @assertEqual( M%m, s1z )
+
+    !/ -----------------------------------------------------------------------------------    
+
+    call zero( dia )
+    call M%set( s1 )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    call M%diagonal( GET=dia, SET=t2 )
+
+    @assertEqual( t1, dia )
+    @assertEqual( M%m, s2 )
+
+    !/ -----------------------------------------------------------------------------------    
+
+    call zero( dia )
+    call M%set( s1 )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    call M%diagonal( GET=dia, SET=t2, ZERO=.false. )
+
+    @assertEqual( t1, dia )
+    @assertEqual( M%m, s2 )
+
+    !/ -----------------------------------------------------------------------------------    
+
+    call zero( dia )
+    call M%set( s1 )
+
+    @assertEqual( t0, dia )
+    @assertEqual( s1, M%m )
+
+    call M%diagonal( GET=dia, SET=t2, ZERO=.true. )
+
+    @assertEqual( t1, dia )
+    @assertEqual( M%m, s2z )
+
+  end subroutine test_m3_diag
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_det
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: s1(3,3) = reshape( [    &
+         &  [  -5.09d0,  -5.82d0,  -4.57d0 ],  &
+         &  [  -4.37d0,  -2.65d0,  -7.80d0 ],  &
+         &  [   1.74d0,  -9.42d0,  -1.49d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: s2(3,3) = reshape( [    &
+         &  [  -5.090d0,   9.597d0,  -4.570d0 ],  &
+         &  [  -4.370d0,  16.380d0,  -7.800d0 ],  &
+         &  [   1.740d0,   3.129d0,  -1.490d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: s3(3,3) = reshape( [    &
+         &  [ -16.169d0,  -9.805d0, -28.860d0 ],  &
+         &  [  -4.370d0,  -2.650d0,  -7.800d0 ],  &
+         &  [   1.740d0,  -9.420d0,  -1.490d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: d1 =  261.581633d0
+
+    type(Matrix3D) :: M1, M2, M3
+
+    call M1%set( s1 )
+    call M2%set( s2 )
+    call M3%set( s3 )
+
+    @assertEqual( s1, M1%m )
+    @assertEqual( s2, M2%m )
+    @assertEqual( s3, M3%m )
+
+    @assertEqual( d1,     M1%det(), 1.0d-12 )
+    @assertEqual( D_ZERO, M2%det(), 1.0d-12 )
+    @assertEqual( D_ZERO, M3%det(), 1.0d-12 )
+
+  end subroutine test_m3_det
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_m3_inv
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: testM(3,3) = reshape( [    &
+         &  [   0.974d0,   2.911d0,   4.641d0 ],  &
+         &  [   6.374d0,  -8.840d0,  -2.086d0 ],  &
+         &  [   7.256d0,   7.906d0,   7.491d0 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: testI(3,3) = reshape( [    &
+         &  [ -1.65722442762141d-01,  4.96063849995124d-02,  1.16486020019767d-01 ],  &
+         &  [ -2.09562465352873d-01, -8.79086909542180d-02,  1.05353340324681d-01 ],  &
+         &  [  3.81695754340129d-01,  4.47286318418882d-02, -9.05281097143717d-02 ]   &
+         &  ], [3,3] )
+
+    real(dp), parameter :: testD =  3.00071150118000d+02
+
+
+    type(Matrix3D) :: A, B, C, D, II
+    real(dp) :: d1
+
+    call II%ident
+
+    call A%set( testM )
+    @assertEqual( testM, A%m )
+    call B%inverse( A, DET=d1 )
+    @assertEqual( testI, B%m, 1.0d-14 )
+    @assertEqual( testD, d1 )
+
+    call C%dot( A, B )
+    call D%dot( B, A )
+
+    @assertEqual( D%m,  C%m, 1.0d-14 )
+    @assertEqual( II%m, C%m, 1.0d-14 )
+    @assertEqual( II%m, D%m, 1.0d-14 )
+
+  end subroutine test_m3_inv
+
+end module test_mat3d
