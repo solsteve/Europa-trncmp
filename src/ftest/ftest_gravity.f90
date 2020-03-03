@@ -422,10 +422,10 @@ program main
 
   t = model%integrate( state, t, t+DELTATIME, ISTEP, P=param )
 
-!  call pd%drawline( px1, py1, state(iX1), state(iY1) )
-!  call pd%drawline( px2, py2, state(iX2), state(iY2) )
-!  call pd%drawline( px3, py3, state(iX3), state(iY3) )
-!  call pd%drawline( px4, py4, state(iX4), state(iY4) )
+  call pd%drawline( px1, py1, state(iX1), state(iY1) )
+  call pd%drawline( px2, py2, state(iX2), state(iY2) )
+  call pd%drawline( px3, py3, state(iX3), state(iY3) )
+  call pd%drawline( px4, py4, state(iX4), state(iY4) )
 
   px1 = state(iX1)
   px2 = state(iX2)
