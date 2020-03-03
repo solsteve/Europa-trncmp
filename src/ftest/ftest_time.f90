@@ -51,7 +51,7 @@ module ftest_time_test
   end interface dv_jday_f77
 
   !/ =====================================================================================
-contains !/**                   P R O C E D U R E   S E C T I O N                       **
+contains !/ **                  P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
 
   subroutine test01

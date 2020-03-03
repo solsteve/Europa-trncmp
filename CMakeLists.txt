@@ -2,9 +2,9 @@
 #/ **                           Top Level - C M A K E L I S T                           **
 #/ =======================================================================================
 #/ **                                                                                   **
-#/ **  Copyright ( c) 2018, Stephen W. Soliday                                           **
-#/ **                      stephen.soliday@trncmp.org                                   **
-#/ **                      http://research.trncmp.org                                   **
+#/ **  Copyright ( c) 2018, Stephen W. Soliday                                          **
+#/ **                       stephen.soliday@trncmp.org                                  **
+#/ **                       http://research.trncmp.org                                  **
 #/ **                                                                                   **
 #/ **  -------------------------------------------------------------------------------  **
 #/ **                                                                                   **
@@ -77,10 +77,10 @@ endif ( "${CMAKE_BUILD_TYPE}" STREQUAL "" )
 
 set ( GARCH "-march=native -mtune=native -fopenmp -mieee-fp -malign-double -ftree-vectorize -ftree-vectorizer-verbose=0 -ffast-math -msse2 -mrdrnd" )
 set ( GWARN "-Wall -Wextra -pedantic-errors -Wampersand -Warray-temporaries -Wcharacter-truncation -Wconversion-extra -Wimplicit-interface -Wimplicit-procedure -Winteger-division -Wintrinsics-std -Wsurprising -Wtabs -Wintrinsic-shadow -Wrealloc-lhs -Wrealloc-lhs-all" )
-set ( GFORM "-std=f2018 -fall-intrinsics -frecursive ${SDSPEC}" )
+set ( GFORM "-std=f2018 -fall-intrinsics -frecursive ${SDSPEC} -cpp" )
 
-set ( CMAKE_Fortran_FLAGS_RELEASE "-Ofast -fopt-info ${GWARN} ${GARCH} ${GFORM}" )
-set ( CMAKE_Fortran_FLAGS_DEBUG   "-g -fverbose-asm -fbacktrace -fcheck=all ${GWARN} ${GARCH} ${GFORM}" )
+set ( CMAKE_Fortran_FLAGS_RELEASE "-O3 -fopt-info ${GWARN} ${GARCH} ${GFORM}" )
+set ( CMAKE_Fortran_FLAGS_DEBUG   "-g -O0 -fverbose-asm -fbacktrace -fcheck=all ${GWARN} ${GARCH} ${GFORM}" )
 
 
 #/ =======================================================================================

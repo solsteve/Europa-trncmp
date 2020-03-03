@@ -41,7 +41,7 @@ module stopwatch_class
   !/ =====================================================================================
   type :: stopwatch
      !/ ----------------------------------------------------------------------------------
-     real(dp) :: start_time = 0.0d0
+     real(dp)   :: start_time = 0.0d0
 
    contains
 
@@ -62,7 +62,7 @@ module stopwatch_class
 
 
   !/ =====================================================================================
-contains !/**                   P R O C E D U R E   S E C T I O N                       **
+contains !/ **                  P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
 
 
@@ -90,9 +90,13 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     class(stopwatch) :: self  !! reference to this stop watch.
     !/ -----------------------------------------------------------------------------------
-
+    
+#ifdef __GFORTRAN__
+    self%start_time = real(mclock(),dp)*1.0d-6
+#else
     call cpu_time( self%start_time )
-
+#endif
+    
   end subroutine sw_reset_internals
 
 
@@ -106,12 +110,15 @@ contains !/**                   P R O C E D U R E   S E C T I O N               
     class(stopwatch) :: self  !! reference to this stop watch.
     real(dp)         :: diff  !! elapsed time in seconds.
     !/ -----------------------------------------------------------------------------------
+    
+#ifdef __GFORTRAN__
+    diff = real(mclock(),dp)*1.0d-6 - self%start_time
+#else
     real(dp) :: t
-    !/ -----------------------------------------------------------------------------------
-
     call cpu_time( t )
     diff = t - self%start_time
-
+#endif
+    
   end function sw_get_diff_time
 
 
