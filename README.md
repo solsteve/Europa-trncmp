@@ -1,5 +1,5 @@
 Europa
 ======
 
-Core FORTRAN 2008 libraries.
+Core FORTRAN 2018 libraries.
 
