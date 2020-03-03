@@ -1,5 +1,5 @@
 project:          Europa
-summary:          ![EUROPA](|doc|/media/europa-logo.png)
+summary:          ![Logo](docs/media/europa-logo.png "Europa")
 author:           Stephen W. Soliday
 src_dir:          ../src
 output_dir:       ./html/publish/
