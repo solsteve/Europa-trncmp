@@ -1,5 +1,6 @@
-# A library of modern FORTRAN modules.   ![Logo](docs/media/europa-logo.png "Europa")
+![Logo](docs/media/europa-logo.png "Europa")
 
+# A library of modern FORTRAN modules.   
 Starting in 1979 a set of basic fortran helper functions was started with FORTRAN IV.
 In 1982 the library was extended with PDP-11/34 FORTRAN 77.
 From 1989-1991 the library was again extended with VAX and Cray FORTRAN.
