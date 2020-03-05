@@ -41,6 +41,30 @@ module app_options_mod
   character(12), parameter, public :: APP_OPT_FILENAME = 'WXYZFSPC1234'
 
   !/ =====================================================================================
+  type :: text_node
+     !/ ----------------------------------------------------------------------------------
+     character(:), allocatable :: text           !! text stored in this node.
+     class(text_node), pointer :: next => null() !! next line.
+   contains
+     final :: tnode_destroy
+  end type text_node
+
+  !/ =====================================================================================
+  type :: text_list
+     !/ ----------------------------------------------------------------------------------
+     class(text_node), pointer :: head => null()  !! head of the list.
+     class(text_node), pointer :: tail => null()  !! tail ofd the list.
+     integer                   :: count = 0       !! number of nodes.
+   contains
+
+     procedure :: clear   => tlist_clear
+     procedure :: add     => tlist_add
+     procedure :: display => tlist_display
+
+     final :: tlist_destroy
+  end type text_list
+
+  !/ =====================================================================================
   type :: cli_map_entry_t
      !/ ----------------------------------------------------------------------------------
      character(:), allocatable :: name               !! command line option key
@@ -85,7 +109,7 @@ module app_options_mod
 
      class(cli_map_t),  pointer :: climap         => null()
      class(configdb_t), pointer :: cfgdb          => null()
-     logical                    :: req_init       = .true.
+     logical                    :: init_flag      = .false.
      logical                    :: check_for_help = .false.
 
      character(:), allocatable  :: base_name    !! base name for config files
@@ -96,16 +120,21 @@ module app_options_mod
 
      character(:), allocatable  :: env_secname  !! environment section name
      character(:), allocatable  :: opt_secname  !! command line section name
-     
-     character(:), allocatable  :: title        !! application title
+
      character(:), allocatable  :: path         !! search path
+
+     character(:), allocatable  :: title        !! title to display on usage page
+     character(:), allocatable  :: example_line !! example line on usage page
+     type(text_list)            :: usage_text   !! aditional text on usage page
 
    contains
 
-     procedure, private :: alloc_instance
      procedure, public  :: init                 => initialize_with_cli_map
+     procedure, private :: has_init             => has_been_initialized
 
      procedure, public  :: setTitleLine         => set_title_line
+     procedure, public  :: setExampleLine       => set_example_line
+     procedure, public  :: addUsageText         => add_usage_text
      procedure, public  :: setConfigBase        => set_base_config_name
      procedure, public  :: setConfigPath        => set_config_path
      procedure, public  :: setEnvSectionName    => set_env_section_name
@@ -115,15 +144,15 @@ module app_options_mod
      procedure, public  :: setHelp              => set_help_key
 
      procedure, public  :: usage                => display_usage_page
-   ! procedure, public  :: setUsageFunction     => set_usage_function
+     ! procedure, public  :: setUsageFunction     => set_usage_function
 
      procedure, private :: parse_command_line
      procedure, private :: parse_environment
-   ! procedure, public  :: setCommandLine       => set_command_line
-   ! procedure, public  :: addOptions           => add_options
+     ! procedure, public  :: setCommandLine       => set_command_line
+     ! procedure, public  :: addOptions           => add_options
 
      procedure, public  :: getConfigDB          => get_configdb
-   ! procedure, public  :: setConfigDB          => set_configdb
+     ! procedure, public  :: setConfigDB          => set_configdb
 
      final :: destroy_app_options
 
@@ -132,9 +161,11 @@ module app_options_mod
 
   type(app_option_t), public :: AppOptions
 
+
   !/ -------------------------------------------------------------------------------------
   interface size
      !/ ----------------------------------------------------------------------------------
+     module procedure :: text_list_size
      module procedure :: get_number_cli_entries
   end interface size
 
@@ -149,7 +180,130 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
 
-  
+
+  !/ =====================================================================================
+  subroutine tnode_destroy( tn )
+    !/ -----------------------------------------------------------------------------------
+    !! Destructor function.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(text_node), intent(inout) :: tn !! reference to a text_node.
+    !/ -----------------------------------------------------------------------------------
+    if ( allocated( tn%text ) ) deallocate( tn%text )
+    nullify( tn%next )
+  end subroutine tnode_destroy
+
+
+  !/ =====================================================================================
+  function text_list_size( tl ) result( n )
+    !/ -----------------------------------------------------------------------------------
+    !! Number of nodes in list.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(text_list), intent(inout) :: tl !! reference to a text_list.
+    integer                        :: n  !! number of nodes in list.
+    !/ -----------------------------------------------------------------------------------
+    n = tl%count
+  end function text_list_size
+
+
+  !/ =====================================================================================
+  subroutine tlist_destroy( tl )
+    !/ -----------------------------------------------------------------------------------
+    !! Destructor function.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(text_list), intent(inout) :: tl !! reference to a text_list.
+    !/ -----------------------------------------------------------------------------------
+    class(text_node), pointer :: P, A
+    !/ -----------------------------------------------------------------------------------
+
+    P => tl%head
+
+100 continue
+    if ( .not.associated( P ) ) goto 200
+    A => P
+    P => A%next
+    nullify( A%next )
+    deallocate(A)
+    nullify(A)
+    goto 100
+200 continue
+    nullify( tl%head )
+    nullify( tl%tail )
+
+    tl%count = 0
+
+  end subroutine tlist_destroy
+
+
+  !/ =====================================================================================
+  subroutine tlist_clear( self )
+    !/ -----------------------------------------------------------------------------------
+    !! Empty the list.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(text_list), intent(inout) :: self !! reference to this text_list.
+    !/ -----------------------------------------------------------------------------------
+    call tlist_destroy(self)
+  end subroutine tlist_clear
+
+
+  !/ =====================================================================================
+  subroutine tlist_add( self, text )
+    !/ -----------------------------------------------------------------------------------
+    !! Add a text line to the list.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(text_list), intent(inout) :: self !! reference to this text_list.
+    character(*),     intent(in)    :: text !! text to add.
+    !/ -----------------------------------------------------------------------------------
+    class(text_node), pointer :: node
+    !/ -----------------------------------------------------------------------------------
+    allocate( node )
+    node%text = trim(adjustl(text))
+
+    if ( associated( self%tail ) ) then
+       self%tail%next => node
+       self%tail      => node
+       self%count     =  self%count + 1
+    else
+       self%head  => node
+       self%tail  => node
+       self%count =  1
+    end if
+
+  end subroutine tlist_add
+
+
+  !/ =====================================================================================
+  subroutine tlist_display( self, unit )
+    !/ -----------------------------------------------------------------------------------
+    !! Display each node's text on a separate line.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(text_list), intent(inout) :: self !! reference to this text_list.
+    integer,          intent(in)    :: unit !! file unit to display on.
+    !/ -----------------------------------------------------------------------------------
+    class(text_node), pointer :: P, A
+    !/ -----------------------------------------------------------------------------------
+
+    P => self%head
+
+100 continue
+    if ( .not.associated( P ) ) goto 200
+    write( unit, '(A)' ) P%text 
+    P => P%next
+    goto 100
+200 continue
+
+  end subroutine tlist_display
+
+
+
+
+
+
   !/ =====================================================================================
   function get_number_cli_entries( map ) result( n )
     !/ -----------------------------------------------------------------------------------
@@ -161,10 +315,10 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     n = map%cur_entry
-    
+
   end function get_number_cli_entries
 
-  
+
   !/ =====================================================================================
   subroutine destroy_map( map )
     !/ -----------------------------------------------------------------------------------
@@ -185,7 +339,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        end do
        deallocate( map%cli_map )
     end if
-    
+
     map%max_entries = 0
     map%cur_entry   = 0
 
@@ -276,8 +430,235 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     implicit none
     type(app_option_t), intent(inout) :: appopt !! reference to an app option
     !/ -----------------------------------------------------------------------------------
-   
+
   end subroutine destroy_app_options
+
+  
+  !/ =====================================================================================
+  subroutine has_been_initialized( self, should_abort )
+    !/ -----------------------------------------------------------------------------------
+    !! Display a message that AppOptions%init(cli_map_entry_t) must be the first
+    !! procedure called.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self         !! reference to this app option
+    logical, optional,   intent(in)    :: should_abort !! default is .true.
+    !/ -----------------------------------------------------------------------------------
+    logical :: sa
+    !/ -----------------------------------------------------------------------------------
+    if ( .not.self%init_flag ) then
+       write(ERROR_UNIT,'(A)') 'AppOptions%init(cli_map_entry_t) must be the first call'
+
+       sa = .true.
+       if ( present( should_abort ) ) sa = should_abort
+
+       if ( sa ) then
+          stop
+       end if
+    end if
+
+  end subroutine has_been_initialized
+
+
+  !/ =====================================================================================
+  subroutine initialize_with_cli_map( self, climap )
+    !/ -----------------------------------------------------------------------------------
+    !! Initialize with user supplied CLI map.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t),     intent(inout) :: self   !! reference to this app option
+    type(cli_map_t), target, intent(in)    :: climap !! the command line map
+    !/ -----------------------------------------------------------------------------------
+
+    self%init_flag = .true.
+
+    !/ ----- set default values --------------------
+    self%base_name   = 'configdb'
+    self%env_secname = 'ENV'
+    self%opt_secname = 'CLI'
+    self%prog_name   = 'Application'
+    self%path        = '/etc:~:.'
+    self%help_key    = 'help'
+
+    self%title        = ' '         !
+    self%cfg_key      = ' '         !
+    self%env_cfg_key  = ' '         !
+    self%example_line = ' '         ! This assures that these fail
+    !         if (allocated(...
+    deallocate( self%title )        !
+    deallocate( self%example_line ) !
+    deallocate( self%cfg_key )      !
+    deallocate( self%env_cfg_key )  !
+
+    self%climap => climap
+
+  end subroutine initialize_with_cli_map
+
+
+  !/ =====================================================================================
+  subroutine set_base_config_name( self, base_name )
+    !/ -----------------------------------------------------------------------------------
+    !! Set the base config file name.
+    !!
+    !! three directories will be searched: /etc, ~, and .
+    !! two file names will be derived:   .base_name and base_name.cfg
+    !! this creates 6 possible config files.
+    !! the order is /etc/.base /etc/base.cfg ~/.base ~/base.cfg ./.base ./base.cfg
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self       !! reference to this app option
+    character(*),        intent(in)    :: base_name  !! base name for config files
+    !/ -----------------------------------------------------------------------------------
+    call self%has_init
+
+    self%base_name = TRIM( ADJUSTL( base_name ) )
+
+  end subroutine set_base_config_name
+
+
+  !/ =====================================================================================
+  subroutine set_config_file_key( self, cfg_key )
+    !/ -----------------------------------------------------------------------------------
+    !! This is the optional command line key that points to a config file.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self     !! reference to this app option
+    character(*),        intent(in)    :: cfg_key  !! command line key for config file
+    !/ -----------------------------------------------------------------------------------
+    call self%has_init
+
+    self%cfg_key = TRIM( ADJUSTL( cfg_key ) )
+
+  end subroutine set_config_file_key
+
+
+  !/ =====================================================================================
+  subroutine set_env_config_file_key( self, env_cfg_key )
+    !/ -----------------------------------------------------------------------------------
+    !! This is the optional environment variable key that points to a config file.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self         !! reference to this app option
+    character(*),        intent(in)    :: env_cfg_key  !! environment key for config file
+    !/ -----------------------------------------------------------------------------------
+    call self%has_init
+
+    self%env_cfg_key = TRIM( ADJUSTL( env_cfg_key ) )
+
+  end subroutine set_env_config_file_key
+
+
+  !/ =====================================================================================
+  subroutine set_help_key( self, help_key )
+    !/ -----------------------------------------------------------------------------------
+    !! This is the command line word that will activate the usage page and abort.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self      !! reference to this app option
+    character(*),        intent(in)    :: help_key  !! command line key for help screen
+    !/ -----------------------------------------------------------------------------------
+    call self%has_init
+
+    self%help_key       = TRIM( ADJUSTL( help_key ) )
+    self%check_for_help = .true.
+
+  end subroutine set_help_key
+
+
+  !/ =====================================================================================
+  subroutine set_title_line( self, title )
+    !/ -----------------------------------------------------------------------------------
+    !! Set the title line above the usage statement.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self      !! reference to this app option
+    character(*),        intent(in)    :: title     !! application title
+    !/ -----------------------------------------------------------------------------------
+
+    call self%has_init
+    self%title = TRIM( ADJUSTL( title ) )
+
+  end subroutine set_title_line
+
+
+  !/ =====================================================================================
+  subroutine set_example_line( self, text )
+    !/ -----------------------------------------------------------------------------------
+    !! Set the title line above the usage statement.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self !! reference to this app option
+    character(*),        intent(in)    :: text !! example line on usage page
+    !/ -----------------------------------------------------------------------------------
+
+    call self%has_init
+    self%example_line = TRIM( ADJUSTL( text ) )
+
+  end subroutine set_example_line
+
+
+  !/ =====================================================================================
+  subroutine add_usage_text( self, text )
+    !/ -----------------------------------------------------------------------------------
+    !! Set the title line above the usage statement.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self !! reference to this app option
+    character(*),        intent(in)    :: text !! aditional text on usage page
+    !/ -----------------------------------------------------------------------------------
+
+    call self%has_init
+    call self%usage_text%add( text )
+
+  end subroutine add_usage_text
+
+
+  !/ =====================================================================================
+  subroutine set_config_path( self, path )
+    !/ -----------------------------------------------------------------------------------
+    !! 
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self      !! reference to this app option
+    character(*),        intent(in)    :: path      !! search path for config
+    !/ -----------------------------------------------------------------------------------
+
+    call self%has_init
+    self%path = TRIM( ADJUSTL( path ) )
+
+  end subroutine set_config_path
+
+
+  !/ =====================================================================================
+  subroutine set_env_section_name( self, sname )
+    !/ -----------------------------------------------------------------------------------
+    !! 
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self      !! reference to this app option
+    character(*),        intent(in)    :: sname
+    !/ -----------------------------------------------------------------------------------
+
+    call self%has_init
+    self%env_secname  = TRIM( ADJUSTL( sname ) )
+
+  end subroutine set_env_section_name
+
+
+  !/ =====================================================================================
+  subroutine set_config_section_name( self, cname )
+    !/ -----------------------------------------------------------------------------------
+    !! 
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(app_option_t), intent(inout) :: self      !! reference to this app option
+    character(*),        intent(in)    :: cname
+    !/ -----------------------------------------------------------------------------------
+
+    call self%has_init
+    self%opt_secname  = TRIM( ADJUSTL( cname ) )
+
+  end subroutine set_config_section_name
 
 
   !/ =====================================================================================
@@ -296,7 +677,6 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   end subroutine parse_environment
-
 
 
   !/ =====================================================================================
@@ -331,7 +711,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     end if
 
     csec => cfg%get( self%opt_secname, STATUS=istat )
-    
+
     count = COMMAND_ARGUMENT_COUNT()
 
     call GET_COMMAND_ARGUMENT( NUMBER=0, VALUE=temp_arg, LENGTH=arg_len )
@@ -359,204 +739,10 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     end do
 
 100 format( 'file',I0 )
-    
+
   end subroutine parse_command_line
 
 
-  !/ =====================================================================================
-  subroutine alloc_instance( self )
-    !/ -----------------------------------------------------------------------------------
-    !! Initialization.
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(app_option_t), intent(inout) :: self !! reference to this app option
-    !/ -----------------------------------------------------------------------------------
-    if ( self%req_init ) then
-       self%req_init = .false.
-       call log_info( 'Set default values' )
-       
-       !/ ----- set default values --------------------
-       self%base_name   = 'configdb'
-       self%env_secname = 'ENV'
-       self%opt_secname = 'CLI'
-       self%prog_name   = 'Application'
-       self%title       = 'Application * ver 1.0 * 20xx'
-       self%path        = '/etc:~:.'
-    end if
-  end subroutine alloc_instance
-
-
-  !/ =====================================================================================
-  subroutine initialize_with_cli_map( self, climap )
-    !/ -----------------------------------------------------------------------------------
-    !! Initialize with user supplied CLI map.
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(app_option_t),     intent(inout) :: self   !! reference to this app option
-    type(cli_map_t), target, intent(in)    :: climap !! the command line map
-    !/ -----------------------------------------------------------------------------------
-    call self%alloc_instance
-
-    self%climap => climap
-
-  end subroutine initialize_with_cli_map
-
-
-  !/ =====================================================================================
-  subroutine set_base_config_name( self, base_name )
-    !/ -----------------------------------------------------------------------------------
-    !! Set the base config file name.
-    !!
-    !! three directories will be searched: /etc, ~, and .
-    !! two file names will be derived:   .base_name and base_name.cfg
-    !! this creates 6 possible config files.
-    !! the order is /etc/.base /etc/base.cfg ~/.base ~/base.cfg ./.base ./base.cfg
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(app_option_t), intent(inout) :: self       !! reference to this app option
-    character(*),        intent(in)    :: base_name  !! base name for config files
-    !/ -----------------------------------------------------------------------------------
-    call self%alloc_instance
-
-    self%base_name = TRIM( ADJUSTL( base_name ) )
-
-  end subroutine set_base_config_name
-
-
-  !/ =====================================================================================
-  subroutine set_config_file_key( self, cfg_key )
-    !/ -----------------------------------------------------------------------------------
-    !! This is the optional command line key that points to a config file.
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(app_option_t), intent(inout) :: self     !! reference to this app option
-    character(*),        intent(in)    :: cfg_key  !! command line key for config file
-    !/ -----------------------------------------------------------------------------------
-    call self%alloc_instance
-
-    self%cfg_key = TRIM( ADJUSTL( cfg_key ) )
-
-  end subroutine set_config_file_key
-
-
-  !/ =====================================================================================
-  subroutine set_env_config_file_key( self, env_cfg_key )
-    !/ -----------------------------------------------------------------------------------
-    !! This is the optional environment variable key that points to a config file.
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(app_option_t), intent(inout) :: self         !! reference to this app option
-    character(*),        intent(in)    :: env_cfg_key  !! environment key for config file
-    !/ -----------------------------------------------------------------------------------
-    call self%alloc_instance
-
-    self%env_cfg_key = TRIM( ADJUSTL( env_cfg_key ) )
-
-  end subroutine set_env_config_file_key
-
-
-  !/ =====================================================================================
-  subroutine set_help_key( self, help_key )
-    !/ -----------------------------------------------------------------------------------
-    !! This is the command line word that will activate the usage page and abort.
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(app_option_t), intent(inout) :: self      !! reference to this app option
-    character(*),        intent(in)    :: help_key  !! command line key for help screen
-    !/ -----------------------------------------------------------------------------------
-    call self%alloc_instance
-
-    self%help_key       = TRIM( ADJUSTL( help_key ) )
-    self%check_for_help = .true.
-    
-  end subroutine set_help_key
-
-
-
-
-
-
-
-
-
-
-
-  !/ =====================================================================================
-  subroutine set_title_line( self, title )
-    !/ -----------------------------------------------------------------------------------
-    !! Set the title line above the usage statement.
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(app_option_t), intent(inout) :: self      !! reference to this app option
-    character(*),        intent(in)    :: title     !! application title
-    !/ -----------------------------------------------------------------------------------
-
-    call self%alloc_instance
-    self%title = TRIM( ADJUSTL( title ) )
-
-  end subroutine set_title_line
-
-
-  !/ =====================================================================================
-  subroutine set_config_path( self, path )
-    !/ -----------------------------------------------------------------------------------
-    !! 
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(app_option_t), intent(inout) :: self      !! reference to this app option
-    character(*),        intent(in)    :: path      !! search path for config
-    !/ -----------------------------------------------------------------------------------
-
-    call self%alloc_instance
-    self%path = TRIM( ADJUSTL( path ) )
-
-  end subroutine set_config_path
-
-
-  !/ =====================================================================================
-  subroutine set_env_section_name( self, sname )
-    !/ -----------------------------------------------------------------------------------
-    !! 
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(app_option_t), intent(inout) :: self      !! reference to this app option
-    character(*),        intent(in)    :: sname
-    !/ -----------------------------------------------------------------------------------
-
-    call self%alloc_instance
-    self%env_secname  = TRIM( ADJUSTL( sname ) )
-
-  end subroutine set_env_section_name
-
-
-  !/ =====================================================================================
-  subroutine set_config_section_name( self, cname )
-    !/ -----------------------------------------------------------------------------------
-    !! 
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(app_option_t), intent(inout) :: self      !! reference to this app option
-    character(*),        intent(in)    :: cname
-    !/ -----------------------------------------------------------------------------------
-
-    call self%alloc_instance
-    self%opt_secname  = TRIM( ADJUSTL( cname ) )
-
-  end subroutine set_config_section_name
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
   !/ =====================================================================================
   subroutine display_usage_page( self, PNAME )
     !/ -----------------------------------------------------------------------------------
@@ -570,8 +756,11 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     integer                   :: i, n, nOpt, nReq
     !/ -----------------------------------------------------------------------------------
 
-    write( ERROR_UNIT, * ) self%title
-    
+    if ( allocated( self%title ) ) then
+       write( ERROR_UNIT, * )
+       write( ERROR_UNIT, '(A)' ) self%title
+    end if
+
     if ( present( PNAME ) ) then
        allocate( pn, source=TRIM( ADJUSTL( PNAME ) ) )
     else
@@ -602,7 +791,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     if ( 0.lt.nReq ) then
        write( ERROR_UNIT, * )
-       write( ERROR_UNIT, * ) '  Required:'
+       write( ERROR_UNIT, '(A)' ) '  Required:'
        do i=1,n
           if ( self%climap%cli_map(i)%ptr%required ) then
              write( ERROR_UNIT, 200 ) self%climap%cli_map(i)%ptr%name, &
@@ -615,7 +804,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     if ( 0.lt.nReq ) then
        write( ERROR_UNIT, * )
-       write( ERROR_UNIT, * ) '  Optional:'
+       write( ERROR_UNIT, '(A)' ) '  Optional:'
        do i=1,n
           if ( .not.self%climap%cli_map(i)%ptr%required ) then
              write( ERROR_UNIT, 200 ) self%climap%cli_map(i)%ptr%name, &
@@ -624,9 +813,20 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        end do
     end if
 
+    if ( allocated( self%example_line ) ) then
+       write( ERROR_UNIT, * )
+       write( ERROR_UNIT, 150 ) pn, self%example_line
+    end if
+
+    if ( 0.lt.size( self%usage_text ) ) then
+       write( ERROR_UNIT, * )
+       call self%usage_text%display( ERROR_UNIT )
+    end if
+
     write( ERROR_UNIT, * )
 
 100 format( 'USAGE: ',A,' options' )
+150 format( 'Example: ',A,1X,A )
 200 format( '     ',A,' - ',A )
 
     stop
@@ -654,7 +854,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     type(string_splitter) :: path_splitter
-    
+
     character(20), parameter, dimension(8) :: cfg_fmt = [ &
          &    "(A,'/',A)           ",                     &
          &    "(A,'/',A,'.ini')    ",                     &
@@ -678,7 +878,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
           end if
        end do
     end if
-    
+
     !/ ----- add user sections -----------------------------------------------------------
 
     n = self%climap%cur_entry
@@ -690,7 +890,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
           call log_debug( 'User section added', STR=sname )
        end if
     end do
-    
+
     !/ ----- add user defaults -----------------------------------------------------------
 
     n = self%climap%cur_entry
@@ -765,7 +965,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     else
        call log_debug( 'No config file key was setup for the CLI' )
     end if
-     
+
     !/ ----- check if the command line requests a config ---------------------------------
 
     if ( allocated( self%cfg_key ) ) then
@@ -785,12 +985,12 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
              call log_warn( 'Config file could not be read', STR=cfg_file )
           end if
        else
-           call log_debug( 'the config key was not used' )
+          call log_debug( 'the config key was not used' )
        end if
     else
        call log_debug( 'No config file key was setup for the CLI' )
     end if
-    
+
     !/ ----- use command line to override keypairs ---------------------------------------
 
     !  call cli%add( 'if', 'APP', 'infile',  .true.,  '', 'path to an input  file' )
@@ -834,13 +1034,13 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     if ( .not.validated ) then
        call self%usage
     end if
-        
+
     !/ -----------------------------------------------------------------------------------
-    
+
     self%cfgdb => cfg
 
 1000 format( 'CLI ',A,'= or Config ',A,'.',A )
-    
+
   end subroutine get_configdb
 
 

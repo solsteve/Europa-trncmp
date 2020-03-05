@@ -51,7 +51,14 @@ program main
   call AppOptions%setEnvConfigFilename( 'ECFG' )
   call AppOptions%setOptConfigFilename( 'cfg' )
   call AppOptions%setHelp( 'help' )
+  call AppOptions%setTitleLine( 'Test Application * v1.0' )
+  call AppOptions%setExampleLine( 'E if=test.in of=test.out n=5' )
+  call AppOptions%addUsageText( 'This is a test application that' )
+  call AppOptions%addUsageText( 'does not really do anything.' )
+
+  
   call AppOptions%getConfigDB( cfg, STATUS=ierr )
+
 
   call cfg%writeINI( UNIT=6 )
 
