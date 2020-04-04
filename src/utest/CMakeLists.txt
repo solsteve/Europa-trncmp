@@ -37,6 +37,7 @@ add_subdirectory ( fuzzy )
 add_subdirectory ( datetime )
 add_subdirectory ( linear3d )
 add_subdirectory ( astro )
+add_subdirectory ( ffnn )
 
 set ( CMAKE_Fortran_MODULE_DIRECTORY "" )
 

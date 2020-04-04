@@ -1,0 +1,374 @@
+module test_layer
+  use pfunit_mod
+  use trncmp_ENV
+  use ffnn_network_mod
+  use string_tools
+  implicit none
+
+
+
+  interface toNumpy
+     module procedure :: to_numpy_1D
+     module procedure :: to_numpy_2D
+  end interface toNumpy
+
+    real(dp), parameter :: test_alpha =    1.0000000000d-02 
+
+    real(dp), parameter :: test_X(4) = [     &
+         &      4.0895000000d-01,   5.7322100000d+00,  -2.6247000000d-01,     &
+         &     -4.5839000000d-01     &
+         &    ]
+
+    real(dp), parameter :: test_W(4,6) = reshape([     &
+         &     -1.7900900000d+00,   3.7111900000d+00,   1.0565300000d+00,     &
+         &     -1.5231300000d+00,  -4.3766900000d+00,  -1.0263700000d+00,     &
+         &     -8.7547000000d-01,  -1.5728100000d+00,  -7.8175000000d-01,     &
+         &     -5.0270000000d-01,   2.2520500000d+00,   3.6933100000d+00,     &
+         &     -2.5551100000d+00,  -3.9084100000d+00,   3.0103500000d+00,     &
+         &      2.2183000000d-01,  -2.1152900000d+00,  -1.4583200000d+00,     &
+         &      6.2860000000d-01,  -1.7806300000d+00,   3.8118300000d+00,     &
+         &     -1.8041900000d+00,  -3.6421800000d+00,   5.6090000000d-02     &
+         &    ],[4,6])
+
+    real(dp), parameter :: test_b(6) = [     &
+         &     -1.5521600000d+00,   3.5880000000d-02,   1.2748300000d+00,     &
+         &      2.2715000000d+00,   8.4839000000d-01,   1.1875900000d+00     &
+         &    ]
+
+    real(dp), parameter :: test_Z(6) = [     &
+         &      1.9409983256d+01,  -6.6865907664d+00,  -4.2105205639d+00,     &
+         &     -2.2069050339d+01,  -7.7248199890d+00,  -6.6653061919d+00     &
+         &    ]
+
+    real(dp), parameter :: test_a(6) = [     &
+         &      9.9999999628d-01,   1.2459742593d-03,   1.4621676052d-02,     &
+         &      2.6033539406d-10,   4.4153131234d-04,   1.2727444231d-03     &
+         &    ]
+
+    real(dp), parameter :: test_d2(6) = [     &
+         &      1.8794917148d-01,  -1.4633840507d-01,   2.7901094879d-01,     &
+         &      2.0551378680d-01,  -1.9570413841d-01,  -4.1134450146d-01     &
+         &    ]
+
+    real(dp), parameter :: test_d1(4) = [     &
+         &     -4.1559696381d-03,  -7.6460708359d-04,   1.1062667989d-02,     &
+         &      1.5257833237d-02     &
+         &    ]
+
+    real(dp), parameter :: test_E(6) = [     &
+         &      6.9886260727d-10,  -1.8210670254d-04,   4.0199570058d-03,     &
+         &      5.3502512656d-11,  -8.6371352558d-05,  -5.2287009215d-04     &
+         &    ]
+
+    real(dp), parameter :: test_g(6) = [     &
+         &      3.7183596064d-09,   1.2444218074d-03,   1.4407882641d-02,     &
+         &      2.6033539399d-10,   4.4133636244d-04,   1.2711245447d-03     &
+         &    ]
+
+    real(dp), parameter :: test_dW(4,6) = reshape([     &
+         &      2.8579986324d-10,   4.0060272260d-09,  -1.8343046853d-10,     &
+         &     -3.2035163055d-10,  -7.4472536002d-05,  -1.0438738613d-03,     &
+         &      4.7797546215d-05,   8.3475891375d-05,   1.6439614175d-03,     &
+         &      2.3043237748d-02,  -1.0551181153d-03,  -1.8427080919d-03,     &
+         &      2.1879852551d-11,   3.0668763807d-10,  -1.4042804497d-11,     &
+         &     -2.4525016777d-11,  -3.5321564629d-05,  -4.9509873085d-04,     &
+         &      2.2669888906d-05,   3.9591764299d-05,  -2.1382772418d-04,     &
+         &     -2.9972011709d-03,   1.3723771309d-04,   2.3967842154d-04     &
+         &    ],[4,6])
+
+    real(dp), parameter :: test_db(6) = [     &
+         &      6.9886260727d-10,  -1.8210670254d-04,   4.0199570058d-03,     &
+         &      5.3502512656d-11,  -8.6371352558d-05,  -5.2287009215d-04     &
+         &    ]
+
+    real(dp), parameter :: test_Wup(4,6) = reshape([     &
+         &     -1.7900900000d+00,   3.7111900000d+00,   1.0565300000d+00,     &
+         &     -1.5231300000d+00,  -4.3766892553d+00,  -1.0263595613d+00,     &
+         &     -8.7547047798d-01,  -1.5728108348d+00,  -7.8176643961d-01,     &
+         &     -5.0293043238d-01,   2.2520605512d+00,   3.6933284271d+00,     &
+         &     -2.5551100000d+00,  -3.9084100000d+00,   3.0103500000d+00,     &
+         &      2.2183000000d-01,  -2.1152896468d+00,  -1.4583150490d+00,     &
+         &      6.2859977330d-01,  -1.7806303959d+00,   3.8118321383d+00,     &
+         &     -1.8041600280d+00,  -3.6421813724d+00,   5.6087603216d-02     &
+         &    ],[4,6])
+
+    real(dp), parameter :: test_bup(6) = [     &
+         &     -1.5521600000d+00,   3.5881821067d-02,   1.2747898004d+00,     &
+         &      2.2715000000d+00,   8.4839086371d-01,   1.1875952287d+00     &
+         &    ]
+
+    real(dp), parameter :: test_dW0(4,6) = reshape([     &
+         &      0.0000000000d+00,   0.0000000000d+00,   0.0000000000d+00,     &
+         &      0.0000000000d+00,   0.0000000000d+00,   0.0000000000d+00,     &
+         &      0.0000000000d+00,   0.0000000000d+00,   0.0000000000d+00,     &
+         &      0.0000000000d+00,   0.0000000000d+00,   0.0000000000d+00,     &
+         &      0.0000000000d+00,   0.0000000000d+00,   0.0000000000d+00,     &
+         &      0.0000000000d+00,   0.0000000000d+00,   0.0000000000d+00,     &
+         &      0.0000000000d+00,   0.0000000000d+00,   0.0000000000d+00,     &
+         &      0.0000000000d+00,   0.0000000000d+00,   0.0000000000d+00     &
+         &    ],[4,6])
+
+    real(dp), parameter :: test_db0(6) = [     &
+         &      0.0000000000d+00,   0.0000000000d+00,   0.0000000000d+00,     &
+         &      0.0000000000d+00,   0.0000000000d+00,   0.0000000000d+00     &
+         &    ]
+
+
+
+    
+contains
+
+
+
+  
+  !/ =====================================================================================
+  function to_numpy_1D( A, LABEL, FMT ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Convert a vector of double precision numbers into a numpy array.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp),               intent(in) :: A(:)
+    character(*), optional, intent(in) :: LABEL
+    character(*), optional, intent(in) :: FMT
+    character(:), allocatable          :: str
+
+    character(64) :: buffer
+
+    str = ''
+
+    if ( present( LABEL ) ) then
+       write( buffer, 100 ) LABEL
+       str = trim(adjustl(buffer))
+    end if
+
+    str = str // 'np.array([' // toString(A,FMT=FMT) // '])'
+
+100 format( A,'=' )
+  end function to_numpy_1D
+
+  
+  !/ =====================================================================================
+  function to_numpy_2D( A, LABEL, FMT ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !! Convert a matrix of double precision numbers into a numpy array.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp),               intent(in) :: A(:,:)
+    character(*), optional, intent(in) :: LABEL
+    character(*), optional, intent(in) :: FMT
+    character(:), allocatable          :: str, root
+
+    character(64) :: buffer
+
+    root = toString(A,FMT=FMT,RDEL='],[')
+
+    str = ''
+    if ( present( LABEL ) ) then
+       write( buffer, 100 ) LABEL
+       str = trim(adjustl(buffer))
+    end if
+
+    str = str // 'np.array([[' // root // ']])'
+
+100 format( A,'=' )
+
+  end function to_numpy_2D
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_layer_loadsave
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+  
+    type(FFLayer) :: L
+    integer :: nc, nn
+    real(dp), allocatable :: nW(:,:), nb(:)
+
+    nc = size( test_W, DIM=1 )
+    nn = size( test_W, DIM=2 )
+
+    allocate( nW(nc,nn) )
+    allocate( nb(   nn) )
+
+    !call displayAlloc( 'W', L%W )
+    !call displayAlloc( 'b', L%b )
+    call L%build( nc, nn, 0.1d0, 'sigmoid' )
+
+    call L%load( test_W, test_b )
+    !call displayAlloc( 'W', L%W )
+    !call displayAlloc( 'b', L%b )
+
+   @assertEqual( test_W, L%W )
+   @assertEqual( test_b, L%b )
+
+   call L%save( nW, nb )
+
+   @assertEqual( test_W, nW )
+   @assertEqual( test_b, nb )   
+
+   deallocate( nW )
+   deallocate( nb )
+
+ end subroutine test_layer_loadsave
+
+ 
+   @test
+  !/ =====================================================================================
+  subroutine test_layer_forward
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+  
+    type(FFLayer) :: L
+    integer :: nc, nn
+
+    nc = size( test_W, DIM=1 )
+    nn = size( test_W, DIM=2 )
+
+    call L%build( nc, nn, 0.01d0, 'sigmoid' )
+
+    call L%load( test_W, test_b )
+
+   @assertEqual( test_W, L%W )
+   @assertEqual( test_b, L%b )
+
+   call L%propagate_forward( test_X )
+
+   @assertEqual( test_Z, L%Z, 1.0d-4 )
+   @assertEqual( test_a, L%a, 1.0d-4 )
+
+ end subroutine test_layer_forward
+
+
+ @test
+ !/ =====================================================================================
+ subroutine test_layer_simple
+   !/ -----------------------------------------------------------------------------------
+   implicit none
+
+    real(dp), parameter :: xor_X(2) = [     &
+         &      7.190996574164d-01,   6.637386974044d-01     &
+         &    ]
+
+    real(dp), parameter :: xor_W(2,2) = reshape([     &
+         &     -3.000000000000d-01,   5.000000000000d-01,     &
+         &      1.000000000000d-01,   2.000000000000d-01     &
+         &    ],[2,2])
+
+    real(dp), parameter :: xor_b(2) = [     &
+         &      1.000000000000d-01,   3.000000000000d-01     &
+         &    ]
+
+    real(dp), parameter :: xor_Z(2) = [     &
+         &      2.161394514773d-01,   5.046577052225d-01     &
+         &    ]
+
+    real(dp), parameter :: xor_a(2) = [     &
+         &      5.538254820607d-01,   6.235532832740d-01     &
+         &    ]
+
+    real(dp), parameter :: xor_d2(2) = [     &
+         &     -1.831644282876d-02,   4.579110707190d-02     &
+         &    ]
+
+    real(dp), parameter :: xor_g(2) = [     &
+         &      2.471028174809d-01,   2.347345861922d-01     &
+         &    ]
+
+    real(dp), parameter :: xor_E(2) = [     &
+         &     -4.526044629215d-03,   1.074875656981d-02     &
+         &    ]
+
+     real(dp), parameter :: xor_d1(2) = [     &
+         &      2.432689045745d-03,  -1.132710006463d-04     &
+         &    ]
+
+    real(dp), parameter :: xor_dW(2,2) = reshape([     &
+         &     -3.254677142320d-03,  -3.004110966589d-03,     &
+         &      7.729427166999d-03,   7.134365684359d-03     &
+         &    ],[2,2])
+
+    real(dp), parameter :: xor_db(2) = [     &
+         &     -4.526044629215d-03,   1.074875656981d-02     &
+         &    ]
+
+ 
+   type(FFLayer) :: L
+   integer :: nc, nn
+
+   nc = size( xor_W, DIM=1 )
+   nn = size( xor_W, DIM=2 )
+
+   call L%build( nc, nn, 0.01d0, 'sigmoid' )
+
+   call L%load( xor_W, xor_b )
+
+   @assertEqual( xor_W, L%W )
+   @assertEqual( xor_b, L%b )
+
+   call L%propagate_forward( xor_X )
+
+   @assertEqual( xor_Z, L%Z, 1.0d-4 )
+   @assertEqual( xor_a, L%a, 1.0d-4 )
+
+   call L%reset
+   call L%propagate_backward( xor_d2, xor_X )
+
+   @assertEqual( xor_E,  L%E,     1.0d-6 )
+   @assertEqual( xor_g,  L%g,     1.0d-6 )
+   @assertEqual( xor_d1, L%delta, 1.0d-6 )
+   @assertEqual( xor_dW, L%dW,    1.0d-6 )
+   @assertEqual( xor_db, L%db,    1.0d-6 )
+
+ end subroutine test_layer_simple
+  
+ @test
+ !/ =====================================================================================
+ subroutine test_layer_backward
+   !/ -----------------------------------------------------------------------------------
+   implicit none
+
+   type(FFLayer) :: L
+   integer :: nc, nn
+
+   nc = size( test_W, DIM=1 )
+   nn = size( test_W, DIM=2 )
+
+   call L%build( nc, nn, test_alpha, 'sigmoid' )
+
+   call L%load( test_W, test_b )
+
+   @assertEqual( test_W, L%W, 1.0d-14 )
+   @assertEqual( test_b, L%b, 1.0d-14 )
+
+   call L%propagate_forward( test_X )
+
+   @assertEqual( test_Z, L%Z, 1.0d-8 )
+   @assertEqual( test_a, L%a, 1.0d-8 )
+
+   call L%reset
+   call L%propagate_backward( test_d2, test_X )
+
+   @assertEqual( test_E,  L%E,     1.0d-12 )
+   @assertEqual( test_g,  L%g,     1.0d-12 )
+   @assertEqual( test_d1, L%delta, 1.0d-12 )
+   @assertEqual( test_dW, L%dW,    1.0d-12 )
+   @assertEqual( test_db, L%db,    1.0d-12 )
+
+   call L%update
+
+   @assertEqual( test_Wup, L%W, 1.0d-10 )
+   @assertEqual( test_bup, L%b, 1.0d-10 )
+   
+   call L%propagate_backward( test_d2, test_X )
+   call L%reset
+   
+   @assertEqual( test_dW0, L%dW )
+   @assertEqual( test_db0, L%db )
+
+
+ end subroutine test_layer_backward
+ 
+
+
+end module test_layer

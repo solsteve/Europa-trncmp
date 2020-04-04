@@ -61,7 +61,7 @@ module btree_object_class
   !/ =====================================================================================
   type, public :: btree_node_pointer
      !/ ----------------------------------------------------------------------------------
-     class(btree_node), pointer :: ptr
+     class(btree_node), pointer :: ptr => null()
   end type btree_node_pointer
 
 

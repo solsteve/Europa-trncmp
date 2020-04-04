@@ -89,6 +89,21 @@ module trncmp_env
   end interface print_array
 
 
+  !/ -------------------------------------------------------------------------------------
+  interface displayAlloc
+     !/ ----------------------------------------------------------------------------------
+     module procedure ::  display_alloc_I32_1D
+     module procedure ::  display_alloc_R4_1D
+     module procedure ::  display_alloc_R8_1D
+     module procedure ::  display_alloc_I32_2D
+     module procedure ::  display_alloc_R4_2D
+     module procedure ::  display_alloc_R8_2D
+  end interface displayAlloc
+
+
+
+
+
 
   !/ =====================================================================================
 contains !/ **                  P R O C E D U R E   S E C T I O N                       **
@@ -258,10 +273,10 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
   subroutine URANDOM( buffer )
     !/ -----------------------------------------------------------------------------------
     !! Retrieve entropy from /dev/urandom
-   !/ -----------------------------------------------------------------------------------
+    !/ -----------------------------------------------------------------------------------
     implicit none
     integer, intent(inout) :: buffer(:)
-   !/ -----------------------------------------------------------------------------------
+    !/ -----------------------------------------------------------------------------------
     integer :: un, istat
     open(newunit=un, file="/dev/urandom", access="stream",  &
          &           form="unformatted", action="read", status="old", iostat=istat)
@@ -289,7 +304,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     write( ed, 100 ) fmt
 100 format('(',A,')')
-    
+
     if ( x.lt.D_ZERO ) then
        write( buffer, trim(adjustl(ed)) ) -x
     else
@@ -314,6 +329,109 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        end if
     end if
   end function LeadingZero
+
+
+
+
+
+
+
+  !/ =====================================================================================
+  subroutine display_alloc_I32_1D( name, var )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    character(*),         intent(in)    :: name   !! name of the allocatable array
+    integer, allocatable, intent(inout) :: var(:) !! allocatable array
+    !/ -----------------------------------------------------------------------------------
+    if ( allocated(var) ) then
+       write(*,'(A,1X,I0)') name, size(var)
+    else
+       write(*,'(A,1X,A)') name, 'not allocated'
+    end if
+  end subroutine display_alloc_I32_1D
+
+
+  !/ =====================================================================================
+  subroutine display_alloc_R4_1D( name, var )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    character(*),          intent(in)    :: name   !! name of the allocatable array
+    real(sp), allocatable, intent(inout) :: var(:) !! allocatable array
+    !/ -----------------------------------------------------------------------------------
+    if ( allocated(var) ) then
+       write(*,'(A,1X,I0)') name, size(var)
+    else
+       write(*,'(A,1X,A)') name, 'not allocated'
+    end if
+  end subroutine display_alloc_R4_1D
+
+
+  !/ =====================================================================================
+  subroutine display_alloc_R8_1D( name, var )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    character(*),          intent(in)    :: name   !! name of the allocatable array
+    real(dp), allocatable, intent(inout) :: var(:) !! allocatable array
+    !/ -----------------------------------------------------------------------------------
+    if ( allocated(var) ) then
+       write(*,'(A,1X,I0)') name, size(var)
+    else
+       write(*,'(A,1X,A)') name, 'not allocated'
+    end if
+  end subroutine display_alloc_R8_1D
+
+
+
+
+
+  !/ =====================================================================================
+  subroutine display_alloc_I32_2D( name, var )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    character(*),          intent(in)    :: name     !! name of the allocatable array
+    integer, allocatable, intent(inout) :: var(:,:) !! allocatable array
+    !/ -----------------------------------------------------------------------------------
+    if ( allocated(var) ) then
+       write(*,"(A,1X,'(',I0,',',I0,')')") name, size(var,DIM=1), size(var,DIM=2)
+    else
+       write(*,'(A,1X,A)') name, 'not allocated'
+    end if
+  end subroutine display_alloc_I32_2D
+
+  !/ =====================================================================================
+  subroutine display_alloc_R4_2D( name, var )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    character(*),          intent(in)    :: name     !! name of the allocatable array
+    real(sp), allocatable, intent(inout) :: var(:,:) !! allocatable array
+    !/ -----------------------------------------------------------------------------------
+    if ( allocated(var) ) then
+       write(*,"(A,1X,'(',I0,',',I0,')')") name, size(var,DIM=1), size(var,DIM=2)
+    else
+       write(*,'(A,1X,A)') name, 'not allocated'
+    end if
+  end subroutine display_alloc_R4_2D
+
+  !/ =====================================================================================
+  subroutine display_alloc_R8_2D( name, var )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    character(*),          intent(in)    :: name     !! name of the allocatable array
+    real(dp), allocatable, intent(inout) :: var(:,:) !! allocatable array
+    !/ -----------------------------------------------------------------------------------
+    if ( allocated(var) ) then
+       write(*,"(A,1X,'(',I0,',',I0,')')") name, size(var,DIM=1), size(var,DIM=2)
+    else
+       write(*,'(A,1X,A)') name, 'not allocated'
+    end if
+  end subroutine display_alloc_R8_2D
+
+
+
+
+
+
+
 
 end module trncmp_env
 

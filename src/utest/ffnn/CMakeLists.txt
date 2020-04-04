@@ -1,5 +1,5 @@
 #/ ====================================================================== BEGIN FILE =====
-#/ **                            Library - C M A K E L I S T                            **
+#/ **                      pFUnit Subdirectory - C M A K E L I S T                      **
 #/ =======================================================================================
 #/ **                                                                                   **
 #/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
@@ -22,25 +22,10 @@
 #/ **                                                                                   **
 #/ =======================================================================================
 
-project ( europa Fortran )
+project(ffnn Fortran)
 
-file ( GLOB lib_src "*.f90" )
-file ( GLOB la_src  "linalg/*.f90" )
-file ( GLOB nn_src  "ffnn/*.f90" )
-file ( GLOB fft_src "dfftpack/*.f" )
-
-set ( ${PROJECT_NAME}_sources ${lib_src} ${la_src} ${nn_src} ${fft_src} )
-set ( SDSPEC " -ffree-form" )
-
-message ( STATUS "Sources for project ${PROJECT_NAME}: ${${PROJECT_NAME}_sources}" )
-
-add_library ( ${PROJECT_NAME} STATIC ${${PROJECT_NAME}_sources} )
-
-install ( TARGETS ${PROJECT_NAME}
-  RUNTIME DESTINATION bin
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib )
+include( ../build_pfunit.cmake )
 
 #/ =======================================================================================
-#/ **                            Library - C M A K E L I S T                            **
+#/ **                      pFUnit Subdirectory - C M A K E L I S T                      **
 #/ =========================================================================== end FILE ==

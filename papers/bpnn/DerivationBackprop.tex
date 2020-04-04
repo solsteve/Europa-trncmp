@@ -47,7 +47,7 @@
 %  =======================================================================================
 % Heading arguments are {volume}{year}{pages}{submitted}{published}{author-full-names}
 
-\jmlrheading{Tutorial}{2018}{}{9/11}{-}{Stephen W.~Soliday}{TRNCMP/ARD/CCB}
+\jmlrheading{Tutorial}{2018}{}{6/18}{-}{Stephen W.~Soliday}{TRNCMP/ARD/CCB}
 
 % Short headings should be running head and authors last names
 
@@ -81,10 +81,10 @@
 
 \begin{document}
 \title{Derivation of Backproagation for Multi-layer Neural Networks}
-\author{ \name Stephen W.~Soliday \email research@trncmp.org \\
-  \addr Tranquillitatis Computing \\
-  \addr Advanced Research Division\\
-  \addr Cognitive Computing Branch \\
+\author{ \name Stephen W.~Soliday \email research@trncmp.org %\\
+%  \addr Tranquillitatis Computing \\
+%  \addr Advanced Research Division\\
+%  \addr Cognitive Computing Branch \\
 }
 \date{22-October-2018}
 
@@ -481,27 +481,67 @@ The next scetion will express equations (\ref{eq:forward}
 through~\ref{eq:error}) as generic source code fragments.
 
 %/ =======================================================================================
-\section{How to Code a Neural Network with Do Loops}
+\section{How to Code a Neural Network with FOR Loops}
 %/ =======================================================================================
 
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
-Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+This section will step through the process of coding each component from the
+derivation in the previous section.
+
+The first step is to code the activation function and its derivative.
+For this example the classic 'sigmoid' function will be used.\footnote{The Appendix
+  contains a table of popular activation functions and thier derivatives.}
+
+\begin{tcequation}
+  a = \FU{\sigma}{Z} = \frac{1}{1 - e^{-z}}
+\end{tcequation}
+
 
 
 % ----------------------------------------------
 % code for the activation function
 % ----------------------------------------------
 \begin{figure}[h]
-\caption{Activation}
+\caption{Activation\label{eq:act2}}
 \begin{Verbatim}[frame=single]
-  double activate( double x ) {
-    return 1.0 / (1.0 + -exp(x));
+  double activate( double Z ) {
+    return 1.0 / (1.0 + exp(-Z));
   }
 \end{Verbatim}
 \end{figure}
 %----------------------------------------------
+
+there are two choices for the first derivative of the acvtivation function.
+The derivative may be directly calculated.
+
+\begin{tcequation}
+  \delta = \frac{d}{dZ} \FU{\sigma}{Z} = \frac{-e^{-1}}{\GPP{1 - e^{-z}}^2}
+\end{tcequation}
+
+or if the prior activation is stored then assuming $a$ from equation~\ref{eq:act2}
+
+\begin{tcequation}
+  \delta = \frac{d}{dZ} \FU{\sigma}{Z} = \FU{\sigma}{Z}\GPP{1-\FU{\sigma}{Z}} = a\GPP{1-a}
+\end{tcequation}
+
+% ----------------------------------------------
+% code for the Dactivation function
+% ----------------------------------------------
+\begin{figure}[h]
+\caption{Activation Derivative\label{eq:Dact2}}
+\begin{Verbatim}[frame=single]
+  double dActivate( double a, double Z ) {
+    return a*(1.0 - a)
+    /*
+      double e1 = exp(-Z);
+      double e2 = 1.0 - e1;
+      return -e1/(e2*e2);
+    */
+  }
+\end{Verbatim}
+\end{figure}
+%----------------------------------------------
+
+Next construct the input layer from equation~\ref{eq:fwd1}
 
 % ----------------------------------------------
 % input layer

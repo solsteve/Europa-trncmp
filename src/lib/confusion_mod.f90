@@ -44,8 +44,8 @@ module confusion_mod
      type(varying_string), allocatable :: short_name(:)     !! Three letter class labels
      type(varying_string), allocatable :: long_name(:)      !! Seven letter class labels
      integer,              allocatable :: mat(:,:)          !! NxN error matrix
-     integer                           :: non_class_actual  !! Total number of unlabled actuals
-     integer                           :: non_class_predict !! Total number of unlabled predictions
+     integer                           :: num_class_actual  !! Total number of unlabled actuals
+     integer                           :: num_class_predict !! Total number of unlabled predictions
      
      integer,              allocatable :: act_total(:)      !! column totals
      integer,              allocatable :: prd_total(:)      !! row totals
@@ -319,17 +319,17 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        end if
     end do
 
-    cm%non_class_actual  = 0
-    cm%non_class_predict = 0
+    cm%num_class_actual  = 0
+    cm%num_class_predict = 0
 
     do i=1,n
        row = findloc( tlab, A(i), DIM=1 )
        col = findloc( tlab, P(i), DIM=1 )
        if ( 0.ge.row ) then
-          cm%non_class_actual = cm%non_class_actual + 1
+          cm%num_class_actual = cm%num_class_actual + 1
        end if
        if ( 0.ge.col ) then
-          cm%non_class_predict = cm%non_class_predict + 1
+          cm%num_class_predict = cm%num_class_predict + 1
        end if
     end do
 
@@ -400,8 +400,8 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     n = MIN( size(A), size(P) )
 
-     cm%non_class_actual  = 0
-     cm%non_class_predict = 0
+     cm%num_class_actual  = 0
+     cm%num_class_predict = 0
 
     do i=1,n
        row = findloc( tlab, A(i), DIM=1 )
@@ -410,10 +410,10 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
           if ( 0.lt.col ) then
              cm%mat(row,col) = cm%mat(row,col) + 1
           else
-             cm%non_class_predict = cm%non_class_predict + 1
+             cm%num_class_predict = cm%num_class_predict + 1
           end if
        else
-          cm%non_class_actual = cm%non_class_actual + 1
+          cm%num_class_actual = cm%num_class_actual + 1
        end if
     end do
 
@@ -510,12 +510,12 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     write(un,160) bottom_line, cm%tru_total
     
     write(un,170) 'Total     Samples ', cm%total
-    if ( 0.lt.cm%non_class_actual ) then
-       write(un,170) 'Actual    Unknowns', cm%non_class_actual
+    if ( 0.lt.cm%num_class_actual ) then
+       write(un,170) 'Actual    Unknowns', cm%num_class_actual
     end if
     
-    if ( 0.lt.cm%non_class_predict ) then
-       write(un,170) 'Predicted Unknowns', cm%non_class_predict
+    if ( 0.lt.cm%num_class_predict ) then
+       write(un,170) 'Predicted Unknowns', cm%num_class_predict
     end if
     
 100 format( 6X, A )
@@ -535,6 +535,15 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   subroutine cm_show_metrics( cm, UNIT, FILE, IOSTAT )
     !! -----------------------------------------------------------------------------------
+    !100!              | Precision | Recall  | F1-Score |  Support
+    !200!   -----------+-----------+---------+----------+------------
+    !300!    Target    |   0.5714  |  0.5714 |  0.5714  |          7
+    !300!    Neutral   |   0.7143  |  0.5556 |  0.6250  |          9
+    !300!    Clutter   |   0.6000  |  0.7500 |  0.6667  |          8
+    !300!   -----------+-----------+---------+----------+------------
+    !000!    avg/total |   0.6286  |  0.6257 |  0.6210  |         24
+    !! -----------------------------------------------------------------------------------
+    
     use file_tools, only : WriteUnit
     implicit none
     class(confusion_matrix), intent(inout) :: cm

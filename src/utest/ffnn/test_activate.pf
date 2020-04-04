@@ -1,0 +1,74 @@
+module test_activate
+  use pfunit_mod
+  use trncmp_ENV
+  use ffnn_network_mod
+  use string_tools
+  implicit none
+
+
+
+    real(dp), parameter :: test_Z(3,3) = reshape([     &
+         &     -3.0000000000d-01,  -1.0000000000d-01,  -2.0000000000d-01,     &
+         &      0.0000000000d+00,   1.0000000000d-01,  -1.0000000000d-01,     &
+         &      3.0000000000d-01,   2.0000000000d-01,   1.0000000000d-01     &
+         &    ],[3,3])
+
+    real(dp), parameter :: test_sig_a(3,3) = reshape([     &
+         &      4.2555748319d-01,   4.7502081252d-01,   4.5016600269d-01,     &
+         &      5.0000000000d-01,   5.2497918748d-01,   4.7502081252d-01,     &
+         &      5.7444251681d-01,   5.4983399731d-01,   5.2497918748d-01     &
+         &    ],[3,3])
+
+    real(dp), parameter :: test_sig_g(3,3) = reshape([     &
+         &      2.4445831169d-01,   2.4937604019d-01,   2.4751657271d-01,     &
+         &      2.5000000000d-01,   2.4937604019d-01,   2.4937604019d-01,     &
+         &      2.4445831169d-01,   2.4751657271d-01,   2.4937604019d-01     &
+         &    ],[3,3])
+
+
+
+
+  contains
+
+
+
+
+
+  @test
+  !/ =====================================================================================
+  subroutine test_activate_sigma
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    procedure(ActivateFunction),  pointer :: act
+    procedure(DActivateFunction), pointer :: dact
+    integer  :: r,c,nr,nc
+    real(dp), allocatable :: a(:,:), g(:,:)
+    !/ -----------------------------------------------------------------------------------
+    nr = size( test_Z, DIM=1 )
+    nc = size( test_Z, DIM=2 )
+
+    allocate( a(nr,nc) )
+    allocate( g(nr,nc) )
+
+    act  => getActivation( 'sigma' )
+    dact => getDActivation( 'sigma' )
+
+    do concurrent( r=1:nr, c=1:nc )
+       a(r,c) = act( test_Z(r,c) )
+    end do
+
+    do concurrent( r=1:nr, c=1:nc )
+       g(r,c) = dact( a(r,c), test_Z(r,c) )
+    end do
+
+    @assertEqual( test_sig_a, a, 1.0d-10 )
+    @assertEqual( test_sig_g, g, 1.0d-11 )
+
+    deallocate( a )
+    deallocate( g )
+
+  end subroutine test_activate_sigma
+
+
+
+end module test_activate
