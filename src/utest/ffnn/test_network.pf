@@ -1,0 +1,389 @@
+module test_network
+  use pfunit_mod
+  use ffnn_network_mod
+  implicit none
+
+
+  real(dp), parameter :: test_X(4,2) = reshape([     &
+       &      2.0000000000d-01,   2.0000000000d-01,   8.0000000000d-01,     &
+       &      8.0000000000d-01,   2.0000000000d-01,   8.0000000000d-01,     &
+       &      2.0000000000d-01,   8.0000000000d-01     &
+       &    ],[4,2])
+
+  real(dp), parameter :: test_Y(4,1) = reshape([     &
+       &      2.0000000000d-01,   8.0000000000d-01,   8.0000000000d-01,     &
+       &      2.0000000000d-01     &
+       &    ],[4,1])
+
+  real(dp), parameter :: test_W1a(2,2) = reshape([     &
+       &      5.0000000000d-01,   8.0000000000d-01,  -1.0000000000d-01,     &
+       &      7.0000000000d-01     &
+       &    ],[2,2])
+
+  real(dp), parameter :: test_W2a(2,2) = reshape([     &
+       &     -3.0000000000d-01,   5.0000000000d-01,   1.0000000000d-01,     &
+       &      2.0000000000d-01     &
+       &    ],[2,2])
+
+  real(dp), parameter :: test_W3a(2,1) = reshape([     &
+       &     -2.0000000000d-01,   5.0000000000d-01     &
+       &    ],[2,1])
+
+  real(dp), parameter :: test_b1a(2) = [     &
+       &     -1.0000000000d-01,   2.0000000000d-01     &
+       &    ]
+
+  real(dp), parameter :: test_b2a(2) = [     &
+       &      1.0000000000d-01,   3.0000000000d-01     &
+       &    ]
+
+  real(dp), parameter :: test_b3a(1) =  [  1.0000000000d-01 ]
+
+  real(dp), parameter :: test_W1b(2,2) = reshape([     &
+       &      4.9998353482d-01,   7.9998240421d-01,  -9.9998777149d-02,     &
+       &      7.0000133458d-01     &
+       &    ],[2,2])
+
+  real(dp), parameter :: test_W2b(2,2) = reshape([     &
+       &     -2.9977883360d-01,   5.0022113920d-01,   9.9479671001d-02,     &
+       &      1.9947921675d-01     &
+       &    ],[2,2])
+
+  real(dp), parameter :: test_W3b(2,1) = reshape([     &
+       &     -2.0396042201d-01,   4.9558924175d-01     &
+       &    ],[2,1])
+
+  real(dp), parameter :: test_b1b(2) = [     &
+       &     -1.0004084976d-01,   2.0000242873d-01     &
+       &    ]
+
+  real(dp), parameter :: test_b2b(2) = [     &
+       &      1.0035489736d-01,   2.9916361306d-01     &
+       &    ]
+
+  real(dp), parameter :: test_b3b(1) =  [  9.2876626272d-02 ]
+
+real(dp), parameter :: test_mse(10) = [     &
+         &      9.5487077239d-02,   9.5441912031d-02,   9.5397102716d-02,     &
+         &      9.5352646736d-02,   9.5308541550d-02,   9.5264784629d-02,     &
+         &      9.5221373459d-02,   9.5178305540d-02,   9.5135578387d-02,     &
+         &      9.5093189528d-02     &
+         &    ]
+
+
+    real(dp), parameter :: test_Z1(2) = [     &
+         &      9.4000000000d-01,   6.8000000000d-01     &
+         &    ]
+
+    real(dp), parameter :: test_a1(2) = [     &
+         &      7.1909965742d-01,   6.6373869740d-01     &
+         &    ]
+
+    real(dp), parameter :: test_Z2(2) = [     &
+         &      2.1613945148d-01,   5.0465770522d-01     &
+         &    ]
+
+    real(dp), parameter :: test_a2(2) = [     &
+         &      5.5382548206d-01,   6.2355328327d-01     &
+         &    ]
+
+    real(dp), parameter :: test_Z3(1) = [ 3.0101154522d-01 ]
+
+    real(dp), parameter :: test_a3(1) = [ 5.7468977881d-01 ]
+
+
+contains
+
+  @test
+  !/ =====================================================================================
+  subroutine test_network_forward
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer, parameter :: N_EPC = 10
+    real(dp) :: mse(N_EPC)
+    real(dp) :: s
+    real(dp) :: test_out(1)
+    integer  :: i, j
+
+    type(FFNN) :: net
+
+    call net%build( 2, 3, ALPHA=0.01d0, ACTIVATE='sigmoid' )
+
+    call net%setupLayer( 1, 2 )
+    call net%setupLayer( 2, 2 )
+    call net%setupLayer( 3, 1 )
+
+    call net%layer(1)%load( test_W1a, test_b1a )
+    call net%layer(2)%load( test_W2a, test_b2a )
+    call net%layer(3)%load( test_W3a, test_b3a )
+
+    @assertEqual( test_W1a, net%layer(1)%W )
+    @assertEqual( test_b1a, net%layer(1)%b )
+
+    @assertEqual( test_W2a, net%layer(2)%W )
+    @assertEqual( test_b2a, net%layer(2)%b )
+
+    @assertEqual( test_W3a, net%layer(3)%W )
+    @assertEqual( test_b3a, net%layer(3)%b )
+
+    call net%predict( INPUT=test_X(4,:), OUTPUT=test_out )
+
+    @assertEqual( test_Z1, net%layer(1)%Z, 1.0d-14 )
+    @assertEqual( test_a1, net%layer(1)%a, 1.0d-10 )
+
+    @assertEqual( test_Z2, net%layer(2)%Z, 1.0d-10 )
+    @assertEqual( test_a2, net%layer(2)%a, 1.0d-10 )
+
+    @assertEqual( test_Z3, net%layer(3)%Z, 1.0d-10 )
+    @assertEqual( test_a3, net%layer(3)%a, 1.0d-11 )
+
+    @assertEqual( test_a3, test_out, 1.0d-11 )
+
+  end subroutine test_network_forward
+
+
+    @test
+  !/ =====================================================================================
+  subroutine test_network_onestep
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: one_Z1(2) = [     &
+         &      9.4000000000d-01,   6.8000000000d-01     &
+         &    ]
+
+    real(dp), parameter :: one_a1(2) = [     &
+         &      7.1909965742d-01,   6.6373869740d-01     &
+         &    ]
+
+    real(dp), parameter :: one_E1(2) = [     &
+         &      4.9139185120d-04,  -2.5280913740d-05     &
+         &    ]
+
+    real(dp), parameter :: one_g1(2) = [     &
+         &      2.0199534012d-01,   2.2318963897d-01     &
+         &    ]
+
+    real(dp), parameter :: one_dW1(2,2) = reshape([     &
+         &      3.9311348096d-04,   3.9311348096d-04,     &
+         &     -2.0224730992d-05,  -2.0224730992d-05     &
+         &    ],[2,2])
+
+    real(dp), parameter :: one_db1(2) = [     &
+         &      4.9139185120d-04,  -2.5280913740d-05     &
+         &    ]
+
+    real(dp), parameter :: one_d1(2) = [     &
+         &      2.4326890457d-03,  -1.1327100065d-04     &
+         &    ]
+
+   real(dp), parameter :: one_Z2(2) = [     &
+         &      2.1613945148d-01,   5.0465770522d-01     &
+         &    ]
+
+    real(dp), parameter :: one_a2(2) = [     &
+         &      5.5382548206d-01,   6.2355328327d-01     &
+         &    ]
+
+    real(dp), parameter :: one_E2(2) = [     &
+         &     -4.5260446292d-03,   1.0748756570d-02     &
+         &    ]
+
+    real(dp), parameter :: one_g2(2) = [     &
+         &      2.4710281748d-01,   2.3473458619d-01     &
+         &    ]
+
+    real(dp), parameter :: one_dW2(2,2) = reshape([     &
+         &     -3.2546771423d-03,  -3.0041109666d-03,     &
+         &      7.7294271670d-03,   7.1343656844d-03     &
+         &    ],[2,2])
+
+    real(dp), parameter :: one_db2(2) = [     &
+         &     -4.5260446292d-03,   1.0748756570d-02     &
+         &    ]
+
+    real(dp), parameter :: one_d2(2) = [     &
+         &     -1.8316442829d-02,   4.5791107072d-02     &
+         &    ]
+
+    real(dp), parameter :: one_Z3(1) =  [  3.0101154522d-01 ]
+
+    real(dp), parameter :: one_a3(1) =  [  5.7468977881d-01 ]
+
+    real(dp), parameter :: one_E3(1) =  [  9.1582214144d-02 ]
+
+    real(dp), parameter :: one_g3(1) =  [  2.4442143694d-01 ]
+
+    real(dp), parameter :: one_dW3(2,1) = reshape([     &
+         &      5.0720563896d-02,   5.7106390319d-02     &
+         &    ],[2,1])
+
+    real(dp), parameter :: one_db3(1) = [ 9.1582214144d-02 ]
+
+    real(dp), parameter :: one_d3(1)  = [ 3.7468977881d-01 ]
+
+    real(dp), parameter :: one_mse = 0.14039243034403007d0
+
+
+
+    real(dp), parameter :: one_W1c(2,2) = reshape([     &
+         &      4.9999606887d-01,   7.9999606887d-01,     &
+         &     -9.9999797753d-02,   7.0000020225d-01     &
+         &    ],[2,2])
+
+    real(dp), parameter :: one_W2c(2,2) = reshape([     &
+         &     -2.9996745323d-01,   5.0003004111d-01,     &
+         &      9.9922705728d-02,   1.9992865634d-01     &
+         &    ],[2,2])
+
+    real(dp), parameter :: one_W3c(2,1) = reshape([     &
+         &     -2.0050720564d-01,   4.9942893610d-01     &
+         &    ],[2,1])
+
+    real(dp), parameter :: one_b1c(2) = [     &
+         &     -1.0000491392d-01,   2.0000025281d-01     &
+         &    ]
+
+    real(dp), parameter :: one_b2c(2) = [     &
+         &      1.0004526045d-01,   2.9989251243d-01     &
+         &    ]
+
+    real(dp), parameter :: one_b3c(1) = [ 9.9084177859d-02 ]
+
+
+
+
+
+
+
+
+
+
+    
+    real(dp) :: s
+    real(dp) :: test_out(1)
+    integer  :: i, j
+
+    type(FFNN) :: net
+
+    call net%build( 2, 3, ALPHA=0.01d0, ACTIVATE='sigmoid' )
+
+    call net%setupLayer( 1, 2, ALPHA=0.01d0 )
+    call net%setupLayer( 2, 2, ALPHA=0.01d0 )
+    call net%setupLayer( 3, 1, ALPHA=0.01d0 )
+
+    call net%layer(1)%load( test_W1a, test_b1a )
+    call net%layer(2)%load( test_W2a, test_b2a )
+    call net%layer(3)%load( test_W3a, test_b3a )
+
+    @assertEqual( test_W1a, net%layer(1)%W )
+    @assertEqual( test_b1a, net%layer(1)%b )
+
+    @assertEqual( test_W2a, net%layer(2)%W )
+    @assertEqual( test_b2a, net%layer(2)%b )
+
+    @assertEqual( test_W3a, net%layer(3)%W )
+    @assertEqual( test_b3a, net%layer(3)%b )
+
+    call net%reset
+    call net%train( test_X(4,:), test_Y(4,:), MSE=s )
+    call net%update
+
+    @assertEqual( one_mse, s )
+    
+    @assertEqual( one_Z1,  net%layer(1)%Z,  1.0d-12 )
+    @assertEqual( one_a1,  net%layer(1)%a,  1.0d-10 )
+    @assertEqual( one_e1,  net%layer(1)%e,  1.0d-10 )
+    @assertEqual( one_g1,  net%layer(1)%g,  1.0d-10 )
+    @assertEqual( one_dW1, net%layer(1)%dW, 1.0d-10 )
+    @assertEqual( one_db1, net%layer(1)%db, 1.0d-10 )
+    @assertEqual( one_d1,  net%layer(1)%d,  1.0d-10 )
+    
+    @assertEqual( one_Z2,  net%layer(2)%Z,  1.0d-10 )
+    @assertEqual( one_a2,  net%layer(2)%a,  1.0d-10 )
+    @assertEqual( one_e2,  net%layer(2)%e,  1.0d-10 )
+    @assertEqual( one_g2,  net%layer(2)%g,  1.0d-10 )
+    @assertEqual( one_dW2, net%layer(2)%dW, 1.0d-10 )
+    @assertEqual( one_db2, net%layer(2)%db, 1.0d-10 )
+    @assertEqual( one_d2,  net%layer(2)%d,  1.0d-10 )
+    
+    @assertEqual( one_Z3,  net%layer(3)%Z,  1.0d-10 )
+    @assertEqual( one_a3,  net%layer(3)%a,  1.0d-10 )
+    @assertEqual( one_e3,  net%layer(3)%e,  1.0d-10 )
+    @assertEqual( one_g3,  net%layer(3)%g,  1.0d-10 )
+    @assertEqual( one_dW3, net%layer(3)%dW, 1.0d-10 )
+    @assertEqual( one_db3, net%layer(3)%db, 1.0d-10 )
+    @assertEqual( one_d3,  net%layer(3)%d,  1.0d-10 )
+    
+    @assertEqual( one_W1c, net%layer(1)%W,  1.0d-10 )
+    @assertEqual( one_b1c, net%layer(1)%b,  1.0d-10 )
+
+    @assertEqual( one_W2c, net%layer(2)%W,  1.0d-10 )
+    @assertEqual( one_b2c, net%layer(2)%b,  1.0d-10 )
+
+    @assertEqual( one_W3c, net%layer(3)%W,  1.0d-10 )
+    @assertEqual( one_b3c, net%layer(3)%b,  1.0d-10 )
+
+  end subroutine test_network_onestep
+  
+
+
+    @test
+  !/ =====================================================================================
+  subroutine test_network_full
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer, parameter :: N_EPC = 10
+    real(dp) :: score(N_EPC)
+    real(dp) :: s, mse
+    real(dp) :: test_out(1)
+    integer  :: i, j
+
+    type(FFNN) :: net
+
+    call net%build( 2, 3, ALPHA=0.01d0, ACTIVATE='sigmoid' )
+
+    call net%setupLayer( 1, 2 )
+    call net%setupLayer( 2, 2 )
+    call net%setupLayer( 3, 1 )
+
+    call net%layer(1)%load( test_W1a, test_b1a )
+    call net%layer(2)%load( test_W2a, test_b2a )
+    call net%layer(3)%load( test_W3a, test_b3a )
+
+    @assertEqual( test_W1a, net%layer(1)%W )
+    @assertEqual( test_b1a, net%layer(1)%b )
+
+    @assertEqual( test_W2a, net%layer(2)%W )
+    @assertEqual( test_b2a, net%layer(2)%b )
+
+    @assertEqual( test_W3a, net%layer(3)%W )
+    @assertEqual( test_b3a, net%layer(3)%b )
+
+    do j=1,N_EPC
+       mse = D_ZERO
+       call net%reset
+       do i=1,4
+          call net%train( test_X(i,:), test_Y(i,:), MSE=s )
+          mse = mse + s
+       end do
+       score(j) = mse / D_FOUR
+       call net%update
+    end do
+
+    @assertEqual( test_mse, score, 1.0d-11 )
+
+    @assertEqual( test_W1b, net%layer(1)%W, 1.0d-10 )
+    @assertEqual( test_b1b, net%layer(1)%b, 1.0d-10 )
+
+    @assertEqual( test_W2b, net%layer(2)%W, 1.0d-10 )
+    @assertEqual( test_b2b, net%layer(2)%b, 1.0d-10 )
+
+    @assertEqual( test_W3b, net%layer(3)%W, 1.0d-10 )
+    @assertEqual( test_b3b, net%layer(3)%b, 1.0d-10 )
+
+  end subroutine test_network_full
+  
+end module test_network

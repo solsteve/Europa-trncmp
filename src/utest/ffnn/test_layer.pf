@@ -1,6 +1,5 @@
 module test_layer
   use pfunit_mod
-  use trncmp_ENV
   use ffnn_network_mod
   use string_tools
   implicit none
@@ -308,17 +307,17 @@ contains
 
    call L%propagate_forward( xor_X )
 
-   @assertEqual( xor_Z, L%Z, 1.0d-4 )
-   @assertEqual( xor_a, L%a, 1.0d-4 )
+   @assertEqual( xor_Z, L%Z, 1.0d-12 )
+   @assertEqual( xor_a, L%a, 1.0d-12 )
 
    call L%reset
-   call L%propagate_backward( xor_d2, xor_X )
+   L%d = xor_d2
+   call L%propagate_backward( xor_X )
 
-   @assertEqual( xor_E,  L%E,     1.0d-6 )
-   @assertEqual( xor_g,  L%g,     1.0d-6 )
-   @assertEqual( xor_d1, L%delta, 1.0d-6 )
-   @assertEqual( xor_dW, L%dW,    1.0d-6 )
-   @assertEqual( xor_db, L%db,    1.0d-6 )
+   @assertEqual( xor_E,  L%E,     1.0d-13 )
+   @assertEqual( xor_g,  L%g,     1.0d-13 )
+   @assertEqual( xor_dW, L%dW,    1.0d-13 )
+   @assertEqual( xor_db, L%db,    1.0d-13 )
 
  end subroutine test_layer_simple
   
@@ -347,11 +346,11 @@ contains
    @assertEqual( test_a, L%a, 1.0d-8 )
 
    call L%reset
-   call L%propagate_backward( test_d2, test_X )
+   L%d = test_d2
+   call L%propagate_backward( test_X )
 
    @assertEqual( test_E,  L%E,     1.0d-12 )
    @assertEqual( test_g,  L%g,     1.0d-12 )
-   @assertEqual( test_d1, L%delta, 1.0d-12 )
    @assertEqual( test_dW, L%dW,    1.0d-12 )
    @assertEqual( test_db, L%db,    1.0d-12 )
 
@@ -359,8 +358,9 @@ contains
 
    @assertEqual( test_Wup, L%W, 1.0d-10 )
    @assertEqual( test_bup, L%b, 1.0d-10 )
-   
-   call L%propagate_backward( test_d2, test_X )
+
+   L%d = test_d2
+   call L%propagate_backward( test_X )
    call L%reset
    
    @assertEqual( test_dW0, L%dW )

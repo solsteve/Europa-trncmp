@@ -91,7 +91,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     real(dp), intent(in) :: Z  !! weighted sum of the inputs.
     real(dp)             :: a  !! non-linear activation of Z.
     !/ -----------------------------------------------------------------------------------
-    a = 1.0d0 / ( 1.0d0 + exp( -Z ) )
+    a = D_ONE / ( D_ONE + exp( -Z ) )
   end function sigmoid_activation
 
 
@@ -106,8 +106,10 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     real(dp), intent(in) :: Z    !! weighted sum of the inputs.
     real(dp)             :: dadZ !! first derivative of a with respect to Z.
     !/ -----------------------------------------------------------------------------------
-    dadZ = a*(1.0d0-a)
+    dadZ = a * ( D_ONE - a )
   end function D_sigmoid_activation
+
+
 
 
 
@@ -136,8 +138,49 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     real(dp), intent(in) :: Z    !! weighted sum of the inputs.
     real(dp)             :: dadZ !! first derivative of a with respect to Z.
     !/ -----------------------------------------------------------------------------------
-    dadZ = 1.0d0 - (a*a)
+    dadZ = D_ONE - ( a * a )
   end function D_tanh_activation
+
+
+
+
+
+
+  !/ =====================================================================================
+  pure function relu_activation( Z ) result( a )
+    !/ -----------------------------------------------------------------------------------
+    !! Forward non-linear activation function.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: Z  !! weighted sum of the inputs.
+    real(dp)             :: a  !! non-linear activation of Z.
+    !/ -----------------------------------------------------------------------------------
+    if ( Z.gt.D_ZERO ) then
+       a = Z
+    else
+       a = D_ZERO
+    end if
+  end function relu_activation
+
+
+  !/ =====================================================================================
+  pure function D_relu_activation( a, Z ) result( dadZ )
+    !/ -----------------------------------------------------------------------------------
+    !! First derivative of the non-linear activation function,
+    !! with respect to the weighted sum of the inputs.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: a    !! non-linear activation of Z.
+    real(dp), intent(in) :: Z    !! weighted sum of the inputs.
+    real(dp)             :: dadZ !! first derivative of a with respect to Z.
+    !/ -----------------------------------------------------------------------------------
+    if ( Z.gt.D_ZERO ) then
+       dadZ = D_ONE
+    else
+       dadZ = D_ZERO
+    end if
+  end function D_relu_activation
+
 
 
 
@@ -167,8 +210,40 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     real(dp), intent(in) :: Z    !! weighted sum of the inputs.
     real(dp)             :: dadZ !! first derivative of a with respect to Z.
     !/ -----------------------------------------------------------------------------------
-    dadZ = 1.0d0
+    dadZ = D_ONE
   end function D_linear_activation
+
+
+
+
+
+
+  !/ =====================================================================================
+  pure function gaussian_activation( Z ) result( a )
+    !/ -----------------------------------------------------------------------------------
+    !! Forward non-linear activation function.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: Z  !! weighted sum of the inputs.
+    real(dp)             :: a  !! non-linear activation of Z.
+    !/ -----------------------------------------------------------------------------------
+    a = Z
+  end function gaussian_activation
+
+
+  !/ =====================================================================================
+  pure function D_gaussian_activation( a, Z ) result( dadZ )
+    !/ -----------------------------------------------------------------------------------
+    !! First derivative of the non-linear activation function,
+    !! with respect to the weighted sum of the inputs.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: a    !! non-linear activation of Z.
+    real(dp), intent(in) :: Z    !! weighted sum of the inputs.
+    real(dp)             :: dadZ !! first derivative of a with respect to Z.
+    !/ -----------------------------------------------------------------------------------
+    dadZ = D_ONE
+  end function D_gaussian_activation
 
 
 
@@ -201,13 +276,17 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     end if
 
     if ( ( 'R'.eq.name ).or.( 'r'.eq.name ) ) then
-       call log_warn('ReLU not yet implemented, falling back to sigmoid')
-       f_ptr => sigmoid_activation
+       f_ptr => relu_activation
        goto 999
     end if
 
     if ( ( 'L'.eq.name ).or.( 'l'.eq.name ) ) then
        f_ptr => linear_activation
+       goto 999
+    end if
+
+    if ( ( 'G'.eq.name ).or.( 'g'.eq.name ) ) then
+       f_ptr => gaussian_activation
        goto 999
     end if
 
@@ -241,13 +320,17 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     end if
 
     if ( ( 'R'.eq.name ).or.( 'r'.eq.name ) ) then
-       call log_warn('ReLU not yet implemented, falling back to sigmoid')
-       f_ptr => D_sigmoid_activation
+       f_ptr => D_relu_activation
        goto 999
     end if
 
     if ( ( 'L'.eq.name ).or.( 'l'.eq.name ) ) then
        f_ptr => D_linear_activation
+       goto 999
+    end if
+
+    if ( ( 'G'.eq.name ).or.( 'g'.eq.name ) ) then
+       f_ptr => D_gaussian_activation
        goto 999
     end if
 

@@ -54,7 +54,7 @@ module FFNN_Layer_mod
      real(dp), allocatable :: g(:)      !! gradient
      real(dp), allocatable :: dW(:,:)   !! delta weights
      real(dp), allocatable :: db(:)     !! delta bias
-     real(dp), allocatable :: delta(:)  !! difference applied to the previous layer
+     real(dp), allocatable :: d(:)  !! difference applied to the previous layer
 
      !! non-linear activation function
      procedure(ActivateFunction),  pointer, nopass :: Sigma
@@ -67,6 +67,7 @@ module FFNN_Layer_mod
    contains
 
      procedure :: build               => L_build
+     procedure :: delete              => L_delete
      procedure :: load                => L_load_weights
      procedure :: save                => L_save_weights
      procedure :: init                => L_initialize_weights
@@ -79,6 +80,7 @@ module FFNN_Layer_mod
 
   end type FFLayer
 
+  
 
 
   !/ =====================================================================================
@@ -87,6 +89,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
 
+  
   !/ =====================================================================================
   subroutine L_destroy_layer( layer )
     !/ -----------------------------------------------------------------------------------
@@ -105,14 +108,32 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        deallocate( layer%g )
        deallocate( layer%dW )
        deallocate( layer%db )
-       deallocate( layer%delta )
+       deallocate( layer%d )
     end if
 
     layer%num_connect = 0
     layer%num_node    = 0
+    layer%alpha       = D_ZERO
+
+    layer%Sigma  => null()
+    layer%DSigma => null()
 
   end subroutine L_destroy_layer
 
+
+  
+  !/ =====================================================================================
+  subroutine L_delete( dts )
+    !/ -----------------------------------------------------------------------------------
+    !! Build this FFLayer.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(FFLayer), intent(inout) :: dts !! reference to this FFLayer.
+    !/ -----------------------------------------------------------------------------------
+    call L_destroy_layer( dts )
+  end subroutine L_delete
+
+  
   !/ =====================================================================================
   subroutine L_build( dts, ncon, nnod, ALPHA, ACTIVATE )
     !/ -----------------------------------------------------------------------------------
@@ -157,7 +178,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     allocate( dts%g(nnod) )
     allocate( dts%dW(ncon,nnod) )
     allocate( dts%db(nnod) )
-    allocate( dts%delta(ncon) )
+    allocate( dts%d(nnod) )
 
     dts%Sigma  => getActivation( my_activate )
     dts%DSigma => getDActivation( my_activate )
@@ -259,6 +280,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     
     do concurrent( n=1:nn )
        dts%db(n) = D_ZERO
+       dts%d(n)  = D_ZERO
     end do
 
   end subroutine L_reset_deltas
@@ -291,14 +313,14 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine L_execute_backwards_pass( dts, diff, ain )
+  subroutine L_execute_backwards_pass( dts, ain, DELTA )
     !/ -----------------------------------------------------------------------------------
     !! Execute a single backwards step. First execute a forward step.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FFLayer), intent(inout) :: dts      !! reference to this FFLayer.
-    real(dp),       intent(in)    :: diff(:)  !! difference applied from next layer.
-    real(dp),       intent(in)    :: ain(:)   !! activated input from previous layer.
+    class(FFLayer), intent(inout)   :: dts      !! reference to this FFLayer.
+    real(dp), intent(in)            :: ain(:)   !! activated input from previous layer.
+    real(dp), optional, intent(out) :: DELTA(:) !! difference applied to the previous layer.
     !/ -----------------------------------------------------------------------------------
     integer  :: c,n,nc,nn
     real(dp) :: s
@@ -308,16 +330,18 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     do concurrent( n=1:nn )
        dts%g(n) = dts%DSigma( dts%a(n), dts%Z(n) )
-       dts%E(n) = diff(n) * dts%g(n)
+       dts%E(n) = dts%d(n) * dts%g(n)
     end do
 
-    do c=1,nc
-       s = D_ZERO
-       do n=1,nn
-          s = s + ( dts%E(n) * dts%W(c,n) )
+    if ( present( DELTA ) ) then
+       do c=1,nc
+          s = D_ZERO
+          do n=1,nn
+             s = s + ( dts%E(n) * dts%W(c,n) )
+          end do
+          DELTA(c) = s
        end do
-       dts%delta(c) = s
-    end do
+    end if
 
     do concurrent( c=1:nc, n=1:nn )
        dts%dW(c,n) = dts%dW(c,n) + ( ain(c) * dts%E(n) )
