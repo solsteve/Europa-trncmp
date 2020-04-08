@@ -154,8 +154,6 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     character(*), optional, intent(in)    :: ACTIVATE !! name of the activation function
     !/ -----------------------------------------------------------------------------------
 
-    call dts%dd%seed_set
-
     if ( present( ALPHA ) ) then
        dts%alpha = ALPHA
     else

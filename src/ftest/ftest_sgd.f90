@@ -28,7 +28,7 @@ module ftest_sgd
   use ffnn_sgd_mod
 
 
-  character(*), parameter :: TEST_DATA = '../data/Yacht/yacht.exm'
+  character(*), parameter :: TEST_DATA = '../data/Yacht/airfoil_sig.exm'
 
 
 
@@ -46,9 +46,14 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     type(exemplar_pair_t)  :: E
-    integer :: num_inp, num_out, num_sam
+    type(FFNN) :: net
+    integer  :: num_inp, num_out, num_sam
+    real(dp) :: score
+    type(Dice) :: dd
     !/ -----------------------------------------------------------------------------------
 
+    call dd%seed_set
+    
     call read_pair( PAIR=E, FILE=TEST_DATA )
 
     num_inp = size( E%X, 1 )
@@ -57,6 +62,21 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     print *, num_sam, num_inp, num_out
 
+    call net%build( num_inp, 3, ALPHA=0.005d0 )
+    call net%setupLayer( 1, num_inp+num_out )
+    call net%setupLayer( 2, num_inp / 2 )
+    call net%setupLayer( 3, num_out )
+
+    call net%init
+    
+    call SGD_Train( INPUT=E%X, DESIRED=E%Y, REPLACE=.false., &
+         &          NETWORK=net, EPOCHS=100, BATCH=10, VERBOSE=1 )
+
+    !call sgd_validate( INPUT=E%X, OUTPUT=E%Y, MSE=score )
+    !print *,'Score =', score
+
+
+    
   end subroutine TEST_01
 
 
