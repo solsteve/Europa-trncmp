@@ -1,6 +1,7 @@
 module test_network
   use pfunit_mod
   use ffnn_network_mod
+  use file_tools
   implicit none
 
 
@@ -386,4 +387,109 @@ contains
 
   end subroutine test_network_full
   
+
+    @test
+  !/ =====================================================================================
+  subroutine test_network_readwrite_1
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer :: ios, fp
+    type(FFNN) :: N1, N2
+
+    call N1%build( 2, 3, ALPHA=0.01d0, ACTIVATE='sigmoid' )
+
+    call N1%setupLayer( 1, 2 )
+    call N1%setupLayer( 2, 2 )
+    call N1%setupLayer( 3, 1 )
+
+    call N1%layer(1)%load( test_W1a, test_b1a )
+    call N1%layer(2)%load( test_W2a, test_b2a )
+    call N1%layer(3)%load( test_W3a, test_b3a )
+
+    @assertEqual( test_W1a, N1%layer(1)%W )
+    @assertEqual( test_b1a, N1%layer(1)%b )
+
+    @assertEqual( test_W2a, N1%layer(2)%W )
+    @assertEqual( test_b2a, N1%layer(2)%b )
+
+    @assertEqual( test_W3a, N1%layer(3)%W )
+    @assertEqual( test_b3a, N1%layer(3)%b )
+
+    call N1%write( FILE='/tmp/test1.net', IOSTAT=ios, FMT='ES20.12' )
+    @assertEqual( 0, ios )
+
+    call N2%read( FILE='XXXX', IOSTAT=ios )
+    @assertTrue( 0.ne.ios )
+    
+    call N2%read( FILE='/tmp/test1.net', IOSTAT=ios )
+    @assertEqual( 0, ios )
+    
+    @assertEqual( test_W1a, N2%layer(1)%W )
+    @assertEqual( test_b1a, N2%layer(1)%b )
+
+    @assertEqual( test_W2a, N2%layer(2)%W )
+    @assertEqual( test_b2a, N2%layer(2)%b )
+
+    @assertEqual( test_W3a, N2%layer(3)%W )
+    @assertEqual( test_b3a, N2%layer(3)%b )
+
+  end subroutine test_network_readwrite_1
+
+
+    @test
+  !/ =====================================================================================
+  subroutine test_network_readwrite_2
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer    :: ios, fp
+    type(FFNN) :: N1, N2
+
+    call N1%build( 2, 3, ALPHA=0.01d0, ACTIVATE='sigmoid' )
+
+    call N1%setupLayer( 1, 2 )
+    call N1%setupLayer( 2, 2 )
+    call N1%setupLayer( 3, 1 )
+
+    call N1%layer(1)%load( test_W1a, test_b1a )
+    call N1%layer(2)%load( test_W2a, test_b2a )
+    call N1%layer(3)%load( test_W3a, test_b3a )
+
+    @assertEqual( test_W1a, N1%layer(1)%W )
+    @assertEqual( test_b1a, N1%layer(1)%b )
+
+    @assertEqual( test_W2a, N1%layer(2)%W )
+    @assertEqual( test_b2a, N1%layer(2)%b )
+
+    @assertEqual( test_W3a, N1%layer(3)%W )
+    @assertEqual( test_b3a, N1%layer(3)%b )
+
+    fp = WriteUnit( FILE='/tmp/test2.net', IOSTAT=ios )
+    @assertEqual( 0, ios )
+    
+    call N1%write( UNIT=fp, IOSTAT=ios, FMT='ES20.12' )
+    @assertEqual( 0, ios )
+
+    close( fp )
+
+
+    fp = ReadUnit( FILE='/tmp/test2.net', IOSTAT=ios )
+    @assertEqual( 0, ios )
+
+    call N2%read( UNIT=fp, IOSTAT=ios )
+    @assertEqual( 0, ios )
+    
+    close( fp )
+
+    @assertEqual( test_W1a, N2%layer(1)%W )
+    @assertEqual( test_b1a, N2%layer(1)%b )
+
+    @assertEqual( test_W2a, N2%layer(2)%W )
+    @assertEqual( test_b2a, N2%layer(2)%b )
+
+    @assertEqual( test_W3a, N2%layer(3)%W )
+    @assertEqual( test_b3a, N2%layer(3)%b )
+
+  end subroutine test_network_readwrite_2
+
+
 end module test_network

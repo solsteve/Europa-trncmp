@@ -246,8 +246,8 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     type(exemplar_pair_t),         intent(inout) :: ep      !! reference to an exemplar_pair_t object.
-    real(dp), optional, target,    intent(inout) :: XA(:,:) !! number of inputs.
-    real(dp), optional, target,    intent(inout) :: YA(:,:) !! number of outputs.
+    real(dp), optional, target,    intent(inout) :: XA(:,:) !! input source array.
+    real(dp), optional, target,    intent(inout) :: YA(:,:) !!outputs source array.
     integer,  optional,            intent(out)   :: ERR     !! error return value.
     !/ -----------------------------------------------------------------------------------
     logical :: report
@@ -291,8 +291,8 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(exemplar_pair_t), pointer           :: ep      !! pointer to a new exemplar_pair_t object.
-    real(dp), optional, target, intent(inout) :: XA(:,:) !! number of inputs.
-    real(dp), optional, target, intent(inout) :: YA(:,:) !! number of outputs.
+    real(dp), optional, target, intent(inout) :: XA(:,:) !! inputs source array.
+    real(dp), optional, target, intent(inout) :: YA(:,:) !! outputs source array.
     integer,  optional,         intent(out)   :: ERR     !! error return value.
     !/ -----------------------------------------------------------------------------------
 

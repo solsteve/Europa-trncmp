@@ -54,13 +54,16 @@ module FFNN_Layer_mod
      real(dp), allocatable :: g(:)      !! gradient
      real(dp), allocatable :: dW(:,:)   !! delta weights
      real(dp), allocatable :: db(:)     !! delta bias
-     real(dp), allocatable :: d(:)  !! difference applied to the previous layer
+     real(dp), allocatable :: d(:)      !! difference applied to the previous layer
 
      !! non-linear activation function
      procedure(ActivateFunction),  pointer, nopass :: Sigma
 
      !! first derivative of the activation function
      procedure(DActivateFunction), pointer, nopass :: DSigma
+
+     character(:), allocatable :: activate_name
+
 
      type(Dice) :: dd  !! instance of an entropy source
      
@@ -75,6 +78,10 @@ module FFNN_Layer_mod
      procedure :: propagate_forward   => L_execute_forward_pass
      procedure :: propagate_backward  => L_execute_backwards_pass
      procedure :: update              => L_update_weights
+
+     procedure :: read                => L_read_weights
+     procedure :: write               => L_write_weights
+     
 
      final :: L_destroy_layer
 
@@ -146,8 +153,6 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     real(dp),     optional, intent(in)    :: ALPHA    !! training constant
     character(*), optional, intent(in)    :: ACTIVATE !! name of the activation function
     !/ -----------------------------------------------------------------------------------
-    character(:), allocatable :: my_activate
-    !/ -----------------------------------------------------------------------------------
 
     call dts%dd%seed_set
 
@@ -158,9 +163,9 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     end if
 
     if ( present( ACTIVATE ) ) then
-       my_activate = trim( adjustl( ACTIVATE ) )
+       dts%activate_name = trim( adjustl( ACTIVATE ) )
     else
-       my_activate = DEFAULT_ACTIVATION_FUNCTION
+       dts%activate_name = DEFAULT_ACTIVATION_FUNCTION
     end if
     
     if ( 0.lt.dts%num_node ) then
@@ -180,8 +185,8 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     allocate( dts%db(nnod) )
     allocate( dts%d(nnod) )
 
-    dts%Sigma  => getActivation( my_activate )
-    dts%DSigma => getDActivation( my_activate )
+    dts%Sigma  => getActivation(  dts%activate_name )
+    dts%DSigma => getDActivation( dts%activate_name )
 
   end subroutine L_build
 
@@ -375,8 +380,56 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     end do
 
   end subroutine L_update_weights
+  
 
+  !/ =====================================================================================
+  subroutine L_read_weights( dts, unit )
+    !/ -----------------------------------------------------------------------------------
+    !! Read the weights and bias from an open file.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(FFLayer), intent(inout) :: dts  !! reference to this FFLayer.
+    integer,        intent(in)    :: unit !! file unit number.
+    !/ -----------------------------------------------------------------------------------
+    integer :: c, n
+    !/ -----------------------------------------------------------------------------------
 
+    do n=1,dts%num_node
+       read( unit, * ) dts%b(n)
+       do c=1,dts%num_connect
+          read( unit, * ) dts%W(c,n)
+       end do
+    end do
+
+  end subroutine L_read_weights
+  
+    
+  !/ =====================================================================================
+    subroutine L_write_weights( dts, unit, fmt )
+    !/ -----------------------------------------------------------------------------------
+    !! Write the weights and bias to an open file.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(FFLayer), intent(inout) :: dts  !! reference to this FFLayer.
+    integer,        intent(in)    :: unit !! file unit number.
+    character(*),   intent(in)    :: fmt  !! edit descriptor for weight.
+    !/ -----------------------------------------------------------------------------------
+    integer :: c, n
+    character(:), allocatable :: sfmt
+    !/ -----------------------------------------------------------------------------------
+
+    sfmt = '(' // FMT // ')'
+    
+    do n=1,dts%num_node
+       write( unit, sfmt ) dts%b(n)
+       do c=1,dts%num_connect
+          write( unit, sfmt ) dts%W(c,n)
+       end do
+    end do
+    
+  end subroutine L_write_weights
+  
+      
 end module FFNN_Layer_mod
 
 
