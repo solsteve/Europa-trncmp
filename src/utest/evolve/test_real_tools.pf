@@ -1,0 +1,49 @@
+module test_real_tools
+  use pfunit_mod
+  use trncmp_ENV
+  use dice_mod
+  use real_toolbox_mod
+  implicit none
+
+  integer, parameter :: DEF_SEED(3) = [ 31415, 27828, 154317 ]
+
+contains
+
+  @test
+  !/ =====================================================================================
+  subroutine test_init
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    integer, parameter :: N_SAMP = 10000
+    real(dp), allocatable :: test(:)
+    integer  :: i
+    real(dp) :: x, minv, maxv, mean
+    !/ -----------------------------------------------------------------------------------
+
+    allocate( test(N_SAMP) )
+
+    call dd%seed_set( DEF_SEED )
+
+    call initialize_parameters( test )
+
+    minv = test(1)
+    maxv = test(1)
+    mean = test(1)
+    
+    do i=2,N_SAMP
+       x = test(i)
+       if ( x.lt.minv ) minv = x
+       if ( x.gt.maxv ) maxv = x
+       mean = mean + x
+    end do
+    mean = mean / real(N_SAMP,dp)
+
+    @assertTrue( minv.lt.-9.0d-1 )
+    @assertTrue( (-1.0d-1.lt.mean).and.( mean.lt.1.0d-1) )
+    @assertTrue( maxv.gt.9.0d-1 )
+
+    deallocate( test )
+    
+  end subroutine test_init
+
+end module test_real_tools

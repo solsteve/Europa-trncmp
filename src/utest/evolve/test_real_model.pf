@@ -1,0 +1,55 @@
+module test_real_model
+  use pfunit_mod
+  use real_model_mod
+  implicit none
+
+  
+contains
+
+  
+  @test
+  !/ =====================================================================================
+  subroutine test_build
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+
+    type(RealModel) :: model
+
+    call model%build( 3, 1 )
+    
+    @assertEqual( 3, model%nPar() )
+    @assertEqual( 1, model%nMet() )
+    
+  end subroutine test_build
+
+  @test
+  !/ =====================================================================================
+  subroutine test_exec
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+    real(dp), parameter :: p(3) = [ 1.1d0, 3.4d0, 2.3d0 ]
+    real(dp) :: s(1)
+
+    type(RealModel) :: model
+    
+    call model%build( 3, 1 )
+    
+    @assertEqual( 3, model%nPar() )
+    @assertEqual( 1, model%nMet() )
+
+    model%coef = [ 1.2d0, 3.5d0, 2.2d0 ]
+
+    call model%execute( s, p )
+
+    @assertEqual( 0.01d0, s(1), 1.0d-15 )
+
+    call model%display( UNIT=OUTPUT_UNIT )
+    call model%display( FMT='F5.2', PARAM=p )
+    call model%display( FMT='F5.2', PARAM=p, MFMT='ES11.4' )
+   
+  end subroutine test_exec
+
+  
+end module test_real_model

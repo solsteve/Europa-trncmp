@@ -33,8 +33,6 @@ module fft_mod
   use trncmp_env
 
 
-
-
   !/ =====================================================================================
 contains !/ **                  P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
@@ -73,7 +71,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     ! combine
     do i=1,N/2
-       t=exp(cmplx(0.0_dp,-2.0_dp*D_PI*real(i-1,dp)/real(N,dp),kind=dp))*even(i)
+       t=exp(cmplx(D_ZERO,-D_2PI*real(i-1,dp)/real(N,dp),dp))*even(i)
        x(i)     = odd(i) + t
        x(i+N/2) = odd(i) - t
     end do
@@ -154,7 +152,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     allocate( R(N) )
     allocate( S(P) )
 
-    mean = 0.0d0
+    mean = D_ZERO
     do concurrent(i=1:N)
        mean = mean + X(I)
     end do

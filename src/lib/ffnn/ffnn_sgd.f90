@@ -36,13 +36,19 @@ module FFNN_SGD_mod
   use tlogger
   use ffnn_network_mod
   use dice_mod
+  use stopwatch_class
   implicit none
+
+
+
 
   !/ =====================================================================================
 contains !/ **                  P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
 
-  
+
+
+
   !/ =====================================================================================
   subroutine SGD_TRAIN_WITHOUT_REPLACEMENT( input, desired, network, max_bat, score, verb )
     !! -----------------------------------------------------------------------------------
@@ -98,18 +104,18 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        loss = loss / real(bat_size,dp)
        score = score + loss
        if ( 1.lt.verb) then
-       print *, bat, max_bat, loss
-    end if
+          print *, bat, max_bat, loss
+       end if
     end do
     score = score / real(max_bat,dp)
 
     deallocate( bat_index )
-    
+
   end subroutine SGD_TRAIN_WITHOUT_REPLACEMENT
 
 
 
-  
+
   !/ =====================================================================================
   subroutine SGD_TRAIN_WITH_REPLACEMENT( input, desired, network, max_bat, score, verb )
     !! -----------------------------------------------------------------------------------
@@ -131,7 +137,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !! -----------------------------------------------------------------------------------
 
     call dd%seed_set
-    
+
     num_samp = size(input, DIM=2)
 
     bat_size = num_samp / max_bat
@@ -175,9 +181,10 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     logical,    optional, intent(in)    :: replace
     integer,    optional, intent(in)    :: verbose
     !! -----------------------------------------------------------------------------------
-    real(dp) :: score
-    integer  :: epc, max_epc, max_bat, verb
-    logical  :: rep
+    real(dp)        :: score, elapse
+    integer         :: epc, max_epc, max_bat, verb
+    logical         :: rep
+    type(StopWatch) :: SW
     !! -----------------------------------------------------------------------------------
 
     rep = .true.
@@ -205,6 +212,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
                    call log_info( 'Using default number of batches', I4=max_bat )
                 end if
 
+                call SW%reset
                 do epc=1,max_epc
                    if ( rep ) then
                       call SGD_TRAIN_WITH_REPLACEMENT(input,desired,network,max_bat,score,verb)
@@ -212,14 +220,19 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
                       call SGD_TRAIN_WITHOUT_REPLACEMENT(input,desired,network,max_bat,score,verb)
                    end if
                    if ( 0.lt.verb ) then
-                   print *, epc, max_epc, score
-                end if
-             end do
+                      print *, epc, max_epc, score
+                   end if
+                end do
 
-             if ( 0.eq.verb ) then
-                print *, 'Final MSE=', score
-             end if
-             
+                elapse = SW%check()
+
+                if ( 0.eq.verb ) then
+                   print *, 'Final MSE=', score
+                end if
+
+                write(*,100) elapse
+100             format( 'Ran in ',G0,' seconds' )
+
              else
                 call log_error('input and desired table are different lengths')
              end if
@@ -235,19 +248,5 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
   end subroutine SGD_TRAIN
 
-
-
-
-
-
-
-
-
-
-    
-
-
-
-  
 
 end module FFNN_SGD_mod

@@ -259,8 +259,8 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     else
        dd%have_spare = .true.
        dd%rand1 = dd%ent%R64()
-       if (dd%rand1.lt.1.0e-100) then
-          dd%rand1 = 1.0e-100
+       if (dd%rand1.lt.1.0d-100) then
+          dd%rand1 = 1.0d-100
        end if
        dd%rand1 = -D_TWO * log(dd%rand1)
        dd%rand2 = D_2PI*dd%ent%R64()
