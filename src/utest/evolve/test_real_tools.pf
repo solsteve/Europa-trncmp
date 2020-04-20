@@ -46,4 +46,109 @@ contains
     
   end subroutine test_init
 
-end module test_real_tools
+  @test
+  !/ =====================================================================================
+  subroutine test_cross
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    real(dp), parameter :: C00(3)  = [ 1.0d0,  3.0d0,  7.0d0 ]
+    real(dp), parameter :: C25(3)  = [ 2.0d0,  6.0d0, 14.0d0 ]
+    real(dp), parameter :: C50(3)  = [ 3.0d0,  9.0d0, 21.0d0 ]
+    real(dp), parameter :: C75(3)  = [ 4.0d0, 12.0d0, 28.0d0 ]
+    real(dp), parameter :: C100(3) = [ 5.0d0, 15.0d0, 35.0d0 ]
+
+    real(dp), parameter :: T00    = 0.00d0
+    real(dp), parameter :: T25    = 0.25d0
+    real(dp), parameter :: T50    = 0.50d0
+    real(dp), parameter :: T75    = 0.75d0
+    real(dp), parameter :: T100   = 1.00d0
+
+    real(dp), dimension(3) :: c1, c2, p1, p2
+
+    p1 = C00
+    p2 = C100
+
+    call cross_real_params( c1, c2, p1, p2, 0.0d0 )
+
+    @assertEqual( c1, p1 )
+    @assertEqual( c2, p2 )
+
+    !/ -----------------------------------------------------------------------------------
+
+    call cross_real_params( c1, c2, p1, p2, 1.0d0, TEST=T00 )
+
+    @assertEqual( C00,  c1 )
+    @assertEqual( C100, c2 )
+
+    call cross_real_params( c1, c2, p1, p2, 1.0d0, TEST=T25 )
+
+    @assertEqual( C25, c1 )
+    @assertEqual( C75, c2 )
+
+    call cross_real_params( c1, c2, p1, p2, 1.0d0, TEST=T50 )
+
+    @assertEqual( C50, c1 )
+    @assertEqual( C50, c2 )
+
+    call cross_real_params( c1, c2, p1, p2, 1.0d0, TEST=T100 )
+
+    @assertEqual( C100, c1 )
+    @assertEqual( C00,  c2 )
+
+    !/ -----------------------------------------------------------------------------------
+
+    
+  end subroutine test_cross
+  
+
+  @test
+  !/ =====================================================================================
+  subroutine test_mutate
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer, parameter :: NUM = 10000
+    real(dp), allocatable :: X(:)
+    real(dp), allocatable :: Y(:)
+    integer :: i, count_low, count_high, count_changed
+    real(dp) :: rat
+    !/ -----------------------------------------------------------------------------------
+
+    allocate( X(NUM) )
+    allocate( Y(NUM) )
+
+    call dd%seed_set( DEF_SEED )
+
+    call initialize_parameters( X )
+
+    call mutate( Y, X, D_ZERO, D_HALF )
+
+    @assertEqual( X, Y )
+
+    call mutate( Y, X, 0.25d0, D_HALF )
+
+    count_low     = 0
+    count_high    = 0
+    count_changed = 0
+    do i=1,NUM
+       if ( Y(i).lt.X(i) )   count_changed = count_changed + 1
+       if ( Y(i).gt.X(i) )   count_changed = count_changed + 1
+       if ( Y(i).lt.-D_ONE ) count_low     = count_low     + 1
+       if ( Y(i).gt. D_ONE ) count_high    = count_high    + 1
+    end do
+
+    @assertEqual( 0, count_low )
+    @assertEqual( 0, count_high )
+
+    rat = real(count_changed,dp) / real(NUM,dp)
+
+    @assertTrue( rat .gt. 0.245d0 )
+    @assertTrue( rat .lt. 0.255d0 )
+
+    deallocate( Y )
+    deallocate( X )
+
+  end subroutine test_mutate
+
+  end module test_real_tools

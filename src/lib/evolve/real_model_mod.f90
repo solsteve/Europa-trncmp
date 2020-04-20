@@ -50,6 +50,15 @@ contains
   end type RealModel
 
 
+  !/ -------------------------------------------------------------------------------------
+  interface isLeftBetter
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: is_left_better_scalar
+     module procedure :: is_left_better_vector
+  end interface isLeftBetter
+  
+
+
   
   !/ =====================================================================================
 contains !/ **                  P R O C E D U R E   S E C T I O N                       **
@@ -57,6 +66,41 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   
+
+   !/ =====================================================================================
+  pure function is_left_better_scalar( lhs, rhs ) result( truth )
+    !/ -----------------------------------------------------------------------------------
+    !! return a determination that the left metric is better than the right metric.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: lhs
+    real(dp), intent(in) :: rhs
+    logical              :: truth
+    !/ -----------------------------------------------------------------------------------
+
+    truth = .not.( lhs.gt.rhs )  ! never use .le. or .ge. with floating-point
+    
+  end function is_left_better_scalar
+
+
+   !/ =====================================================================================
+  pure function is_left_better_vector( lhs, rhs ) result( truth )
+    !/ -----------------------------------------------------------------------------------
+    !! return a determination that the left metric is better than the right metric.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: lhs(:)
+    real(dp), intent(in) :: rhs(:)
+    logical              :: truth
+    !/ -----------------------------------------------------------------------------------
+
+    truth = .not.( lhs(1).gt.rhs(1) )  ! never use .le. or .ge. with floating-point
+    
+  end function is_left_better_vector
+
+
+
+ 
 
   !/ =====================================================================================
   subroutine tm_destroy( dts )
