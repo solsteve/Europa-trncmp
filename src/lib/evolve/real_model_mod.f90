@@ -28,7 +28,7 @@ module real_model_mod
   use trncmp_env
   implicit none
 
-  
+
   !/ =====================================================================================
   type :: RealModel
      !/ ----------------------------------------------------------------------------------
@@ -37,16 +37,16 @@ module real_model_mod
      real(dp), allocatable :: coef(:)   !! model coefficients.
      real(dp), allocatable :: met(:)    !! model metrics.
 
-contains
+   contains
 
-  procedure :: nPar    => tm_get_num_parameters
-  procedure :: nMet    => tm_get_num_metrics
-  procedure :: build   => tm_build_model
-  procedure :: execute => tm_execute_model
-  procedure :: display => tm_display_model
+     procedure :: nPar    => tm_get_num_parameters
+     procedure :: nMet    => tm_get_num_metrics
+     procedure :: build   => tm_build_model
+     procedure :: execute => tm_execute_model
+     procedure :: display => tm_display_model
 
      final :: tm_destroy
-     
+
   end type RealModel
 
 
@@ -56,18 +56,18 @@ contains
      module procedure :: is_left_better_scalar
      module procedure :: is_left_better_vector
   end interface isLeftBetter
-  
 
 
-  
+
+
   !/ =====================================================================================
 contains !/ **                  P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
 
 
-  
 
-   !/ =====================================================================================
+
+  !/ =====================================================================================
   pure function is_left_better_scalar( lhs, rhs ) result( truth )
     !/ -----------------------------------------------------------------------------------
     !! return a determination that the left metric is better than the right metric.
@@ -79,11 +79,11 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     truth = .not.( lhs.gt.rhs )  ! never use .le. or .ge. with floating-point
-    
+
   end function is_left_better_scalar
 
 
-   !/ =====================================================================================
+  !/ =====================================================================================
   pure function is_left_better_vector( lhs, rhs ) result( truth )
     !/ -----------------------------------------------------------------------------------
     !! return a determination that the left metric is better than the right metric.
@@ -95,12 +95,12 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 
     truth = .not.( lhs(1).gt.rhs(1) )  ! never use .le. or .ge. with floating-point
-    
+
   end function is_left_better_vector
 
 
 
- 
+
 
   !/ =====================================================================================
   subroutine tm_destroy( dts )
@@ -115,7 +115,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        deallocate( dts%coef )
        deallocate( dts%met )
     end if
-    
+
   end subroutine tm_destroy
 
 
@@ -133,7 +133,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
   end function tm_get_num_parameters
 
-  
+
   !/ =====================================================================================
   function tm_get_num_metrics( dts ) result( n )
     !/ -----------------------------------------------------------------------------------
@@ -148,7 +148,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
   end function tm_get_num_metrics
 
-  
+
   !/ =====================================================================================
   subroutine tm_build_model( dts, np, nm )
     !/ -----------------------------------------------------------------------------------
@@ -167,7 +167,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        dts%n_par = np
        dts%n_met  = nm
     end if
-    
+
   end subroutine tm_build_model
 
 
@@ -191,9 +191,9 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        d = dts%coef(i) - param(i)
        mse = mse + (d*d)
     end do
-    
+
     score(1) = mse / real(n,dp)
-    
+
   end subroutine tm_execute_model
 
 
@@ -232,7 +232,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     write( buffer, 100 ) sfmtm, dts%n_par, sfmt
     fmt1 = trim(adjustl(buffer))
-    
+
     write( buffer, 200 ) dts%n_par, sfmt
     fmt2 = trim(adjustl(buffer))
 
@@ -248,9 +248,9 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     else
        write( un, fmt2 ) (dts%coef(i),i=1,dts%n_par)
     end if
-    
+
   end subroutine tm_display_model
-    
+
 
 end module real_model_mod
 

@@ -25,6 +25,7 @@
 !/ =======================================================================================
 module fga_mod
   !/ -------------------------------------------------------------------------------------
+  use omp_lib
   use real_group_mod
   implicit none
 
@@ -34,6 +35,14 @@ module fga_mod
      !/ ----------------------------------------------------------------------------------
 
      type(RealGroup), allocatable :: group(:)
+     integer :: n_group
+     integer :: n_member
+     integer :: n_param
+     integer :: n_proc
+     integer :: n_metric
+
+     class(RealModel), pointer :: model => null()
+     
 
    contains
 
@@ -87,14 +96,14 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     end if
 
     ga%n_group  = omp_get_max_threads()
-    ga%n_member = nPop / ga%nProc
-    ga%n_param  = model%nPar
-    ga%n_metric = model%nMet
-    
+    ga%n_member = nPop / ga%n_proc
+    ga%n_param  = model%nPar()
+    ga%n_metric = model%nMet()
+
     allocate( ga%group( ga%n_group ) )
 
     do i=1,ga%n_group
-       call ga%group(i)%build( ga%n_param, ga%n_member, dts%metric )
+       call ga%group(i)%build( ga%n_param, ga%n_member, ga%n_metric )
     end do
 
   end subroutine fga_build
@@ -125,20 +134,20 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(FGA), intent(inout) :: ga !! reference to this FGA.
-    integer,   intent(in)    :: pn !! population number
+    class(FGA),      intent(inout) :: ga !! reference to this FGA.
+    integer,         intent(in)    :: pn !! population number
     type(RealModel), intent(inout) :: model
     !/ -----------------------------------------------------------------------------------
     integer i, n
     !/ -----------------------------------------------------------------------------------
-    
+
     n = ga%n_group
 
     do i=1,n
        call ga%group(i)%score( pn, model )
     end do
 
-  end subroutine fga_perform_crossover
+  end subroutine fga_score_population
 
 
   !/ =====================================================================================
@@ -147,6 +156,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(FGA), intent(inout) :: ga !! reference to this FGA.
+    integer,    intent(in)    :: pn !! parent population number
 
   end subroutine fga_mark_parents_for_selection
 
@@ -163,7 +173,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     integer i, n
     !/ -----------------------------------------------------------------------------------
-    
+
     n = ga%n_group
 
     do i=1,n
@@ -186,7 +196,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     integer i, n
     !/ -----------------------------------------------------------------------------------
-    
+
     n = ga%n_group
 
     do i=1,n
@@ -197,19 +207,20 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine fga_find_best_member_in_group( ga )
+  subroutine fga_find_best_member_in_group( ga, pn )
     !/ -----------------------------------------------------------------------------------
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(FGA), intent(inout) :: ga !! reference to this FGA.
+    integer,    intent(in)    :: pn
     !/ -----------------------------------------------------------------------------------
     integer i, n
     !/ -----------------------------------------------------------------------------------
-    
+
     n = ga%n_group
 
     do i=1,n
-       call ga%group(i)%findBest()
+       call ga%group(i)%findBest( pn, ga%model )
     end do
 
   end subroutine fga_find_best_member_in_group
@@ -234,8 +245,14 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     integer,           intent(in)    :: max_gen
     integer, optional, intent(in)    :: REPORT
     !/ -----------------------------------------------------------------------------------
+    real(dp) :: pCross, pMutate, sigma
+    integer  :: nrep, count, gen, best_metric
     !/ -----------------------------------------------------------------------------------
 
+    pCross  = 0.9d0
+    pMutate = 0.01d0
+    sigma   = 0.1d0
+    
     if ( present( REPORT ) ) then
        nrep = REPORT
     else
@@ -248,9 +265,9 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     !/ ----- evaluate population A ------------------------
 
-    call ga%score( 1, ga%model )
+    call ga%scorePop( 1, ga%model )
 
-    call ga%findBestByGroup()
+    call ga%findBestByGroup(1)
 
     call ga%findBest()
 
@@ -258,15 +275,15 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     count = 0
     do gen=1,max_gen
 
-       call ga%markSelect()
+       call ga%markSelect( 1 )
 
        call ga%doCrossover( 2, 1, pCross )
 
        call ga%doMutate( 1, 2, pMutate, sigma )
 
-       call ga%score( 1, ga%model )
+       call ga%scorePop( 1, ga%model )
 
-       call ga%findBestByGroup()
+       call ga%findBestByGroup(1)
 
        call ga%findBest()
 
@@ -275,12 +292,12 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
           print *, gen,  best_metric
           count = 0
        end if
-          
+
     end do
     !/ ^==== end main evolutionary loop =================================================^
 
     ! PRINT FINAL
-    
+
   end subroutine fga_evolve
 
 

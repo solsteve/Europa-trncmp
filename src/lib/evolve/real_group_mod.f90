@@ -82,13 +82,13 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     implicit none
     type(RealGroup), intent(inout) :: grp !! reference to a RealGroup.
     !/ -----------------------------------------------------------------------------------
-    n_member = 0
-    n_param  = 0
+    grp%n_member = 0
+    grp%n_param  = 0
 
-    deallocate( dts%param )
-    deallocate( dts%metric )
-    deallocate( dts%parent_group )
-    deallocate( dts%parent_member )
+    deallocate( grp%param )
+    deallocate( grp%metric )
+    deallocate( grp%parent_group )
+    deallocate( grp%parent_member )
 
   end subroutine rg_destroy
 
@@ -139,7 +139,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
   end function rg_size_of_parameters
 
 
-function rg_find_best_member( dts, best,  ) % 
+!function rg_find_best_member( dts, best,  ) % 
   
 
 
@@ -250,7 +250,7 @@ function rg_find_best_member( dts, best,  ) %
     integer,          intent(in)    :: pn    !! population number
     type(RealModel),  intent(inout) :: model !! reference toi a model.
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
+    integer :: i, n, best_index, worst_index
     !/ -----------------------------------------------------------------------------------
 
     n = dts%n_member
