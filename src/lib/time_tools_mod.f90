@@ -74,7 +74,7 @@ module time_tools_mod
 
   !/ =====================================================================================
   type, public :: Epoch
-     !/ -----------------------------------------------------------------------------------
+     !/ ----------------------------------------------------------------------------------
      real(dp) :: JD1 = D_ZERO !! Julian Date first  part
      real(dp) :: JD2 = D_ZERO !! Julian Date second part
 
@@ -429,7 +429,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     if ( present( DAYF ) )  DAYF  = temp - real(floor( temp ), dp)
 
     if ( present( IERR ) ) IERR = 0
-    
+
   end subroutine epc_to_calendar
 
 
@@ -506,7 +506,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-   function HMS2DAY( H, M, S ) result( day )
+  function HMS2DAY( H, M, S ) result( day )
     !/ -----------------------------------------------------------------------------------
     !! Convert hours, minutes, and seconds into days.
     !/ -----------------------------------------------------------------------------------
@@ -518,14 +518,14 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     day = (H + (M + S/6.0d1)/6.0d1)/2.4d1
 
-!    write(*,100) H, M, S, day
-!   100 format('( ',F5.1,'h ',G0,'m ',G0,'s ) ==> ',F10.6,' days')
+    !    write(*,100) H, M, S, day
+    !   100 format('( ',F5.1,'h ',G0,'m ',G0,'s ) ==> ',F10.6,' days')
 
   end function HMS2DAY
 
 
   !/ =====================================================================================
-   function HMS2DEG( H, M, S ) result( deg )
+  function HMS2DEG( H, M, S ) result( deg )
     !/ -----------------------------------------------------------------------------------
     !! Convert hours, minutes, and seconds into degrees.
     !/ -----------------------------------------------------------------------------------
@@ -544,7 +544,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-   function DMS2DEG( D, M, S ) result( deg )
+  function DMS2DEG( D, M, S ) result( deg )
     !/ -----------------------------------------------------------------------------------
     !! Convert degrees, minutes, and seconds into degrees.
     !/ -----------------------------------------------------------------------------------
@@ -580,7 +580,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     call fraction( H, temp1, day,  MULTIPLY=2.4d1 )
     call fraction( M, temp2, temp1, MULTIPLY=6.0d1 )
     temp1 = temp2 * 6.0d1
-    
+
 
     if ( temp1.lt.6.0d1 ) then
        S = temp1
@@ -590,8 +590,8 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     end if
 
 
-!    write(*,100) H, M, S, day
-!    100 format('( ',F5.1,'h ',G0,'m ',G0,'s ) <== ',F10.6,' days')
+    !    write(*,100) H, M, S, day
+    !    100 format('( ',F5.1,'h ',G0,'m ',G0,'s ) <== ',F10.6,' days')
 
 
   end subroutine DAY2HMS

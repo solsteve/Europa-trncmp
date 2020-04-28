@@ -559,7 +559,7 @@ contains !!**                   P R O C E D U R E   S E C T I O N               
     integer,          optional, intent(in)  :: UNIT   !! 
     integer,          optional, intent(out) :: IOSTAT !! 
     !! -----------------------------------------------------------------------------------
-    integer :: inf, ios
+    integer :: inf, ios, rios
     character(128) :: buffer
     logical :: report
     !! -----------------------------------------------------------------------------------
@@ -570,8 +570,8 @@ contains !!**                   P R O C E D U R E   S E C T I O N               
     inf = ReadUnit( FILE=FILE, UNIT=UNIT, IOSTAT=ios )
     if ( 0.eq.ios ) then
 100    continue
-       read(inf,*,END=120, ERR=110, IOSTAT=ios) buffer
-       if ( ios.ne.0 ) then
+       read(inf,*,END=120, ERR=110, IOSTAT=rios) buffer
+       if ( rios.ne.0 ) then
           write (*,*) 'IOS=', ios
           goto 120
        end if

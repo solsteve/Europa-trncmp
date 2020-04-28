@@ -1,0 +1,297 @@
+!/ =======================================================================================
+module testInterp
+  !/ -------------------------------------------------------------------------------------
+  use pfunit_mod
+  use interpolate_mod
+  implicit none
+
+  
+  real(dp), parameter :: A0 = 100.0d0
+  real(dp), parameter :: E0 = 0.9d0
+
+  
+contains
+
+  
+  !/ =====================================================================================
+  function cosdeg(d) result(c)
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: d
+    real(dp)             :: c
+    c = cos( d * D_PI / 1.8d2 )
+  end function cosdeg
+
+  
+  !/ =====================================================================================
+  function sindeg(d) result(s)
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: d
+    real(dp)             :: s
+    s = sin( d * D_PI / 1.8d2 )
+  end function sindeg
+
+  
+  !/ =====================================================================================
+  function ellipse( a, e, v ) result( r )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(in) :: a
+    real(dp), intent(in) :: e
+    real(dp), intent(in) :: v
+    real(dp)             :: r
+
+    r = a*(D_ONE - e*e) / (D_ONE - e*cosdeg(v))
+  end function ellipse
+
+
+  !/ =====================================================================================
+  subroutine build_tables( V, R, n )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), allocatable, intent(inout) :: V(:)
+    real(dp), allocatable, intent(inout) :: R(:)
+    integer,               intent(in)    :: n
+
+    real(dp) :: rad, delta
+    integer  :: i
+
+    allocate( V(n) )
+    allocate( R(n) )
+
+    delta = 3.6D2 / real(n,dp)
+    rad   = D_ZERO
+
+    do i=1,n
+       V(i) = rad
+       R(i) = ellipse( A0, E0, rad )
+       rad = rad + delta
+    end do
+
+  end subroutine build_tables
+
+
+  !/ =====================================================================================
+  subroutine build_XYtables( V, X, Y, n )
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp), allocatable, intent(inout) :: V(:)
+    real(dp), allocatable, intent(inout) :: X(:)
+    real(dp), allocatable, intent(inout) :: Y(:)
+    integer,               intent(in)    :: n
+
+    real(dp) :: rad, delta, r
+    integer  :: i
+
+    allocate( V(n) )
+    allocate( X(n) )
+    allocate( Y(n) )
+
+    delta = 3.6d2 / real(n,dp)
+    rad   = D_ZERO
+
+    do i=1,n
+       V(i) = rad
+       r = ellipse( A0, E0, rad )
+       X(i) = r*cosdeg(rad)
+       Y(i) = r*sindeg(rad)
+       rad = rad + delta
+    end do
+
+  end subroutine build_XYtables
+
+
+  !/ =====================================================================================
+  @test
+  subroutine test_build
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    type(Bug3) :: bugX, bugY
+    real(dp), allocatable :: D(:), X(:), Y(:)
+    integer :: ie
+    integer, parameter :: NS = 360
+
+    call build_XYtables( D, X, Y, NS )
+
+    @assertEqual( NS, size(D) )
+    @assertEqual( NS, size(X) )
+    @assertEqual( NS, size(Y) )
+
+
+    call bugX%build(IERR=ie )
+    @assertEqual(1,ie)
+
+    call bugX%build( DELTA=1.0d-1, IERR=ie )
+    @assertEqual(2,ie)
+
+    call bugX%build( DELTA=1.0d-1, REFX=X, IERR=ie )
+    @assertEqual(3,ie)
+
+    call bugX%build( DELTA=1.0d-1, REFY=Y , IERR=ie )
+    @assertEqual(4,ie)
+
+    call bugX%build( DELTA=1.0d-1, COPYX=X , IERR=ie )
+    @assertEqual(5,ie)
+
+    call bugX%build( DELTA=1.0d-1, COPYY=Y, IERR=ie )
+    @assertEqual(6,ie)
+
+
+    call bugX%build( DELTA=1.0d-1, REFX=X, REFY=Y, COPYX=X, COPYY=Y, IERR=ie )
+    @assertEqual(7,ie)
+
+    call bugX%build( DELTA=1.0d-1, REFX=X, REFY=Y, COPYX=X         , IERR=ie )
+    @assertEqual(7,ie)
+
+    call bugX%build( DELTA=1.0d-1, REFX=X, REFY=Y,          COPYY=Y, IERR=ie )
+    @assertEqual(7,ie)
+
+    call bugX%build( DELTA=1.0d-1, REFX=X,         COPYX=X, COPYY=Y, IERR=ie )
+    @assertEqual(7,ie)
+
+    call bugX%build( DELTA=1.0d-1, REFX=X,         COPYX=X         , IERR=ie )
+    @assertEqual(7,ie)
+
+    call bugX%build( DELTA=1.0d-1, REFX=X,                  COPYY=Y, IERR=ie )
+    @assertEqual(7,ie)
+
+    call bugX%build( DELTA=1.0d-1,         REFY=Y, COPYX=X, COPYY=Y, IERR=ie )
+    @assertEqual(7,ie)
+
+    call bugX%build( DELTA=1.0d-1,         REFY=Y, COPYX=X         , IERR=ie )
+    @assertEqual(7,ie)
+
+    call bugX%build( DELTA=1.0d-1,         REFY=Y,          COPYY=Y, IERR=ie )
+    @assertEqual(7,ie)
+
+
+    call bugX%build( DELTA=1.0d-1, REFX=D, REFY=X, IERR=ie )
+    @assertEqual(0,ie)
+
+    call bugY%build( DELTA=1.0d-1, COPYX=D, COPYY=Y, IERR=ie, POS=32 )
+    @assertEqual(0,ie)
+
+    ! call bugX%show()
+    ! call bugY%show()
+
+    @assertEqual( 2,     bugX%pos )
+    @assertEqual( 0.5d0, bugX%x )
+    @assertEqual( 1.5d0, bugX%next )
+
+    @assertEqual( 32,     bugY%pos )
+    @assertEqual( 30.5d0, bugY%x )
+    @assertEqual( 31.5d0, bugY%next )
+
+    call bugX%build( DELTA=1.0d-1, REFX=D, REFY=X, IERR=ie, X1=7.9d0 )
+    @assertEqual(0,ie)
+    !call bugX%show()
+
+    @assertEqual( 9,     bugX%pos )
+    @assertEqual( 7.9d0, bugX%x )
+    @assertEqual( 8.5d0, bugX%next )
+
+    call bugX%build( DELTA=1.0d-1, REFX=D, REFY=X, IERR=ie, X1=7.9d0, POS=12 )
+    @assertEqual(8,ie)
+
+    call bugX%build( DELTA=1.0d-1, REFX=D, REFY=X, IERR=ie, X1=-3.9d0 )
+    @assertEqual(9,ie)
+
+    call bugX%build( DELTA=1.0d-1, REFX=D, REFY=X, IERR=ie, X1=400.0d0 )
+    @assertEqual(10,ie)
+
+    call bugX%build( DELTA=1.0d-1, REFX=D, REFY=X, IERR=ie, POS=600 )
+    @assertEqual(11,ie)
+
+    call bugX%build( DELTA=1.0d-1, REFX=D, REFY=X, IERR=ie, POS=-3 )
+    @assertEqual(12,ie)
+
+    deallocate( D )
+    deallocate( X )
+    deallocate( Y )
+
+  end subroutine test_build
+
+  
+  !/ =====================================================================================
+  @test
+  subroutine test_advance_the_bug
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    type(Bug3) :: bug
+    real(dp), allocatable :: D(:), X(:)
+    integer :: ie
+    integer, parameter :: NS = 360
+
+    call build_tables( D, X, NS )
+
+    @assertEqual( NS, size(D) )
+    @assertEqual( NS, size(X) )
+
+    call bug%build(DELTA=0.1d0, REFX=D, REFY=X, IERR=ie )
+    @assertEqual(0,ie)
+
+    call bug%show()
+
+    call bug%advance
+
+    call bug%show()
+
+    deallocate( X )
+    deallocate( D )
+
+  end subroutine test_advance_the_bug
+
+  
+  !/ =====================================================================================
+  @test
+  subroutine test_recall
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer, parameter    :: NS = 360
+    type(Bug3)            :: bug
+    real(dp), allocatable :: D(:), X(:), Y(:)
+    integer               :: ie, count
+    real(dp)              :: r, t, test, delta, xx
+    logical               :: finish
+    
+    call build_XYtables( D, X, Y, NS )
+    
+    call bug%build( DELTA=0.3d0, REFX=D, REFY=X, IERR=ie )
+    @assertEqual(0,ie)
+
+    t     = bug%x
+    delta = bug%delta
+
+    count  = 0
+    finish = .false.
+    
+100 continue
+    r = ellipse( A0, E0, t )
+    xx = r*cosdeg(t)
+    
+    t = t + delta
+
+    test = bug%get( ATEND=finish )
+
+    if ( count.gt.50 ) then
+       if ( count.lt.100 ) then
+         write(*,*) xx, test, (xx-test)
+       end if
+    end if
+    count = count + 1
+    if ( .not.finish ) goto 100
+ 
+    deallocate( X )
+    deallocate( D )
+    
+  end subroutine test_recall
+
+  
+end module testInterp
+
+
+!/ =======================================================================================

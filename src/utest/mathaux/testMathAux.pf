@@ -118,7 +118,7 @@ contains
 
        x2 = xw + xf
 
-       @assertEqual( x1, x2 )
+       @assertEqual( x1, x2, 1.0d-12 )
     end do
 
   end subroutine test_fraction
