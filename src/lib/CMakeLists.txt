@@ -26,12 +26,13 @@ project ( europa Fortran )
 
 file ( GLOB lib_src   "*.f90" )
 file ( GLOB ev_src    "evolve/*.f90" )
+file ( GLOB pso_src   "pso/*.f90" )
 file ( GLOB la_src    "linalg/*.f90" )
 file ( GLOB nn_src    "ffnn/*.f90" )
 file ( GLOB fft_src   "dfftpack/*.f" )
 file ( GLOB astro_src "astro/*.f90" )
 
-set ( ${PROJECT_NAME}_sources ${lib_src} ${la_src} ${nn_src} ${fft_src} ${ev_src} ${astro_src} )
+set ( ${PROJECT_NAME}_sources ${lib_src} ${la_src} ${nn_src} ${fft_src} ${ev_src} ${pso_src} ${astro_src} )
 set ( SDSPEC " -ffree-form" )
 
 message ( STATUS "Sources for project ${PROJECT_NAME}: ${${PROJECT_NAME}_sources}" )

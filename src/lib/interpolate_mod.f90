@@ -29,27 +29,28 @@ module interpolate_mod
   !! date:    2020-Apr-23
   !! license: GPL
   !!
-  !!## Object.
+  !!## Interpolation.
   !!
-  !! Object.
+  !! Provides 3 and 5 entry divided difference interpolation.
   !
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
   use tlogger
   implicit none
 
+  
   !/ =====================================================================================
   type :: Bug3
      !/ ----------------------------------------------------------------------------------
-     real(dp)          :: x1, x2, x3
-     real(dp)          :: y1, y2, y3
-     real(dp)          :: x, delta, next
-     integer           :: pos        =  0
-     integer           :: last       =  0
-     integer           :: tab_len    =  0
-     real(dp), pointer :: x_tab(:)   => null()
-     real(dp), pointer :: y_tab(:)   => null()
-     logical           :: owns_tables = .false.
+     real(dp)          :: x1, x2, x3             !! independent table entries
+     real(dp)          :: y1, y2, y3             !! dependent table entries
+     real(dp)          :: x, delta, next         !! current X, dX and nextX values NeXT
+     integer           :: pos        =  0        !! central table position
+     integer           :: last       =  0        !! last valid central position
+     integer           :: tab_len    =  0        !! number of table entries
+     real(dp), pointer :: x_tab(:)   => null()   !! pointer to the independent table
+     real(dp), pointer :: y_tab(:)   => null()   !! pointer to the dependent table
+     logical           :: owns_tables = .false.  !! flag to indicate ownership of the allocation
 
    contains
 
@@ -74,53 +75,55 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine b3_destroy_bug( dts )
+  subroutine b3_destroy_bug( bug )
     !/ -----------------------------------------------------------------------------------
     !! Release allocation if this object owns it.
     !/ -----------------------------------------------------------------------------------
-    type(Bug3), intent(inout) :: dts
+    type(Bug3), intent(inout) :: bug  !! reference to a Bug3 object.
     !/ -----------------------------------------------------------------------------------
 
-    if ( dts%owns_tables ) then
-       if ( 0.lt.dts%tab_len ) then
-          deallocate( dts%x_tab )
-          deallocate( dts%y_tab )
+    if ( bug%owns_tables ) then
+       if ( 0.lt.bug%tab_len ) then
+          deallocate( bug%x_tab )
+          deallocate( bug%y_tab )
        end if
     end if
 
-    dts%owns_tables = .false.
-    dts%pos     = 0
-    dts%tab_len = 0
-    dts%last    = 0
-    dts%x       = D_ZERO
-    dts%delta   = D_ZERO
-    dts%next    = D_ZERO
-    dts%x1      = D_ZERO
-    dts%x2      = D_ZERO
-    dts%x3      = D_ZERO
-    dts%y1      = D_ZERO
-    dts%y2      = D_ZERO
-    dts%y3      = D_ZERO
+    bug%owns_tables = .false.
+    bug%pos     = 0
+    bug%tab_len = 0
+    bug%last    = 0
+    bug%x       = D_ZERO
+    bug%delta   = D_ZERO
+    bug%next    = D_ZERO
+    bug%x1      = D_ZERO
+    bug%x2      = D_ZERO
+    bug%x3      = D_ZERO
+    bug%y1      = D_ZERO
+    bug%y2      = D_ZERO
+    bug%y3      = D_ZERO
 
-    dts%x_tab   => null()
-    dts%y_tab   => null()
+    bug%x_tab   => null()
+    bug%y_tab   => null()
 
   end subroutine b3_destroy_bug
 
 
   !/ =====================================================================================
-  subroutine b3_build_bug( dts, REFX, REFY, COPYX, COPYY, IERR, DELTA, X1, POS )
+  subroutine b3_build_bug( bug, REFX, REFY, COPYX, COPYY, IERR, DELTA, X1, POS )
     !/ -----------------------------------------------------------------------------------
+    !! Build the Bug. Either point to a source table or allocate memory and copy it.
+    !! Optionally set the inital table position directlly or by setting an initial X value.
     !/ -----------------------------------------------------------------------------------
-    class(Bug3),                 intent(inout) :: dts
-    real(dp), optional, target, intent(inout) :: REFX(:)
-    real(dp), optional, target, intent(inout) :: REFY(:)
-    real(dp), optional,          intent(in)    :: COPYX(:)
-    real(dp), optional,          intent(in)    :: COPYY(:)
-    integer,  optional,          intent(out)   :: IERR
-    real(dp), optional,          intent(in)    :: DELTA
-    real(dp), optional,          intent(in)    :: X1
-    integer,  optional,          intent(in)    :: POS
+    class(Bug3),                 intent(inout) :: bug      !! reference to this Bug3 object.
+    real(dp), optional, target, intent(inout)  :: REFX(:)  !! reference to an independent table.
+    real(dp), optional, target, intent(inout)  :: REFY(:)  !! reference to a dependent table.
+    real(dp), optional,          intent(in)    :: COPYX(:) !! source to copy an independent table from.
+    real(dp), optional,          intent(in)    :: COPYY(:) !! source to copy a dependent table from
+    integer,  optional,          intent(out)   :: IERR     !! return error code.
+    real(dp), optional,          intent(in)    :: DELTA    !! step change in the independent variable.
+    real(dp), optional,          intent(in)    :: X1       !! initial independent variable.
+    integer,  optional,          intent(in)    :: POS      !! initial central table position.
     !/ -----------------------------------------------------------------------------------
     integer :: i, n, ie, flag
     logical :: report
@@ -187,30 +190,30 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
 100 continue  ! Reference the tables
     n = min( size( REFX  ), size( REFY ) )
-    dts%x_tab => REFX
-    dts%y_tab => REFY
-    dts%owns_tables = .false.
+    bug%x_tab => REFX
+    bug%y_tab => REFY
+    bug%owns_tables = .false.
     goto 300
 
     !/ -----------------------------------------------------------------------------------
 200 continue  ! create an allocation and copy the tables
     n = min( size( COPYX  ), size( COPYY ) )
-    call b3_destroy_bug( dts )
-    allocate( dts%x_tab(n) )
-    allocate( dts%y_tab(n) )
+    call b3_destroy_bug( bug )
+    allocate( bug%x_tab(n) )
+    allocate( bug%y_tab(n) )
     do concurrent (i=1:n)
-       dts%x_tab(i) = COPYX(i)
-       dts%y_tab(i) = COPYY(i)
+       bug%x_tab(i) = COPYX(i)
+       bug%y_tab(i) = COPYY(i)
     end do
-    dts%owns_tables = .true.
+    bug%owns_tables = .true.
 
     !/ -----------------------------------------------------------------------------------
 300 continue  ! common build section
 
-    dts%tab_len = n
-    dts%last    = n - 1
+    bug%tab_len = n
+    bug%last    = n - 1
 
-    call dts%set( DELTA, X1=X1, POS=POS, IERR=ie )
+    call bug%set( DELTA, X1=X1, POS=POS, IERR=ie )
 
     !/ -----------------------------------------------------------------------------------
 999 continue
@@ -222,23 +225,23 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine b3_set_starting_point( dts, delta, X1, POS, IERR )
+  subroutine b3_set_starting_point( bug, delta, X1, POS, IERR )
     !/ -----------------------------------------------------------------------------------
     !! note: assume that the data is sorted by the independent table and that
     !!       the deltas are uniform.
     !/ -----------------------------------------------------------------------------------
-    class(Bug3),        intent(inout) :: dts
-    real(dp),           intent(in)    :: delta
-    real(dp), optional, intent(in)    :: X1
-    integer,  optional, intent(in)    :: POS
-    integer,  optional, intent(out)   :: IERR
+    class(Bug3),        intent(inout) :: bug   !! reference to this Bug3 object.
+    real(dp),           intent(in)    :: delta !! step change in the independent variable.
+    real(dp), optional, intent(in)    :: X1    !! initial independent variable.
+    integer,  optional, intent(in)    :: POS   !! initial central table position.
+    integer,  optional, intent(out)   :: IERR  !! return error code.
     !/ -----------------------------------------------------------------------------------
     real(dp) :: diff, test
     integer  :: first, flag, ie
     logical  :: report
     !/ -----------------------------------------------------------------------------------
 
-    dts%delta = delta
+    bug%delta = delta
 
     report = .true.
     if ( present( IERR ) ) report = .false.
@@ -268,7 +271,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     !/ -----------------------------------------------------------------------------------
 100 continue  ! find position in table
-    if ( X1.lt.dts%x_tab(1) ) then
+    if ( X1.lt.bug%x_tab(1) ) then
        ie = 9
        if ( report ) then
           call log_error( 'X1 is below the table', R8=X1 )
@@ -276,7 +279,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        goto 999
     end if
 
-    if ( X1.gt.dts%x_tab(dts%tab_len) ) then
+    if ( X1.gt.bug%x_tab(bug%tab_len) ) then
        ie = 10
        if ( report ) then
           call log_error( 'X1 is above the table', R8=X1 )
@@ -284,8 +287,8 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        goto 999
     end if
 
-    diff  = dts%x_tab(2) - dts%x_tab(1)
-    test  = D_ONE + (X1 - dts%x_tab(1)) / diff
+    diff  = bug%x_tab(2) - bug%x_tab(1)
+    test  = D_ONE + (X1 - bug%x_tab(1)) / diff
 
     first = floor(test)
     test = test - real(first,dp)
@@ -297,26 +300,26 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 200 continue  ! common section
 
     if ( 1.lt.first ) then
-       if ( first.lt.dts%tab_len ) then
+       if ( first.lt.bug%tab_len ) then
           !/ -----------------------------------------------------------------------------
 
-          dts%pos = first
+          bug%pos = first
 
-          dts%x1 = dts%x_tab( dts%pos-1 )
-          dts%x2 = dts%x_tab( dts%pos   )
-          dts%x3 = dts%x_tab( dts%pos+1 )
+          bug%x1 = bug%x_tab( bug%pos-1 )
+          bug%x2 = bug%x_tab( bug%pos   )
+          bug%x3 = bug%x_tab( bug%pos+1 )
 
-          dts%y1 = dts%y_tab( dts%pos-1 )
-          dts%y2 = dts%y_tab( dts%pos   )
-          dts%y3 = dts%y_tab( dts%pos+1 )
+          bug%y1 = bug%y_tab( bug%pos-1 )
+          bug%y2 = bug%y_tab( bug%pos   )
+          bug%y3 = bug%y_tab( bug%pos+1 )
 
           if ( present( X1 ) ) then
-             dts%x = X1
+             bug%x = X1
           else
-             dts%x = D_HALF*(dts%x1 + dts%x2)
+             bug%x = D_HALF*(bug%x1 + bug%x2)
           end if
 
-          dts%next = D_HALF*(dts%x2 + dts%x3)
+          bug%next = D_HALF*(bug%x2 + bug%x3)
 
           !/ -----------------------------------------------------------------------------
        else
@@ -341,11 +344,11 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine b3_advance_bug( dts, ATEND )
+  subroutine b3_advance_bug( bug, ATEND )
     !/ -----------------------------------------------------------------------------------
     !/ -----------------------------------------------------------------------------------
-    class(Bug3),       intent(inout) :: dts
-    logical, optional, intent(out)   :: ATEND
+    class(Bug3),       intent(inout) :: bug   !! reference to this Bug3 object.
+    logical, optional, intent(out)   :: ATEND !! return flag to mark the end of the table.
     !/ -----------------------------------------------------------------------------------
     logical  :: is_at_end
     real(dp) :: test
@@ -353,26 +356,26 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     is_at_end = .false.
 
-    dts%pos = dts%pos + 1
-    if ( dts%pos.gt.dts%last ) then
+    bug%pos = bug%pos + 1
+    if ( bug%pos.gt.bug%last ) then
        is_at_end = .true.
        goto 999
     end if
 
-    dts%x1 = dts%x_tab( dts%pos-1 )
-    dts%x2 = dts%x_tab( dts%pos   )
-    dts%x3 = dts%x_tab( dts%pos+1 )
+    bug%x1 = bug%x_tab( bug%pos-1 )
+    bug%x2 = bug%x_tab( bug%pos   )
+    bug%x3 = bug%x_tab( bug%pos+1 )
 
-    dts%y1 = dts%y_tab( dts%pos-1 )
-    dts%y2 = dts%y_tab( dts%pos   )
-    dts%y3 = dts%y_tab( dts%pos+1 )
+    bug%y1 = bug%y_tab( bug%pos-1 )
+    bug%y2 = bug%y_tab( bug%pos   )
+    bug%y3 = bug%y_tab( bug%pos+1 )
 
-    test     = D_HALF*(dts%x1 + dts%x2)
-    dts%next = D_HALF*(dts%x2 + dts%x3)
+    test     = D_HALF*(bug%x1 + bug%x2)
+    bug%next = D_HALF*(bug%x2 + bug%x3)
 
-    if ( ( dts%x.gt.dts%next ).or.( dts%x.lt.test ) ) then
-       dts%x = D_HALF*(dts%x1 + dts%x2)
-       call log_warn( 'X is out of sync. Re-sync, new value', R8=dts%x )
+    if ( ( bug%x.gt.bug%next ).or.( bug%x.lt.test ) ) then
+       bug%x = D_HALF*(bug%x1 + bug%x2)
+       call log_warn( 'X is out of sync. Re-sync, new value', R8=bug%x )
     end if
 
 999 continue
@@ -382,58 +385,58 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  function b3_get_next_value( dts, ATEND ) result( y )
+  function b3_get_next_value( bug, ATEND ) result( y )
     !/ -----------------------------------------------------------------------------------
     !/ -----------------------------------------------------------------------------------
-    class(Bug3),       intent(inout) :: dts
-    logical, optional, intent(out)   :: ATEND
-    real(dp)                         :: y  !! interpolated value
+    class(Bug3),       intent(inout) :: bug    !! reference to this Bug3 object.
+    logical, optional, intent(out)   :: ATEND  !! return flage to mark the end of the table.
+    real(dp)                         :: y      !! interpolated value.
     !/ -----------------------------------------------------------------------------------
     real(dp) :: n
-    logical  :: is_at_end
     !/ -----------------------------------------------------------------------------------
 
     if ( present( ATEND ) ) ATEND = .false.
 
-    n = dts%x - dts%x2
+    n = bug%x - bug%x2
 
-    y = D_HALF*(n*(dts%y1 - D_TWO*dts%y2 + dts%y3) - dts%y1 + dts%y3)*n + dts%y2
+    y = D_HALF*(n*(bug%y1 - D_TWO*bug%y2 + bug%y3) - bug%y1 + bug%y3)*n + bug%y2
 
-    dts%x = dts%x + dts%delta
-    if ( dts%x.gt.dts%next ) then
-       call dts%advance( ATEND=ATEND )
+    bug%x = bug%x + bug%delta
+    if ( bug%x.gt.bug%next ) then
+       call bug%advance( ATEND=ATEND )
     end if
 
   end function b3_get_next_value
 
 
   !/ =====================================================================================
-  subroutine b3_show_details( dts )
+  subroutine b3_show_details( bug )
     !/ -----------------------------------------------------------------------------------
+    !! Display a representation of the divided difference table.
     !/ -----------------------------------------------------------------------------------
-    class(Bug3), intent(inout) :: dts
+    class(Bug3), intent(inout) :: bug   !! reference to this Bug3 object.
     !/ -----------------------------------------------------------------------------------
     real(dp) :: A, B, C
     !/ -----------------------------------------------------------------------------------
 
-    A = dts%y2 - dts%y1
-    B = dts%y3 - dts%y2
+    A = bug%y2 - bug%y1
+    B = bug%y3 - bug%y2
     C = B - A
 
     write(*,*)
-    write(*,'(A,1X,G0)') 'delta', dts%delta
-    write(*,'(A,1X,I0)') 'pos  ', dts%pos
-    write(*,'(A,1X,G0)') 'x    ', dts%x
-    write(*,'(A,1X,G0)') 'next ', dts%next
-    write(*,'(A,1X,I0)') 'end  ', dts%last
-    write(*,'(A,1X,I0)') 'len  ', dts%tab_len
+    write(*,'(A,1X,G0)') 'delta', bug%delta
+    write(*,'(A,1X,I0)') 'pos  ', bug%pos
+    write(*,'(A,1X,G0)') 'x    ', bug%x
+    write(*,'(A,1X,G0)') 'next ', bug%next
+    write(*,'(A,1X,I0)') 'end  ', bug%last
+    write(*,'(A,1X,I0)') 'len  ', bug%tab_len
     write(*,*)
     write(*, 50)
-    write(*,100) dts%pos-1, dts%x1, dts%y1
+    write(*,100) bug%pos-1, bug%x1, bug%y1
     write(*,200)                 A
-    write(*,300) dts%pos,   dts%x2, dts%y2,    C
+    write(*,300) bug%pos,   bug%x2, bug%y2,    C
     write(*,200)                 B
-    write(*,100) dts%pos+1, dts%x3, dts%y3
+    write(*,100) bug%pos+1, bug%x3, bug%y3
     write(*,*)
 
 50  format( '   I         X            Y           1st          2nd' )
