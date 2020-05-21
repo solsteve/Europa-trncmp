@@ -27,7 +27,8 @@ module pso_mod
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
   use dice_mod
-  use pso_model_mod
+  use real_model_mod
+  use omp_lib
   implicit none
 
   !/ =====================================================================================
@@ -51,7 +52,7 @@ module pso_mod
      real(dp), private, allocatable :: r1(:)    !! random buffer.
      real(dp), private, allocatable :: r2(:)    !! another random buffer.
 
-     class(PSO_Model), private, pointer :: model => null()
+     class(RealModel), private, pointer :: model => null()
 
      type(Dice), private :: dd
 
@@ -171,6 +172,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     do i=1,n
        call dts%model%evaluate( dts%met(:,i), dts%pos(:,i ) )
     end do
+
 
   end subroutine pso_evaluate
 
@@ -306,13 +308,13 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     implicit none
     class(PSO),       intent(inout) :: dts    !! reference to this PSO object.
     integer,          intent(in)    :: pop    !! number of particles in this PSO.
-    class(PSO_Model), target, intent(inout) :: MODEL  !! model to be optimized.
+    class(RealModel), target, intent(inout) :: MODEL  !! model to be optimized.
     !/ -----------------------------------------------------------------------------------
     !/ -----------------------------------------------------------------------------------
 
     dts%model      => MODEL
     dts%num_part   = pop
-    dts%num_param  = dts%model%nVar()
+    dts%num_param  = dts%model%nPar()
     dts%num_metric = dts%model%nMet()
 
     allocate( dts%pos(  dts%num_param,  dts%num_part ) )
@@ -343,7 +345,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     print *, '========================================='
     do i=1,n
-       print *,dts%model%toString( dts%met(:,i), dts%pos(:,i), PFMT='F9.4', MFMT='ES10.4' )
+       print *,dts%model%toString( dts%met(:,i), dts%pos(:,i), FMT='F9.4', MFMT='ES10.4' )
     end do
     print *, '-----------------------------------------'
     print *, ''
@@ -353,7 +355,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine pso_fit( dts, maxit, HISTORY, REPORT, MFMT, PFMT, W, W_FINAL, C1, C2 )
+  subroutine pso_fit( dts, maxit, HISTORY, REPORT, MFMT, PFMT, W, W_FINAL, C1, C2, TIME )
     !/ -----------------------------------------------------------------------------------
     !/ -----------------------------------------------------------------------------------
     implicit none
@@ -369,8 +371,9 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     real(dp),     optional, intent(in) :: W_FINAL !! 
     real(dp),     optional, intent(in) :: C1
     real(dp),     optional, intent(in) :: C2
+    real(dp),     optional, intent(out) :: TIME
     !/ -----------------------------------------------------------------------------------
-    real(dp) :: w_con, c1_accel, c2_accel, decay
+    real(dp) :: w_con, c1_accel, c2_accel, decay, t1, t2
     integer  :: rep, it, test, j
     !/ -----------------------------------------------------------------------------------
 
@@ -398,6 +401,8 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     call dts%pso_initialize_pos_vel
 
+    t1 = omp_get_wtime()
+    
     do it=1,maxit
 
        call dts%pso_update_pos_vel( w_con, c1_accel, c2_accel )
@@ -420,11 +425,15 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
           if ( it.eq.0 )    test = 0
           if ( it.eq.maxit) test = 0
           if ( 0.eq.test ) then
-             write(*,100) it, dts%model%toString( dts%gmet, dts%gpos, MFMT=MFMT, PFMT=PFMT )
+             write(*,100) it, dts%model%toString( dts%gmet, dts%gpos, FMT=PFMT, MFMT=MFMT )
           end if
        end if
 
     end do
+
+    t2 = omp_get_wtime()
+
+    if ( present( TIME ) ) TIME = t2-t1
 
 100 format( I0, ': ', A )
 

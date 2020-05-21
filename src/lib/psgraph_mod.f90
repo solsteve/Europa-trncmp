@@ -156,6 +156,9 @@ module psgraph_mod
      procedure :: drawRectangle => draw_rect_psdraw
      procedure :: drawBorder    => draw_border_psdraw
 
+     procedure :: drawCircleInch => draw_circle_inch_psdraw
+     procedure :: fillCircleInch => fill_circle_inch_psdraw
+
      procedure :: write         => write_psdraw
      procedure :: write_inch    => write_inch_psdraw
      procedure :: saveColor     => save_color_psdraw
@@ -607,6 +610,36 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
+  subroutine draw_circle_inch_psdraw( dts, xc, yc, r )
+    !/ -----------------------------------------------------------------------------------
+    !! Draw a circle centered at (x,y).
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(PSDraw),     intent(inout) :: dts    !! reference to this PSDraw.
+    real(dp),          intent(in)    :: xc     !! x coordinate of the center in inches.
+    real(dp),          intent(in)    :: yc     !! y coordinate of the center in inches.
+    real(dp),          intent(in)    :: r      !! value of the radius in inches.
+    !/ -----------------------------------------------------------------------------------
+    write(dts%file_unit,*) xc, yc, r, 'DCIR'
+  end subroutine draw_circle_inch_psdraw
+
+
+  !/ =====================================================================================
+  subroutine fill_circle_inch_psdraw( dts, xc, yc, r )
+    !/ -----------------------------------------------------------------------------------
+    !! Fill a circle centered at (x,y).
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(PSDraw),     intent(inout) :: dts    !! reference to this PSDraw.
+    real(dp),          intent(in)    :: xc     !! x coordinate of the center in inches.
+    real(dp),          intent(in)    :: yc     !! y coordinate of the center in inches.
+    real(dp),          intent(in)    :: r      !! value of the radius in inches.
+    !/ -----------------------------------------------------------------------------------
+     write(dts%file_unit,*) xc, yc, r, 'FCIR'   
+  end subroutine fill_circle_inch_psdraw
+
+
+  !/ =====================================================================================
   subroutine draw_polygon_psdraw( dts, x, y, n, fill )
     !/ -----------------------------------------------------------------------------------
     !!  Draw a polygon defined my a set of vertices and optionally fill.
@@ -691,8 +724,8 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     character(len=*),   intent(in)    :: text  !! string containing the text to write.
     real(dp),           intent(in)    :: x1    !! starting x world coordinates.
     real(dp),           intent(in)    :: y1    !! starting y world coordinates.
-    real(dp),           intent(in)    :: x2    !! width in world coordinates.
-    real(dp),           intent(in)    :: y2    !! height in world coordinates.
+    real(dp),           intent(in)    :: x2    !! ending   x world coordinates.
+    real(dp),           intent(in)    :: y2    !! ending   y world coordinates.
     real(dp), optional, intent(in)    :: theta !! rotation about the starting coordinates
     !!                                            in degrees counter clockwise.
     !/ -----------------------------------------------------------------------------------
@@ -1197,6 +1230,8 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     write(unit,'(A)') '/TIMES  { /Times findfont setfont } bind def'
     write(unit,'(A)') '/DL { newpath moveto lineto stroke } bind def'
     write(unit,'(A)') '/DR { newpath rectstroke } bind def'
+    write(unit,'(A)') '/DCIR { newpath 0.0 360.0 arc stroke } bind def'
+    write(unit,'(A)') '/FCIR { newpath 0.0 360.0 arc fill } bind def'
     write(unit,'(A)') '/BS { % x, y, width, height, string'
     write(unit,'(A)') 'gsave'
     write(unit,'(A)') '  /str exch def /rot exch def /hgt exch def /wdt exch def'

@@ -1,8 +1,8 @@
 #/ ====================================================================== BEGIN FILE =====
-#/ **                             Tools - C M A K E L I S T                             **
+#/ **                     Telescope Subdirectory - C M A K E L I S T                    **
 #/ =======================================================================================
 #/ **                                                                                   **
-#/ **  Copyright (c) 2018, Stephen W. Soliday                                           **
+#/ **  Copyright (c) 2020, Stephen W. Soliday                                           **
 #/ **                      stephen.soliday@trncmp.org                                   **
 #/ **                      http://research.trncmp.org                                   **
 #/ **                                                                                   **
@@ -22,16 +22,26 @@
 #/ **                                                                                   **
 #/ =======================================================================================
 
-project ( Tools Fortran )
+project ( Telescope Fortran )
 
-#/ One of these for each sub directory
+file ( GLOB progs "*.f90" )
 
-add_subdirectory ( Orrery )
-add_subdirectory ( ttt_matchbox )
-add_subdirectory ( solve_kepler )
-add_subdirectory ( GIS )
-add_subdirectory ( Telescope )
+foreach ( ft ${progs} )
+  get_filename_component ( _exec ${ft} NAME_WE )
+  
+  set ( CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/temp )
+
+  add_executable ( ${_exec} ${ft} )
+  
+  target_link_libraries ( ${_exec} europa )
+  
+  install (TARGETS ${_exec}
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib)
+  
+endforeach ( )
 
 #/ =======================================================================================
-#/ **                             Tools - C M A K E L I S T                             **
+#/ **                     Telescope Subdirectory - C M A K E L I S T                    **
 #/ =========================================================================== end FILE ==

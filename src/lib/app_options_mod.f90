@@ -865,6 +865,8 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
          &    "(A,'/.',A,'.cfg')   ",                     &
          &    "(A,'/.',A,'.config')" ]
 
+    ierr = 0
+    
     !/ ----- check for help --------------------------------------------------------------
 
     arg_len = 256
@@ -954,16 +956,17 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
           if ( 0.eq.ierr ) then
              call cfg%merge( temp_cfg )   !! Merge the configuration file
           else
-             call log_warn( 'Config file could not be read', STR=cfg_file )
+             call log_warn( 'ENV Config file could not be read', STR=cfg_file )
+             goto 999
           end if
        else
           if ( 2.eq.ierr ) then
              call log_critical( 'This processor does not support environment variables' )
           end if
-          call log_debug( 'the config key was not used' )
+          call log_debug( 'the ENV config key was not used' )
        end if
     else
-       call log_debug( 'No config file key was setup for the CLI' )
+       call log_debug( 'No ENV config file key was setup for the CLI' )
     end if
 
     !/ ----- check if the command line requests a config ---------------------------------
@@ -982,13 +985,14 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
           if ( 0.eq.ierr ) then
              call cfg%merge( temp_cfg )   !! Merge the configuration file
           else
-             call log_warn( 'Config file could not be read', STR=cfg_file )
+             call log_warn( 'CLI Config file could not be read', STR=cfg_file )
+             goto 999
           end if
        else
-          call log_debug( 'the config key was not used' )
+          call log_debug( 'the CLI config key was not used' )
        end if
     else
-       call log_debug( 'No config file key was setup for the CLI' )
+       call log_debug( 'No CLI config file key was setup for the CLI' )
     end if
 
     !/ ----- use command line to override keypairs ---------------------------------------
@@ -1039,8 +1043,14 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     self%cfgdb => cfg
 
+
+999 continue
+    if ( present( STATUS ) ) STATUS = ierr
+
+    
 1000 format( 'CLI ',A,'= or Config ',A,'.',A )
 
+    
   end subroutine get_configdb
 
 

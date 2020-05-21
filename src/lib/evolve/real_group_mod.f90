@@ -27,6 +27,8 @@ module real_group_mod
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
   use real_model_mod
+  use real_toolbox_mod
+  use evo_entropy_mod
   implicit none
 
 
@@ -34,25 +36,33 @@ module real_group_mod
   type :: RealGroup
      !/ ----------------------------------------------------------------------------------
 
+     integer :: id       = 0
      integer :: n_member = 0
      integer :: n_param  = 0
 
-     real(dp), allocatable :: param(:,:,:)     !! parameters          (nvar,nmemb,2)
+     real(dp), allocatable :: param(:,:,:)     !! parameters          (npar,nmemb,2)
      real(dp), allocatable :: metric(:,:)      !! metrics             (nmet,nmemb)
      integer,  allocatable :: parent_group(:)  !! parent group  index      (nmemb)
      integer,  allocatable :: parent_member(:) !! parent member index      (nmemb)
 
-     integer               :: bests_index
-     integer               :: worst_index
+     integer               :: best_index  = 0
+     integer               :: worst_index = 0
+     logical               :: new_best    = .false.
+     logical               :: new_worst   = .false.
+
+     type(Entropy) :: dd
+     class(RealModel), pointer :: model => null()
 
    contains
 
      procedure :: build         => rg_build_parameters
      procedure :: initialize    => rg_initialize_parameters
+     procedure :: zero          => rg_zero_parameters
      procedure :: crossover     => rg_crossover_parameters
      procedure :: mutate        => rg_mutate_parameters
      procedure :: score         => rg_score_parameters
      procedure :: findBest      => rg_find_best_member
+     procedure :: toString      => rg_member_to_string
 
      final :: rg_destroy
 
@@ -85,33 +95,54 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     grp%n_member = 0
     grp%n_param  = 0
 
-    deallocate( grp%param )
-    deallocate( grp%metric )
-    deallocate( grp%parent_group )
-    deallocate( grp%parent_member )
+    if ( 0.lt.grp%n_member ) then
+       deallocate( grp%param )
+       deallocate( grp%metric )
+       deallocate( grp%parent_group )
+       deallocate( grp%parent_member )
+    end if
+    
+    grp%best_index  = 0
+    grp%worst_index = 0
+    grp%new_best    = .false.
+    grp%new_worst   = .false.
 
   end subroutine rg_destroy
 
 
   !/ =====================================================================================
-  subroutine rg_build_parameters( dts, nvar, nmemb, nmet )
+  subroutine rg_build_parameters( dts, nmemb, model )
     !/ -----------------------------------------------------------------------------------
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(RealGroup), intent(inout) :: dts   !! reference to this RealGroup.
-    integer,          intent(in)    :: nvar  !! number of parameters.
     integer,          intent(in)    :: nmemb !! number of members.
-    integer,          intent(in)    :: nmet  !! number of metrics.
+    class(RealModel), target, intent(inout) :: model !! reference to the model.
     !/ -----------------------------------------------------------------------------------
+    integer :: npar, nmet
+    npar = model%nPar()
+    nmet = model%nMet()
+
+    call dts%dd%seed
+
+    dts%model => model
+
+    dts%n_member = nmemb
+    dts%n_param  = npar
 
     if ( 0.eq.nmemb ) then
        call rg_destroy( dts )
     end if
 
-    allocate( dts%param( nvar, nmemb, 2 ) )
+    allocate( dts%param( npar, nmemb, 2 ) )
     allocate( dts%metric( nmet, nmemb ) )
     allocate( dts%parent_group( nmemb ) )
     allocate( dts%parent_member( nmemb ) )
+
+    dts%best_index  = 0
+    dts%worst_index = 0
+    dts%new_best    = .false.
+    dts%new_worst   = .false.
 
   end subroutine rg_build_parameters
 
@@ -139,10 +170,6 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
   end function rg_size_of_parameters
 
 
-!function rg_find_best_member( dts, best,  ) % 
-  
-
-
   !/ =====================================================================================
   subroutine rg_initialize_parameters( dts, pn )
     !/ -----------------------------------------------------------------------------------
@@ -157,13 +184,33 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     n = dts%n_member
 
     do i=1,n
-       call initialize_parameters( dts%param(:,i,pn) )
+       call initialize_parameters( dts%dd, dts%param(:,i,pn) )
     end do
 
   end subroutine rg_initialize_parameters
 
 
-  !/ =====================================================================================
+   !/ =====================================================================================
+  subroutine rg_zero_parameters( dts, pn )
+    !/ -----------------------------------------------------------------------------------
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(RealGroup), intent(inout) :: dts !! reference to this RealGroup.
+    integer,          intent(in)    :: pn  !! population number
+    !/ -----------------------------------------------------------------------------------
+    integer :: i, n
+    !/ -----------------------------------------------------------------------------------
+
+    n = dts%n_member
+
+    do i=1,n
+       call zero_parameters( dts%param(:,i,pn) )
+    end do
+
+  end subroutine rg_zero_parameters
+
+
+ !/ =====================================================================================
   subroutine rg_crossover_parameters( dts, cp, pp, groups, pcross )
     !/ -----------------------------------------------------------------------------------
     !/ -----------------------------------------------------------------------------------
@@ -173,7 +220,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     integer,          intent(in)    :: pp        !! parent population number
     type(RealGroup),  intent(inout) :: groups(:) !! reference to this RealGroup.
     real(dp),         intent(in)    :: pcross    !! probability of cross vs. clone
-   !/ -----------------------------------------------------------------------------------
+    !/ -----------------------------------------------------------------------------------
     integer :: c1, c2, p1, p2, g1, g2, n
     !/ -----------------------------------------------------------------------------------
 
@@ -186,7 +233,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        p1 = dts%parent_member(c1)
        p2 = dts%parent_member(c2)
 
-       call crossover(  dts%param(:,c1,cp), dts%param(:,c2,cp), &
+       call crossover(  dts%dd, dts%param(:,c1,cp), dts%param(:,c2,cp), &
             &           groups(g1)%param(:,p1,pp), groups(g2)%param(:,p2,pp), &
             &           pcross )
     end do
@@ -212,21 +259,20 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     n = dts%n_member
 
     do i=1,n
-       call mutate( dts%param(:,i,dpn), dts%param(:,i,spn) )
+       call mutate( dts%dd, dts%param(:,i,dpn), dts%param(:,i,spn), pmutate, sigma )
     end do
 
   end subroutine rg_mutate_parameters
 
 
   !/ =====================================================================================
-  subroutine rg_score_parameters( dts, pn, model )
+  subroutine rg_score_parameters( dts, pn )
     !/ -----------------------------------------------------------------------------------
     !! Apply a model to each member of this group.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(RealGroup), intent(inout) :: dts   !! reference to this RealGroup.
     integer,          intent(in)    :: pn    !! population number
-    type(RealModel),  intent(inout) :: model !! reference toi a model.
     !/ -----------------------------------------------------------------------------------
     integer :: i, n
     !/ -----------------------------------------------------------------------------------
@@ -234,21 +280,19 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     n = dts%n_member
 
     do i=1,n
-       call model%execute( dts%metric(:,i), dts%param(:,i,pn) )
+       call dts%model%evaluate( dts%metric(:,i), dts%param(:,i,pn) )
     end do
 
   end subroutine rg_score_parameters
 
 
   !/ =====================================================================================
-  subroutine rg_find_best_member( dts, pn, model )
+  subroutine rg_find_best_member( dts )
     !/ -----------------------------------------------------------------------------------
     !! Apply a model to each member of this group.
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(RealGroup), intent(inout) :: dts   !! reference to this RealGroup.
-    integer,          intent(in)    :: pn    !! population number
-    type(RealModel),  intent(inout) :: model !! reference toi a model.
     !/ -----------------------------------------------------------------------------------
     integer :: i, n, best_index, worst_index
     !/ -----------------------------------------------------------------------------------
@@ -259,18 +303,52 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     worst_index = 1
 
     do i=2,n
-       if ( isLeftBetter( dts%metric(:,i), dts%metric(:,best_index) ) ) then
+       if ( dts%model%isLeftBetter( dts%metric(:,i), dts%metric(:,best_index) ) ) then
           best_index = i
        end if
-       if ( isLeftBetter( dts%metric(:,worst_index), dts%metric(:,i) ) ) then
+       if ( dts%model%isLeftBetter( dts%metric(:,worst_index), dts%metric(:,i) ) ) then
           worst_index = i
        end if
     end do
 
+    if ( dts%best_index.ne.best_index ) then
+       dts%new_best   = .true.
+       dts%best_index = best_index
+    else
+       dts%new_best   = .false.
+    end if
+
+    if ( dts%worst_index.ne.worst_index ) then
+       dts%new_worst   = .true.
+       dts%worst_index = worst_index
+    else
+       dts%new_worst   = .false.
+    end if
+
   end subroutine rg_find_best_member
 
+  !/ =====================================================================================
+  function rg_member_to_string( dts, pn, member, FMT, MFMT, LONG ) result( str )
+    !/ -----------------------------------------------------------------------------------
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(RealGroup),       intent(inout) :: dts    !! reference to this RealGroup.
+    integer,                intent(in)    :: pn     !! population number.
+    integer,                intent(in)    :: member !! member number to format.
+    character(*), optional, intent(in)    :: FMT
+    character(*), optional, intent(in)    :: MFMT
+    logical,      optional, intent(in)    :: LONG
+    character(:), allocatable             :: str
+    !/ -----------------------------------------------------------------------------------
+
+    str = dts%model%toString( dts%metric(:,member),    &
+         &                    dts%param(:,member,pn),  &
+         &                    FMT=FMT, MFMT=MFMT, LONG=LONG )
+
+  end function rg_member_to_string
 
 
+  
 end module real_group_mod
 
 

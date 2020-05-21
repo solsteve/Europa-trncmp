@@ -48,6 +48,7 @@ module astro_body_mod
      real(dp)              :: mu         !! gravitational constant
      real(dp)              :: delta      !! time delta in seconds
      real(dp), allocatable :: table(:,:) !! vector table
+     integer               :: num_entry  !! number of entries
 
    contains
 
@@ -122,8 +123,9 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     character(len=*), optional, intent(in)  :: fspc   !! path to an new or existing file.
     integer,          optional, intent(out) :: IOSTAT !! error return.
     !/ -----------------------------------------------------------------------------------
-    integer :: fh, ierr, i, j, m, n
-    logical :: report
+    integer  :: fh, ierr, i, j, m, n
+    logical  :: report
+    real(dp) :: mse, diff
     !/ -----------------------------------------------------------------------------------
 
     fh     = 0
@@ -142,6 +144,8 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
        read( fh ) m, n
 
+       dts%num_entry = n
+
        if ( allocated( dts%table ) ) deallocate( dts%table )
        allocate( dts%table(m,n) )
 
@@ -151,6 +155,13 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
        close( fh )
 
+       mse = D_ZERO
+       do j=2,n
+          diff = (dts%table(1,n) - dts%table(1,n-1))
+          mse = mse + diff
+       end do
+       dts%delta = mse / real(n-1,dp)
+       
     else
        if ( report ) then
           call log_error( 'Cannot open file for reading',  STR=fspc )

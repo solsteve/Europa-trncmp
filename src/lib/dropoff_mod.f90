@@ -1,10 +1,10 @@
 !/ ====================================================================== BEGIN FILE =====
-!/ **                          R E A L _ T O O L B O X _ M O D                          **
+!/ **                               D R O P O F F _ M O D                               **
 !/ =======================================================================================
 !/ **                                                                                   **
 !/ **  This file is part of the TRNCMP Research Library, `Europa' (Fortran 2018)        **
 !/ **                                                                                   **
-!/ **  Copyright (c) 1994-2020, Stephen W. Soliday                                      **
+!/ **  Copyright (c) 2016-2020, Stephen W. Soliday                                      **
 !/ **                           stephen.soliday@trncmp.org                              **
 !/ **                           http://research.trncmp.org                              **
 !/ **                                                                                   **
@@ -23,29 +23,44 @@
 !/ **  Europa. If not, see <http://www.gnu.org/licenses/>.                              **
 !/ **                                                                                   **
 !/ =======================================================================================
-module real_toolbox_mod
+module dropoff_mod
+  !/ -------------------------------------------------------------------------------------
+  !! brief  Drop Off Generator.
+  !! file   DropOff.hh
+  !! author Stephen W. Soliday
+  !! date   2016-Aug-09 Original release.
+  !! date   2019-Jun-27 CMake refactorization.
+  !!
+  !! Provides the interface for a drop off generator.
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
-  use evo_entropy_mod
   implicit none
 
-  interface initialize_parameters
-     module procedure :: initialize_real_params
-  end interface initialize_parameters
-
-  interface zero_parameters
-     module procedure :: zero_real_params
-  end interface zero_parameters
-
-  interface crossover
-     module procedure :: cross_real_params
-  end interface crossover
-
-  interface mutate
-     module procedure :: mutate_real_params
-  end interface mutate
-
   
+  integer, private, parameter :: DO_LINEAR      = 1
+  integer, private, parameter :: DO_EXPONENTIAL = 2
+  integer, private, parameter :: DO_GAUSSIAN    = 3
+
+
+  !/ =====================================================================================
+  type :: DropOff
+     !/ ----------------------------------------------------------------------------------
+     integer  :: index  = 0
+     real(dp) :: A      = D_ZERO
+     real(dp) :: B      = D_ZERO
+     integer  :: d_type = 0
+
+   contains
+
+     procedure :: build => do_build
+     procedure :: next  => do_next
+     procedure :: get   => do_get
+     procedure :: reset => do_reset
+  end type DropOff
+
+
+
+
   !/ =====================================================================================
 contains !/ **                  P R O C E D U R E   S E C T I O N                       **
   !/ =====================================================================================
@@ -54,125 +69,118 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine zero_real_params( param )
+  subroutine do_build( dts, Vo, Vf, n, dt )
     !/ -----------------------------------------------------------------------------------
-    !! Set parameters to uniform distribution [0,1)
+    !! Set up a drop off function such that V=Vo @ 0 and V=Vf @ n-1.
     !/ -----------------------------------------------------------------------------------
-    implicit none
-    real(dp), intent(inout) :: param(:) !! array of parameters.
+    class(DropOff), intent(inout) :: dts !! reference to this DropOff object.
+    real(dp),       intent(in)    :: Vo  !! starting value.
+    real(dp),       intent(in)    :: Vf  !! final value.
+    integer,        intent(in)    :: n   !! number of samples.
+    character(1),   intent(in)    :: dt  !! drop off type (default linear).
     !/ -----------------------------------------------------------------------------------
-    integer :: i, n
-    !/ -----------------------------------------------------------------------------------
-    n = size(param)
 
-    do i=1,n
-       param(i) = D_ZERO
-    end do
+    dts%index = 0
     
-  end subroutine zero_real_params
-    
+    if ( ( 'L'.eq.dt ).or.( 'l'.eq.dt ) ) then
 
-  !/ =====================================================================================
-  subroutine initialize_real_params( dd, param )
-    !/ -----------------------------------------------------------------------------------
-    !! Set parameters to uniform distribution [0,1)
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    type(Entropy),      intent(inout) :: dd     !! reference to an entropy source.
-    real(dp), intent(inout) :: param(:) !! array of parameters.
-    !/ -----------------------------------------------------------------------------------
-    integer :: i, n
-    !/ -----------------------------------------------------------------------------------
-    n = size(param)
+       dts%A      = (Vf - Vo) / real(n-1, dp)
+       dts%B      = Vo
+       dts%d_type = DO_LINEAR
+       
+    else if ( ( 'E'.eq.dt ).or.( 'e'.eq.dt ) ) then
 
-    do i=1,n
-       param(i) = D_TWO * dd%uniform() - D_ONE
-    end do
-    
-  end subroutine initialize_real_params
-    
+       dts%A      = Vo
+       dts%B      = ( log(Vf) - log(Vo) ) / real(n-1, dp)
+       dts%d_type = DO_EXPONENTIAL
+       
+    else if ( ( 'G'.eq.dt ).or.( 'g'.eq.dt ) ) then
 
-  !/ =====================================================================================
-  subroutine cross_real_params( dd, c1, c2, p1, p2, pcross, TEST )
-    !/ -----------------------------------------------------------------------------------
-    !! Perform parametric crossover.
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    type(Entropy),      intent(inout) :: dd     !! reference to an entropy source.
-    real(dp),           intent(inout) :: c1(:)  !! array of first  child  parameters.
-    real(dp),           intent(inout) :: c2(:)  !! array of second child  parameters.
-    real(dp),           intent(in)    :: p1(:)  !! array of first  parent parameters.
-    real(dp),           intent(in)    :: p2(:)  !! array of second parent parameters.
-    real(dp),           intent(in)    :: pcross !! probability of crossover
-    real(dp), optional, intent(in)    :: TEST   !! replace die roll with test value
-    !/ -----------------------------------------------------------------------------------
-    integer  :: i, n
-    real(dp) :: t, omt
-    !/ -----------------------------------------------------------------------------------
-
-    n = size(p1)
-
-    if ( dd%boolean(pcross) ) then
-       if ( present( TEST ) ) then
-          t = TEST
-       else
-          t = dd%uniform()
-       end if
-       omt = D_ONE - t
-       do concurrent (i=1:n)
-          c1(i) = omt*p1(i) + t*p2(i)
-          c2(i) = omt*p2(i) + t*p1(i)
-       end do
+       dts%A      = Vo
+       dts%B      = ( log(Vf) - log(Vo) ) / real((n-1)*(n-1), dp)
+       dts%d_type = DO_GAUSSIAN
+       
     else
-       do concurrent (i=1:n)
-          c1(i) = p1(i)
-          c2(i) = p2(i)
-       end do
+       
+       write( ERROR_UNIT, 100 )Vo, Vf, dt
+       
     end if
-    
-  end subroutine cross_real_params
+
+100 format( 'DropOff%build(',G0,',',G0,',',A,') - failed' )
+
+  end subroutine do_build
 
 
   !/ =====================================================================================
-  subroutine mutate_real_params( dd, dst, src, pmutate, sigma )
+  function do_next( dts ) result( rv )
     !/ -----------------------------------------------------------------------------------
-    !! Perform mutation. pMutate expresses the percentage of individual parameters that
-    !! under go mutation. Sigma expresses the degree to wich the mutated parameter is
-    !! changed. All changes are clipped to [-1,+1]
+    !! Get the current value and increment the index.
     !/ -----------------------------------------------------------------------------------
-    implicit none
-    type(Entropy),      intent(inout) :: dd     !! reference to an entropy source.
-    real(dp), intent(inout) :: dst(:)  !! array of mutated parameters.
-    real(dp), intent(in)    :: src(:)  !! array of source  parameters.
-    real(dp), intent(in)    :: pmutate !! probability that a single allele mutates.
-    real(dp), intent(in)    :: sigma   !! standard deviation of the noise.
-    !/ -----------------------------------------------------------------------------------
-    integer  :: i, n
-    real(dp) :: x
+    class(DropOff), intent(inout) :: dts !! reference to this DropOff object.
+    real(dp)                      :: rv  !! current value.
     !/ -----------------------------------------------------------------------------------
 
-    n = size(src)
+    rv = D_ZERO
+    
+    if ( DO_LINEAR.eq.dts%d_type ) then
+       
+       rv = dts%B + dts%A * real(dts%index, dp)
+       dts%index = dts%index + 1
+       
+    else if ( DO_EXPONENTIAL.eq.dts%d_type ) then
 
-    do i=1,n
-       if ( dd%boolean( pmutate ) ) then
-          x = src(i) + sigma * dd%normal()
-          if ( -D_ONE.gt.x ) then
-             x = -D_ZERO
-          else if ( D_ONE.lt.x ) then
-             x =  D_ZERO
-          end if
-       else
-          x = src(i)
-       end if
-       dst(i) = x
-    end do
+       rv =  dts%A * exp( dts%B * real(dts%index, dp)  )
+       dts%index = dts%index + 1
+       
+    else if ( DO_GAUSSIAN.eq.dts%d_type ) then
 
-  end subroutine mutate_real_params
-  
+       rv = dts%A * exp( real(dts%index*dts%index, dp) * dts%B )
+       dts%index = dts%index + 1
+       
+    else
+       
+       write( ERROR_UNIT, 100 ) dts%index, dts%d_type
+       
+    end if
 
-end module real_toolbox_mod
+100 format('DropOff(',I0,',',I0,') - failed')
+    
+  end function do_next
+
+
+  !/ =====================================================================================
+  function do_get( dts, n ) result( rv )
+    !/ -----------------------------------------------------------------------------------
+    !! Set the index, return that value and then increment.
+    !! Example:  get(5)  returns V(5) and then increments index to 6.
+    !/ -----------------------------------------------------------------------------------
+    class(DropOff), intent(inout) :: dts !! reference to this DropOff object.
+    integer,        intent(in)    :: n   !! new index.
+    real(dp)                      :: rv  !! current value.
+    !/ -----------------------------------------------------------------------------------
+
+    dts%index = n-1
+    rv = dts%next()
+
+  end function do_get
+
+
+  !/ =====================================================================================
+  subroutine do_reset( dts )
+    !/ -----------------------------------------------------------------------------------
+    !! Reset the DropOff to the initial value. Set the index to 1.
+    !/ -----------------------------------------------------------------------------------
+    class(DropOff), intent(inout) :: dts !! reference to this DropOff object.
+    !/ -----------------------------------------------------------------------------------
+
+    dts%index = 1
+
+  end subroutine do_reset
+
+
+end module dropoff_mod
 
 
 !/ =======================================================================================
-!/ **                          R E A L _ T O O L B O X _ M O D                          **
+!/ **                               D R O P O F F _ M O D                               **
 !/ ======================================================================== END FILE =====

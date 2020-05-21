@@ -1,5 +1,5 @@
 !/ =======================================================================================
-module testInterp
+module testInterp3
   !/ -------------------------------------------------------------------------------------
   use pfunit_mod
   use interpolate_mod
@@ -173,8 +173,8 @@ contains
     call bugY%build( DELTA=1.0d-1, COPYX=D, COPYY=Y, IERR=ie, POS=32 )
     @assertEqual(0,ie)
 
-    ! call bugX%show()
-    ! call bugY%show()
+    call bugX%show()
+    call bugY%show()
 
     @assertEqual( 2,     bugX%pos )
     @assertEqual( 0.5d0, bugX%x )
@@ -186,7 +186,7 @@ contains
 
     call bugX%build( DELTA=1.0d-1, REFX=D, REFY=X, IERR=ie, X1=7.9d0 )
     @assertEqual(0,ie)
-    !call bugX%show()
+    call bugX%show()
 
     @assertEqual( 9,     bugX%pos )
     @assertEqual( 7.9d0, bugX%x )
@@ -291,7 +291,7 @@ contains
   end subroutine test_recall
 
   
-end module testInterp
+end module testInterp3
 
 
 !/ =======================================================================================

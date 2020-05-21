@@ -1,0 +1,136 @@
+module test_evo_entropy
+  use pfunit_mod
+  use evo_entropy_mod
+  use statistics_mod
+  implicit none
+
+  integer, parameter :: TEST_SEED = 31415
+  integer, parameter :: NUM_SAMP  = 100000
+  
+contains
+
+  
+  @test
+  !/ =====================================================================================
+  subroutine test_ent_uniform
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+
+    type(Entropy)       :: ent
+    type(running_stats) :: RS
+    integer             :: i
+    real(dp)            :: x
+
+    call ent%seed( TEST_SEED )
+
+    call RS%reset
+
+    do i=1,NUM_SAMP
+       x = ent%uniform()
+       call RS%sample( x )
+    end do
+
+    call RS%report( UNIT=OUTPUT_UNIT )
+
+    @assertEqual( 0.0d0, RS%minv(), 1.0d-2 )
+    @assertEqual( 0.5d0, RS%mean(), 1.0d-2 )
+    @assertEqual( 1.0d0, RS%maxv(), 1.0d-2 )
+    
+  end subroutine test_ent_uniform
+
+  @test
+  !/ =====================================================================================
+  subroutine test_ent_normal
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+
+    type(Entropy)       :: ent
+    type(running_stats) :: RS
+    integer             :: i
+    real(dp)            :: x
+
+    call ent%seed( TEST_SEED )
+
+    call RS%reset
+
+    do i=1,NUM_SAMP
+       x = ent%normal()
+       call RS%sample( x )
+    end do
+
+    call RS%report( UNIT=OUTPUT_UNIT )
+
+    @assertEqual( -4.1d0, RS%minv(),  1.0d-2 )
+    @assertEqual(  0.0d0, RS%mean(),  1.0d-2 )
+    @assertEqual(  1.0d0, RS%stdev(), 1.0d-2 )
+    @assertEqual(  4.44d0, RS%maxv(),  1.0d-1 )
+    
+  end subroutine test_ent_normal
+
+  @test
+  !/ =====================================================================================
+  subroutine test_ent_index
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+
+    type(Entropy)       :: ent
+    type(running_stats) :: RS
+    integer             :: i, x
+
+    call ent%seed( TEST_SEED )
+
+    call RS%reset
+
+    do i=1,NUM_SAMP
+       x = ent%index(3772)
+       call RS%sample( x )
+    end do
+
+    call RS%report( UNIT=OUTPUT_UNIT )
+
+    @assertEqual( 1.0d0,     RS%minv() )
+    @assertEqual( 1.886663d3,   RS%mean(), 1.0d-2 )
+    @assertEqual( 3.772d3, RS%maxv() )
+    
+  end subroutine test_ent_index
+
+  @test
+  !/ =====================================================================================
+  subroutine test_ent_bool
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+
+    type(Entropy)       :: ent
+    type(running_stats) :: RS
+    integer             :: i, t_count, f_count
+
+    call ent%seed( TEST_SEED )
+
+    call RS%reset
+
+    t_count = 0
+    f_count = 0
+    
+    do i=1,NUM_SAMP
+       if ( ent%boolean(0.6d0) ) then
+          t_count = t_count + 1
+       else
+          f_count = f_count + 1
+       end if
+    end do
+
+    print *, 'T', t_count
+    print *, 'F', f_count
+
+    call RS%report( UNIT=OUTPUT_UNIT )
+
+    @assertTrue( 59000 .lt. t_count )
+    @assertTrue( 39000 .lt. f_count )
+    
+  end subroutine test_ent_bool
+
+end module test_evo_entropy

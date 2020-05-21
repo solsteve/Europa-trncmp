@@ -1,0 +1,97 @@
+module test_dropoff
+  use pfunit_mod
+  use dropoff_mod
+  implicit none
+
+contains
+
+  
+  @test
+  !/ =====================================================================================
+  subroutine test_drop_build
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+
+    type(DropOff) :: drop
+
+    call drop%build( 10.0d0, 2.0d0, 11, 'Linear' )
+
+    @assertEqual( -0.8D0,  drop%A )
+    @assertEqual( 10.00D0, drop%B )
+
+
+    call drop%build( 9.0d0, 2.0d0, 10, 'Exp' )
+
+    @assertEqual(9.0d0,                  drop%A )
+    @assertEqual( -1.67119710752919D-01, drop%B, 1.0D-14 )
+
+
+    call drop%build( 9.0d0, 2.0d0, 10, 'g' )
+
+    @assertEqual( 9.0d0,                 drop%A )
+    @assertEqual( -1.85688567503244D-02, drop%B, 1.0D-15 )
+
+  end subroutine test_drop_build
+
+  
+  @test
+  !/ =====================================================================================
+  subroutine test_drop_get
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+
+    type(DropOff) :: drop
+
+    call drop%build( 10.0d0, 2.0d0, 10, 'Linear' )
+
+    @assertEqual( 10.0D0, drop%get(  1 ), 1.0D-14 )
+    @assertEqual(  2.0D0, drop%get( 10 ), 1.0D-14 )
+
+    call drop%build( 15.0d0, 3.0d0, 20, 'Exp' )
+
+    @assertEqual( 15.0D0, drop%get(  1 ), 1.0D-14 )
+    @assertEqual(  3.0D0, drop%get( 20 ), 1.0D-14 )
+
+    call drop%build( 24.0d0, 13.0d0, 30, 'G' )
+
+    @assertEqual( 24.0D0, drop%get(  1 ), 1.0D-14 )
+    @assertEqual( 13.0D0, drop%get( 30 ), 1.0D-12 )
+
+  end subroutine test_drop_get
+  
+
+  @test
+  !/ =====================================================================================
+  subroutine test_drop_next
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    !/ -----------------------------------------------------------------------------------
+
+    type(DropOff) :: dL, dE, dG
+    real(dp)      :: xL, xE, xG
+    integer       :: i
+    
+    call dL%build( 10.0d0, 2.0d0, 100, 'Linear' )
+    call dE%build( 10.0d0, 3.0d0, 100, 'Exp' )
+    call dG%build( 10.0d0, 5.0d0, 100, 'Gauss' )
+
+    @assertEqual( 10.0d0, dL%next() )
+    @assertEqual( 10.0d0, dE%next() )
+    @assertEqual( 10.0d0, dG%next() )
+
+    do i=2,100
+       xL = dL%next()
+       xE = dE%next()
+       xG = dG%next()
+    end do
+
+    @assertEqual( 2.0d0, xL, 1.0D-14 )
+    @assertEqual( 3.0d0, xE, 1.0D-14 )
+    @assertEqual( 5.0d0, xG, 1.0D-14 )
+
+  end subroutine test_drop_next
+  
+
+end module test_dropoff

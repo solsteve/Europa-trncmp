@@ -1,5 +1,5 @@
 !/ ====================================================================== BEGIN FILE =====
-!/ **                                 F T E S T _ P S O                                 **
+!/ **                             F T E S T _ D R O P O F F                             **
 !/ =======================================================================================
 !/ **                                                                                   **
 !/ **  This file is part of the TRNCMP Research Library, `Europa' (Fortran 2018)        **
@@ -23,12 +23,11 @@
 !/ **  Europa. If not, see <http://www.gnu.org/licenses/>.                              **
 !/ **                                                                                   **
 !/ =======================================================================================
-module ftest_pso
-  use pso_mod
-  use test_models
+module ftest_dropoff
+  !/ -------------------------------------------------------------------------------------
+  use dropoff_mod
   use psgraph_mod
   implicit none
-
 
 
   !/ =====================================================================================
@@ -37,117 +36,70 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine plot( fspc, data )
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    character(*), intent(in) :: fspc
-    real(dp),     intent(in) :: data(:,:,:)
-    !/ -----------------------------------------------------------------------------------
-    class(PSGraph), pointer :: ps
-    class(PSDraw),  pointer :: pd
-    integer  :: i, j, n, m
-    real(dp) :: x, last_x, minv, maxv
-    !/ -----------------------------------------------------------------------------------
+  subroutine graph( pd, Vo, Vf, n, dt )
+    !/ -------------------------------------------------------------------------------------
+    type(PSDraw), intent(inout) :: pd
+    real(dp),     intent(in)    :: Vo  !! starting value.
+    real(dp),     intent(in)    :: Vf  !! final value.
+    integer,      intent(in)    :: n   !! number of samples.
+    character(1), intent(in)    :: dt  !! drop off type (default linear).
+    !/ -------------------------------------------------------------------------------------
+    type(DropOff) :: drop
+    integer       :: i
+    real(dp)      :: last_x, last_y, x, y
+    !/ -------------------------------------------------------------------------------------
 
-    minv = data(1,1,1)
-    maxv = data(1,1,1)
-    n = size(data,DIM=2)
-    m = size(data,DIM=3)
+    call drop%build( Vo, Vf, n, dt )
 
-    do j=1,m
-       do i=1,n
-          x = data(1,i,j)
-          if ( x.lt.minv ) minv = x
-          if ( x.gt.maxv ) maxv = x
-       end do
+    last_x = D_ONE
+    last_y = drop%next()
+
+    do i=2,n
+       x = last_x + D_ONE
+       y = drop%next()
+       call pd%drawLine( last_x, last_y, x, y )
+       last_x = x
+       last_y = y
     end do
-
-    pd => PSDraw( 7.5d0, 7.5d0, 0.0d0, minv, real(n,dp), maxv)
-
-    call pd%setRGB( color_blue )
-    call pd%drawBorder
-    call pd%setRGB( color_black )
-
-    do j=1,m
-       last_x = data(1,1,j)
-
-       do i=2,n
-          x = data(1,i,j)
-          call pd%drawLine( real(i-1,dp), last_x, real(i,dp), x )
-          last_x = x
-       end do
-    end do
-
-    ps => PSGraph( 1 )
-    call ps%add( pd, 1, 1.0d0, 1.0d0 )
-
-    call ps%pswrite( fspc )
-
-  end subroutine plot
+  end subroutine graph
 
 
-end module ftest_pso
+end module ftest_dropoff
 
 !/ =======================================================================================
 program main
   !/ -------------------------------------------------------------------------------------
-  use ftest_pso
+  use ftest_dropoff
   implicit none
-  !/ -------------------------------------------------------------------------------------
 
-  integer, parameter :: MAXIT = 10000
-  integer, parameter :: NTEST = 5
-  integer, parameter :: NPOP  = 500
-  integer, parameter :: NPAR  = 40
+  real(dp), parameter :: first = 100.0d0
+  real(dp), parameter :: last  =  10.0d0
+  integer,  parameter :: count = 100
 
-  integer :: i,j,k,m,n
+  type(PSGraph), pointer :: ps
+  type(PSDraw),  pointer :: pd
 
+  pd => PSDraw( 10d0, 7.5d0, D_ZERO, D_ZERO, real(count,dp), max( first, last ) )
 
-  type(SPHERE) :: test_mod
-  type(PSO) :: optimizer
-  real(dp), allocatable :: hist(:,:)
-  real(dp), allocatable :: master_hist(:,:,:)
-  real(dp) :: elp, time
-  !/ -------------------------------------------------------------------------------------
+  ps => PSGraph(1)
 
-  call test_mod%build( NPAR )
+  call pd%drawBorder
 
-  n = test_mod%nMet()
+  call pd%setRGB( color_red )
+  call graph( pd, first, last, count, 'Linear' )
 
-  allocate( master_hist(n,MAXIT,NTEST) )
+  call pd%setRGB( color_green )
+  call graph( pd, first, last, count, 'Exp' )
 
-  call optimizer%build( NPOP, MODEL=test_mod )
+  call pd%setRGB( color_blue )
+  call graph( pd, first, last, count, 'Gaussian' )
 
-  time = D_ZERO
-  
-  do k = 1,NTEST
-     call optimizer%fit( MAXIT, HISTORY=hist, PFMT='ES11.4', MFMT='ES10.4', &
-          & W=0.9d0, W_FINAL=0.4d0, TIME=elp )
+  call ps%add( pd, 1, 0.5d0, 0.5d0 )
 
-     time = time + elp
-     
-     do j=1,MAXIT
-        do i=1,n
-           master_hist(i,j,k) = hist(i,j)
-        end do
-     end do
-     
-     print *, elp, hist(1,MAXIT)
-     deallocate( hist )
-  end do
-
-  call plot( 'test.ps', master_hist )
-
-  time = time / real(NTEST,dp)
-
-  print *, ''
-  print *, time, 'seconds (mean)'
-
-  deallocate( master_hist )
+  call ps%pswrite( 'dropoff.ps' )
 
 end program main
 
-
 !/ =======================================================================================
-!/ **                                 F T E S T _ P S O                                 **
-!/ ======================================================================== END FILE =====
+!/ **                             F T E S T _ D R O P O F F                             **
+!/ =========================================================================== END FILE ==

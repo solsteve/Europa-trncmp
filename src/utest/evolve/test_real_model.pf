@@ -1,6 +1,7 @@
 module test_real_model
   use pfunit_mod
   use real_model_mod
+  use test_models
   implicit none
 
   
@@ -14,9 +15,9 @@ contains
     implicit none
     !/ -----------------------------------------------------------------------------------
 
-    type(RealModel) :: model
+    type(Sphere) :: model
 
-    call model%build( 3, 1 )
+    call model%build( 3 )
     
     @assertEqual( 3, model%nPar() )
     @assertEqual( 1, model%nMet() )
@@ -32,22 +33,20 @@ contains
     real(dp), parameter :: p(3) = [ 1.1d0, 3.4d0, 2.3d0 ]
     real(dp) :: s(1)
 
-    type(RealModel) :: model
+    type(Sphere) :: model
     
-    call model%build( 3, 1 )
+    call model%build( 3 )
     
     @assertEqual( 3, model%nPar() )
     @assertEqual( 1, model%nMet() )
 
-    model%coef = [ 1.2d0, 3.5d0, 2.2d0 ]
+    call model%evaluate( s, p )
 
-    call model%execute( s, p )
+    @assertEqual( 18.06d4, s(1) )
 
-    @assertEqual( 0.01d0, s(1), 1.0d-15 )
-
-    call model%display( UNIT=OUTPUT_UNIT )
-    call model%display( FMT='F5.2', PARAM=p )
-    call model%display( FMT='F5.2', PARAM=p, MFMT='ES11.4' )
+    !call model%display( UNIT=OUTPUT_UNIT )
+    !call model%display( FMT='F5.2', PARAM=p )
+    !call model%display( FMT='F5.2', PARAM=p, MFMT='ES11.4' )
    
   end subroutine test_exec
 
@@ -58,19 +57,14 @@ contains
     !/ -----------------------------------------------------------------------------------
     implicit none
     !/ -----------------------------------------------------------------------------------
-    real(dp) :: a0, b0, a1(2), b1(2)
+    real(dp) :: a1(2), b1(2)
+    type(Sphere) :: model
 
-    a0 = 3.0d0
-    b0 = 4.0d0
+    a1(1) = 3.5d0
+    b1(1) = 4.7d0
 
-    a1(1) = a0
-    b1(1) = b0
-
-    @assertTrue( isLeftBetter( a0, b0 ) )
-    @assertTrue( isLeftBetter( a1, b1 ) )
-
-    @assertTrue( .not. isLeftBetter( b0, a0 ) )
-    @assertTrue( .not. isLeftBetter( b1, a1 ) )
+    @assertTrue( model%isLeftBetter( a1, b1 ) )
+    @assertTrue( .not. model%isLeftBetter( b1, a1 ) )
 
   end subroutine test_eval
 

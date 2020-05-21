@@ -1,12 +1,12 @@
 !/ ====================================================================== BEGIN FILE =====
-!/ **                             P S O _ M O D E L _ M O D                             **
+!/ **                            R E A L _ M O D E L _ M O D                            **
 !/ =======================================================================================
 !/ **                                                                                   **
 !/ **  This file is part of the TRNCMP Research Library, `Europa' (Fortran 2018)        **
 !/ **                                                                                   **
-!/ **  Copyright (c) 2020, Stephen W. Soliday                                           **
-!/ **                      stephen.soliday@trncmp.org                                   **
-!/ **                      http://research.trncmp.org                                   **
+!/ **  Copyright (c) 1994-2020, Stephen W. Soliday                                      **
+!/ **                           stephen.soliday@trncmp.org                              **
+!/ **                           http://research.trncmp.org                              **
 !/ **                                                                                   **
 !/ **  -------------------------------------------------------------------------------  **
 !/ **                                                                                   **
@@ -26,61 +26,28 @@
 module real_model_mod
   !/ -------------------------------------------------------------------------------------
   use trncmp_env
-  use tlogger
   implicit none
 
 
   !/ =====================================================================================
-  type, abstract :: RealModel
+  type :: RealModel
      !/ ----------------------------------------------------------------------------------
-
-     integer  :: num_metric   =  0      !! number of metrics
-     integer  :: num_variable =  0      !! number of optimizable variables
-     real(dp) :: min_var      = -D_ONE  !! lower bound of variables
-     real(dp) :: max_var      =  D_ONE  !! upper bound of variables
-
-     real(dp) :: S1 = D_ONE
-     real(dp) :: S2 = D_ZERO
+     integer               :: n_par = 0 !! number of model coefficients.
+     integer               :: n_met = 0 !! number of model metrics.
+     real(dp), allocatable :: met(:)    !! model metrics.
 
    contains
 
-     procedure(rm_abstract_eval),   pass(dts), deferred :: evaluate
-     procedure(rm_abstract_better), nopass,    deferred :: isLeftBetter
+     procedure :: nPar     => tm_get_num_parameters
+     procedure :: nMet     => tm_get_num_metrics
+     procedure :: build    => tm_build_model
+     procedure :: execute  => tm_execute_model
+     procedure :: toString => tm_to_string
+     procedure, nopass :: isLeftBetter => is_left_better
 
-     procedure :: super    => rm_super_init
-     procedure :: nMet     => rm_metric_size
-     procedure :: nPar     => rm_parameter_size
-     procedure :: scale    => rm_scale_parameter
-     procedure :: toString => rm_to_string
+     final :: tm_destroy
 
   end type RealModel
-
-
-  !/ =====================================================================================
-  abstract interface
-     !/ ----------------------------------------------------------------------------------
-     subroutine rm_abstract_eval( dts, metric, param )
-       use trncmp_env, only : dp
-       import :: RealModel
-       class(RealModel), intent(inout) :: dts       !! reference to this RealModel.
-       real(dp),         intent(inout) :: metric(:) !! return metric.
-       real(dp),         intent(in)    :: param(:)  !! input parameters.
-     end subroutine rm_abstract_eval
-  end interface
-
-
-  !/ =====================================================================================
-  abstract interface
-     !/ ----------------------------------------------------------------------------------
-     function rm_abstract_better( lhs, rhs ) result ( truth )
-       use trncmp_env, only : dp
-       real(dp), intent(in) :: lhs(:) !! left  hand side metric.
-       real(dp), intent(in) :: rhs(:) !! right hand side metric.
-       logical              :: truth  !! true if lhs is better than rhs.
-     end function rm_abstract_better
-  end interface
-
-
 
 
   !/ =====================================================================================
@@ -91,90 +58,119 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
   !/ =====================================================================================
-  subroutine rm_super_init( dts, MET, VAR, MINV, MAXV )
+  pure function is_left_better( lhs, rhs ) result( truth )
     !/ -----------------------------------------------------------------------------------
-    !! Init the super instance.
+    !! return a determination that the left metric is better than the right metric.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(RealModel),   intent(inout) :: dts  !! reference to this RealModel.
-    integer,  optional, intent(in)    :: MET  !! number of metrics.
-    integer,  optional, intent(in)    :: VAR  !! number of optimizable variables.
-    real(dp), optional, intent(in)    :: MINV !! lower bound of variables.
-    real(dp), optional, intent(in)    :: MAXV !! upper bound of variables.
-    !/ -----------------------------------------------------------------------------------
-    integer :: count
+    real(dp), intent(in) :: lhs(:)
+    real(dp), intent(in) :: rhs(:)
+    logical              :: truth
     !/ -----------------------------------------------------------------------------------
 
-    count = 0
+    truth = .not.( lhs(1).gt.rhs(1) )  ! never use .le. or .ge. with floating-point
 
-    if ( present( MET ) ) then
-       count = count + 1
-       dts%num_metric = MET
+  end function is_left_better
+
+
+
+
+
+  !/ =====================================================================================
+  subroutine tm_destroy( dts )
+    !/ -----------------------------------------------------------------------------------
+    !! Free model allocations.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    type(RealModel), intent(inout) :: dts !! reference to this RealModel.
+    !/ -----------------------------------------------------------------------------------
+
+    if ( 0.lt.dts%n_par ) then
+       deallocate( dts%met )
     end if
 
-    if ( present( VAR ) ) then
-       count = count + 1
-       dts%num_variable = VAR
+  end subroutine tm_destroy
+
+
+  !/ =====================================================================================
+  function tm_get_num_parameters( dts ) result( n )
+    !/ -----------------------------------------------------------------------------------
+    !! Get the number of evolvable parameters.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(RealModel), intent(inout) :: dts !! reference to this RealModel.
+    integer                         :: n
+    !/ -----------------------------------------------------------------------------------
+
+    n = dts%n_par
+
+  end function tm_get_num_parameters
+
+
+  !/ =====================================================================================
+  function tm_get_num_metrics( dts ) result( n )
+    !/ -----------------------------------------------------------------------------------
+    !! Get the number of model metrics.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(RealModel), intent(inout) :: dts !! reference to this RealModel.
+    integer                         :: n
+    !/ -----------------------------------------------------------------------------------
+
+    n = dts%n_met
+
+  end function tm_get_num_metrics
+
+
+  !/ =====================================================================================
+  subroutine tm_build_model( dts, np, nm )
+    !/ -----------------------------------------------------------------------------------
+    !! Allocate and initialize the model coefficients.
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    class(RealModel), intent(inout) :: dts !! reference to this RealModel.
+    integer,          intent(in)    :: np  !! number of model coefficients.
+    integer,          intent(in)    :: nm  !! number of model metrics.
+    !/ -----------------------------------------------------------------------------------
+
+    if ( np.ne.dts%n_par ) then
+       call tm_destroy( dts )
+       allocate( dts%met( nm ) )
+       dts%n_par = np
+       dts%n_met  = nm
     end if
 
-    if ( 2.ne.count ) then
-       call log_error( 'Both MET= and VAR= are required by RealModel%super' )
-    end if
-
-    if ( present( MINV ) ) dts%min_var = MINV
-    if ( present( MAXV ) ) dts%max_var = MAXV
-
-    dts%S1 = D_HALF*(dts%max_var - dts%min_var)
-    dts%S2 = D_HALF*(dts%max_var + dts%min_var)
-
-  end subroutine rm_super_init
+  end subroutine tm_build_model
 
 
   !/ =====================================================================================
-  function rm_metric_size( dts ) result( n )
+  subroutine tm_execute_model( dts, score, param )
     !/ -----------------------------------------------------------------------------------
-    !! Return the dimension of the fitness metric.
+    !! Calculate the sum square error between model coefficients and the supplied parameter.
     !/ -----------------------------------------------------------------------------------
     implicit none
-    class(RealModel), intent(in) :: dts
-    integer                      :: n
+    class(RealModel), intent(inout) :: dts      !! reference to this RealModel.
+    real(dp),         intent(in)    :: param(:) !! input parameters.
+    real(dp),         intent(out)   :: score(:) !! return score.
+    !/ -----------------------------------------------------------------------------------
+    integer  :: i, n
+    real(dp) :: mse, d
     !/ -----------------------------------------------------------------------------------
 
-    n = dts%num_metric
+    n   = dts%n_par
+    mse = D_ZERO
+    do i=1,n
+       d = param(i)
+       mse = mse + (d*d)
+    end do
 
-  end function rm_metric_size
+    score(1) = mse
+
+  end subroutine tm_execute_model
 
 
   !/ =====================================================================================
-  function rm_parameter_size( dts ) result( n )
-    !/ -----------------------------------------------------------------------------------
-    !! Return the number of parameters to be optimized.
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(RealModel), intent(in) :: dts
-    integer                      :: n
-    !/ -----------------------------------------------------------------------------------
-
-    n = dts%num_variable
-
-  end function rm_parameter_size
-
-
-  !/ =====================================================================================
-  pure function rm_scale_parameter( dts, x ) result( y )
-    !/ -----------------------------------------------------------------------------------
-    !/ -----------------------------------------------------------------------------------
-    implicit none
-    class(RealModel), intent(in) :: dts
-    real(dp), intent(in)         :: x !! unscaled input (-1,1)
-    real(dp)                     :: y !! scaled output
-    !/ -----------------------------------------------------------------------------------
-    y = dts%S1*x + dts%S2
-  end function rm_scale_parameter
-
-
-  !/ =====================================================================================
-  function rm_to_string( dts, metric, param, FMT, MFMT, LONG ) result ( str )
+  function tm_to_string( dts, metric, param, FMT, MFMT, LONG ) result ( str )
     !/ -----------------------------------------------------------------------------------
     !/ -----------------------------------------------------------------------------------
     implicit none
@@ -205,8 +201,10 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
     m_fmt = trim(adjustl(work))
 
-    n = dts%num_variable
-    m = dts%num_metric
+    !/ -----------------------------------------------------------------------------------
+
+    n = dts%n_par
+    m = dts%n_met
 
     write(work,m_fmt) metric(1)
     str = '(' // trim(work)
@@ -221,12 +219,12 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     if ( present( LONG ) ) then
        if ( LONG ) then
 
-          write(work,p_fmt) dts%scale(param(1))
+          write(work,p_fmt) param(1)
           str = str // ' = [' // trim(work)
 
           if ( 1.lt.n ) then
              do i=2,n
-                write(work,p_fmt) dts%scale(param(i))
+                write(work,p_fmt) param(i)
                 str = str // ' ' // trim(work)
              end do
           end if
@@ -236,12 +234,12 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     end if
 
 
-  end function rm_to_string
+  end function tm_to_string
 
 
 end module real_model_mod
 
 
 !/ =======================================================================================
-!/ **                             P S O _ M O D E L _ M O D                             **
+!/ **                            R E A L _ M O D E L _ M O D                            **
 !/ ======================================================================== END FILE =====

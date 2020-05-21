@@ -1,12 +1,14 @@
 module test_real_tools
   use pfunit_mod
   use trncmp_ENV
-  use dice_mod
   use real_toolbox_mod
+  use evo_entropy_mod
   implicit none
 
-  integer, parameter :: DEF_SEED(3) = [ 31415, 27828, 154317 ]
+  integer, parameter :: DEF_SEED = 31415
 
+  type(Entropy) :: dd
+  
 contains
 
   @test
@@ -22,9 +24,9 @@ contains
 
     allocate( test(N_SAMP) )
 
-    call dd%seed_set( DEF_SEED )
+    call dd%seed( DEF_SEED )
 
-    call initialize_parameters( test )
+    call initialize_parameters( dd, test )
 
     minv = test(1)
     maxv = test(1)
@@ -69,29 +71,29 @@ contains
     p1 = C00
     p2 = C100
 
-    call cross_real_params( c1, c2, p1, p2, 0.0d0 )
+    call cross_real_params( dd, c1, c2, p1, p2, 0.0d0 )
 
     @assertEqual( c1, p1 )
     @assertEqual( c2, p2 )
 
     !/ -----------------------------------------------------------------------------------
 
-    call cross_real_params( c1, c2, p1, p2, 1.0d0, TEST=T00 )
+    call cross_real_params( dd, c1, c2, p1, p2, 1.0d0, TEST=T00 )
 
     @assertEqual( C00,  c1 )
     @assertEqual( C100, c2 )
 
-    call cross_real_params( c1, c2, p1, p2, 1.0d0, TEST=T25 )
+    call cross_real_params( dd, c1, c2, p1, p2, 1.0d0, TEST=T25 )
 
     @assertEqual( C25, c1 )
     @assertEqual( C75, c2 )
 
-    call cross_real_params( c1, c2, p1, p2, 1.0d0, TEST=T50 )
+    call cross_real_params( dd, c1, c2, p1, p2, 1.0d0, TEST=T50 )
 
     @assertEqual( C50, c1 )
     @assertEqual( C50, c2 )
 
-    call cross_real_params( c1, c2, p1, p2, 1.0d0, TEST=T100 )
+    call cross_real_params( dd, c1, c2, p1, p2, 1.0d0, TEST=T100 )
 
     @assertEqual( C100, c1 )
     @assertEqual( C00,  c2 )
@@ -118,15 +120,15 @@ contains
     allocate( X(NUM) )
     allocate( Y(NUM) )
 
-    call dd%seed_set( DEF_SEED )
+    call dd%seed( DEF_SEED )
 
-    call initialize_parameters( X )
+    call initialize_parameters( dd, X )
 
-    call mutate( Y, X, D_ZERO, D_HALF )
+    call mutate( dd, Y, X, D_ZERO, D_HALF )
 
     @assertEqual( X, Y )
 
-    call mutate( Y, X, 0.25d0, D_HALF )
+    call mutate( dd, Y, X, 0.25d0, D_HALF )
 
     count_low     = 0
     count_high    = 0

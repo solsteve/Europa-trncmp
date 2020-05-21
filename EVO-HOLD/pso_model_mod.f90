@@ -216,12 +216,12 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        end do
     end if
 
-    write(work,p_fmt) param(1)
+    write(work,p_fmt) dts%scale(param(1))
     str = str // ') = [' // trim(work)
 
     if ( 1.lt.n ) then
        do i=2,n
-          write(work,p_fmt) param(i)
+          write(work,p_fmt) dts%scale(param(i))
           str = str // ' ' // trim(work)
        end do
     end if
