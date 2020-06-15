@@ -142,7 +142,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     !/ -----------------------------------------------------------------------------------
     implicit none
     class(PCA),        intent(inout) :: dts           !! reference to this PCA object.
-    real(dp),          intent(in)    :: table(:,:)    !! input data
+    real(dp),          intent(in)    :: table(:,:)    !! input data  (n_samp,n_var)
     logical, optional, intent(in)    :: MEAN_CENTERED !! table is mean centered (default: FALSE)
     !/ -----------------------------------------------------------------------------------
     integer :: ierr, i, j
@@ -169,6 +169,9 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        !print *, 'Data has already been mean shifted'
        do concurrent( j=1:dts%max_var, i=1:dts%n_sample )
           dts%U(i,j) = table(i,j)
+       end do
+       do concurrent( j=1:dts%max_var )
+          dts%mu(j) = D_ZERO
        end do
     end if
 
@@ -212,7 +215,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     do j=1,m
        x = D_ZERO
        do i=1,n
-          x = x + vecin(i) * dts%V(i,j)
+          x = x + ( vecin(i) - dts%mu(i) ) * dts%V(i,j)
        end do
        vecout(j) = x
     end do
@@ -250,7 +253,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        do j=1,m
           x = D_ZERO
           do k=1,n
-             x = x + matin(i,k) * dts%V(k,j)
+             x = x + ( matin(i,k) - dts%mu(k) ) * dts%V(k,j)
           end do
           matout(i,j) = x
        end do
@@ -289,7 +292,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        do i=1,n
           x = x + vecin(i) * dts%VT(i,j)
        end do
-       vecout(j) = x
+       vecout(j) = x + dts%mu(j)
     end do
 
   end subroutine pca_vector_recover
@@ -327,7 +330,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
           do k=1,n
              x = x + matin(i,k) * dts%VT(k,j)
           end do
-          matout(i,j) = x
+          matout(i,j) = x + dts%mu(j)
        end do
     end do
 

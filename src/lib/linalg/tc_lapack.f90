@@ -80,11 +80,13 @@ module tc_lapack
   END INTERFACE tc_dgetrf
 
 
+  !/ =====================================================================================
   INTERFACE erinfo
      MODULE PROCEDURE :: erinfo_borrowed
   END INTERFACE erinfo
 
 
+  !/ =====================================================================================
   INTERFACE lsame
      MODULE PROCEDURE :: lsame_borrowed
   END INTERFACE lsame

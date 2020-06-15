@@ -36,6 +36,7 @@ module matrix_mod
   !/ -------------------------------------------------------------------------------------
   use vector_mod
   use tlogger
+  use tc_lapack
   implicit none
 
   integer, parameter :: MIN_M_PAR = 64 !! minimum matrix dimension for parallization with openmp
@@ -142,7 +143,7 @@ module matrix_mod
      module procedure :: inverse_n_R8
   end interface inverse
 
-  
+
   !/ -------------------------------------------------------------------------------------
   interface MeanShift
      !/ ----------------------------------------------------------------------------------
@@ -158,6 +159,12 @@ module matrix_mod
      !/ ----------------------------------------------------------------------------------
      module procedure :: dot_AT_A_R8
   end interface ATA
+
+  !/ -------------------------------------------------------------------------------------
+  interface ATB
+     !/ ----------------------------------------------------------------------------------
+     module procedure :: dot_AT_B_R8
+  end interface ATB
 
   !/ -------------------------------------------------------------------------------------
   interface AAT
@@ -747,7 +754,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
        end do
        !$omp end parallel do
     end if
-    
+
   end subroutine mul_dm_R8
 
   !/ =====================================================================================
@@ -1123,7 +1130,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
   !/ =====================================================================================
   function det_n_R8( mat ) result( d )
     !/ -----------------------------------------------------------------------------------
-    !! Calculate the determinant of a 4x4 Matrix directly.
+    !! Calculate the determinant of a NxN Matrix directly.
     !/ -----------------------------------------------------------------------------------
     implicit none
     real(dp), intent(in) :: mat(:,:)    
@@ -1335,7 +1342,8 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     real(dp),           intent(in)    :: mat(:,:)  !! matrix.
     real(dp), optional, intent(out)   :: D         !! determinant of mat.
     !/ -----------------------------------------------------------------------------------
-    integer :: n
+    integer               :: r, c, n, ier
+    integer,  allocatable :: ip(:)
     !/ -----------------------------------------------------------------------------------
     n = size(mat,DIM=1)
     if ( 1.eq.n ) then
@@ -1347,9 +1355,53 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     elseif ( 4.eq.n ) then
        call inverse_4_R8( inv, mat, D )
     else
-       write( ERROR_UNIT, * ) 'Inverse: rank > 4 not yet implemented'
-       stop
+       !/ --------------------------------------------------------------------------------
+       allocate( ip(n) )
+
+       if ( present( D ) ) D = D_ONE
+
+       
+       if ( n.lt.MIN_M_PAR ) then
+          do concurrent( c=1:n, r=1:n )
+             inv(r,c) = mat(r,c)
+          end do
+       else
+          !$omp parallel shared ( inv, mat, n ) private ( r, c )
+          !$omp do
+          do c=1,n
+             do r=1,n
+                inv(r,c) = mat(r,c)
+             end do
+          end do
+          !$omp end do
+          !$omp end parallel
+       end if
+
+       
+       call TC_DGETRF( inv, IPIV=ip, INFO=ier )
+       if ( 0.ne.ier ) then
+          if ( 0.lt.ier ) then
+             call log_warn( 'Matrix is singular' )
+             if ( present( D ) ) D = D_ZERO
+             goto 999
+          end if
+       end if
+
+       call tc_dgetri( inv, ip, INFO=ier )
+       if ( 0.ne.ier ) then
+          if ( 0.lt.ier ) then
+             call log_warn( 'Matrix is singular' )
+             if ( present( D ) ) D = D_ZERO
+             goto 999
+          end if
+       end if
+
+       deallocate( ip )
+
+       !/ --------------------------------------------------------------------------------
     end if
+
+999 continue
 
   end subroutine inverse_n_R8
 
@@ -1500,6 +1552,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 999 continue
 
     if ( present( MEAN ) ) then
+       !print *,'returning col mean'
        do i=1,nc
           MEAN(i) = mu(i)
        end do
@@ -1731,7 +1784,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
 
-  
+
   !/ =======================================================================================
   subroutine dot_AT_A_R8( B, A )
     !/ -------------------------------------------------------------------------------------
@@ -1756,8 +1809,36 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     end do
 
   end subroutine dot_AT_A_R8
-  
-  
+
+
+  !/ =======================================================================================
+  subroutine dot_AT_B_R8( D, A, B )
+    !/ -------------------------------------------------------------------------------------
+    !! Inner product of a Transpose of a Matrix with itself.  $$D = A^T \cdot B$$
+    !/ -------------------------------------------------------------------------------------
+    implicit none
+    real(dp), intent(inout) :: D(:,:)  !! Resulting Matrix.
+    real(dp), intent(in)    :: A(:,:)  !! source Matrix to transpose.
+    real(dp), intent(in)    :: B(:,:)  !! source Matrix.
+    !/ -------------------------------------------------------------------------------------
+    integer :: r,c,k,ar,ac,bc
+    !/ -------------------------------------------------------------------------------------
+    ar = size( A, DIM=1 )
+    ac = size( A, DIM=2 )
+    bc = size( B, DIM=2 )
+
+    do r=1,ac
+       do c=1,bc
+          D(r,c) = D_ZERO
+          do k=1,ar
+             D(r,c) = D(r,c) + ( A(k,r) * B(k,c) )
+          end do
+       end do
+    end do
+
+  end subroutine dot_AT_B_R8
+
+
   !/ =======================================================================================
   subroutine dot_A_AT_R8( B, A )
     !/ -------------------------------------------------------------------------------------
@@ -1785,7 +1866,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
 
-     
+
 end module matrix_mod
 
 

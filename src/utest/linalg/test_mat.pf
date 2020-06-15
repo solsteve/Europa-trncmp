@@ -627,6 +627,52 @@ contains
   end subroutine test_matrix_inv4
 
 
+  @test
+  !/ =====================================================================================
+  subroutine test_matrix_invN
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+
+    integer, parameter :: NN = 6
+
+    real(dp), parameter :: A(6,6) = reshape([     &
+         &   1.22d+00,  1.68d+00,  4.80d-01, -3.40d+00, -4.31d+00, -5.00d-02,  &
+         &  -3.31d+00, -8.80d-01,  3.00d-02, -3.44d+00,  7.70d-01,  2.99d+00,  &
+         &   4.40d-01,  5.00d-02, -8.90d-01,  1.63d+00, -2.28d+00,  1.56d+00,  &
+         &  -1.00d-01,  4.60d-01,  2.22d+00, -5.64d+00, -5.10d-01,  5.27d+00,  &
+         &  -2.26d+00,  4.40d-01, -3.30d-01, -4.00d-01, -1.98d+00,  1.76d+00,  &
+         &   1.29d+00, -1.80d-01,  9.70d-01, -1.45d+00,  3.66d+00,  2.74d+00  &
+         &  ],[6,6])
+
+    real(dp), parameter :: TEST_DT = -513.533820663072d0
+
+    real(dp) :: B(NN,NN), C1(NN,NN), C2(NN,NN)
+    real(dp) :: dt
+
+    integer :: i, j
+
+    call inverse( B, A, D=dt )
+
+    !@assertEqual( TEST_DT, dt )
+
+    call dot( C1, A, B )
+    call dot( C2, B, A )
+
+    do i=1,NN
+       do j=1,NN
+          if ( i.eq.j ) then
+             @assertEqual( 1.0d0, C1(i,j), 1.0d-12 )
+             @assertEqual( 1.0d0, C2(i,j), 1.0d-12 )
+          else
+             @assertEqual( 0.0d0, C1(i,j), 1.0d-12 )
+             @assertEqual( 0.0d0, C2(i,j), 1.0d-12 )
+          end if
+       end do
+    end do
+
+  end subroutine test_matrix_invN
+
+
   !/ =====================================================================================
   function dfunc( i ) result( x )
     !/ -----------------------------------------------------------------------------------

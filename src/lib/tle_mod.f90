@@ -58,7 +58,7 @@ module tle_mod
      !/ 12345678901234567890123456789012345678901234567890123456789012345678901234567890
      !/ AAAAAAAAAA
 
-     character(69) :: name      !< 01-10  A10    Satellite Name
+     character(69) :: name      !! 01-10  A10    Satellite Name
 
 
      !/ ----- card 1 ---------------------------------------------------------------------
@@ -68,39 +68,39 @@ module tle_mod
      !/ 1 NNNNNU NNNNNAAA NNNNN.NNNNNNNN +.NNNNNNNN +NNNNN-N +NNNNN-N N NNNNN
      !/ 1 AAAAAU 00  0  0 BBBBB.BBBBBBBB +.CCCCCCCC +00000-0 +00000-0 0  DDDZ
 
-     integer      :: lineno1    !< 01-01  I1     Card Number of Element Data
+     integer      :: lineno1    !! 01-01  I1     Card Number of Element Data
      !/ ------------ SPACE ------- 02-02  ------------------------------------------------
-     integer      :: satNumber  !< 03-07  I5     Satellite Number
-     character(1) :: security   !< 08-08  A1     Security Classification (U,C,S,T,B)
+     integer      :: satNumber  !! 03-07  I5     Satellite Number
+     character(1) :: security   !! 08-08  A1     Security Classification (U,C,S,T,B)
      !/ ------------ SPACE  ------ 09-09  ------------------------------------------------
-     integer      :: idYear     !< 10-11  I2     International Designator
+     integer      :: idYear     !! 10-11  I2     International Designator
      !!                                          (Last two digits of launch year)
-     integer      :: idLaunch   !< 12-14  I3     International Designator
+     integer      :: idLaunch   !! 12-14  I3     International Designator
      !!                                          (Launch number of the year)
-     character(3) :: idPiece    !< 15-17  A3     International Designator (Piece of launch)
+     character(3) :: idPiece    !! 15-17  A3     International Designator (Piece of launch)
      !/ ------------ SPACE ------- 18-18  ------------------------------------------------
-     integer      :: epochYear  !< 19-20  I2     Epoch Year (Last two digits of year)
-     real(dp)     :: epochDay   !< 21-32  F12.8  Epoch (Day number and fractional portion
+     integer      :: epochYear  !! 19-20  I2     Epoch Year (Last two digits of year)
+     real(dp)     :: epochDay   !! 21-32  F12.8  Epoch (Day number and fractional portion
      !!                                          of the day) 000Z Jan 1 == 1.0  (not 0.0)
      !/ ------------ SPACE ------- 33-33  ------------------------------------------------
-     real(dp)     :: N1         !< 34-43  F10.8  First Time Derivative of the Mean Motion
+     real(dp)     :: N1         !! 34-43  F10.8  First Time Derivative of the Mean Motion
      !!                                          divided by 2. or Ballistic Coefficient
      !!                                          (Depending on ephemeris type)
      !!                                          TLE:[rev/day^2] Internal:{rad/min^2}
      !/ ------------ SPACE ------- 44-44 -------------------------------------------------
-     real(dp)     :: dN1        !< 45-52  E8.5   Second Time Derivative of Mean Motion
+     real(dp)     :: dN1        !! 45-52  E8.5   Second Time Derivative of Mean Motion
      !!                                          divided by 6. (Blank if N/A)
      !!                                          TLE:[rev/day^3] Internal:{rad/min^3}
      !/ ------------ SPACE ------- 53-53 -------------------------------------------------
-     real(dp)     :: bstar      !< 54-61  E8.5   BSTAR drag term if SGP4 general
+     real(dp)     :: bstar      !! 54-61  E8.5   BSTAR drag term if SGP4 general
      !!                                          perturbation theory was used. Otherwise,
      !!                                          radiation pressure coefficient.
      !!                                          [Rearth^-1]
      !/ ------------ SPACE ------- 62-62 -------------------------------------------------
-     integer      :: eType      !< 63-63  I1     Ephemeris type
+     integer      :: eType      !! 63-63  I1     Ephemeris type
      !/ ------------ SPACE ------- 64-64 -------------------------------------------------
-     integer      :: eNum       !< 65-68  I4     Element number
-     integer      :: cksum1     !< 69-69  I1     Check Sum (Modulo 10)
+     integer      :: eNum       !! 65-68  I4     Element number
+     integer      :: cksum1     !! 69-69  I1     Check Sum (Modulo 10)
 
 
 
@@ -112,28 +112,28 @@ module tle_mod
      !/ 2 AAAAA EEE.EEEE FFF.FFFF GGGGGGG HHH.HHHH III.IIII JJ.JJJJJJJJKKKKKZ
 
      !
-     integer      :: lineno2    !< 01-01  I1     Line Number of Element Data
+     integer      :: lineno2    !! 01-01  I1     Line Number of Element Data
      !/ ------------ SPACE ------- 02-02 -------------------------------------------------
-     integer      :: satNumber2 !< 03-07  I5     Satellite Number
+     integer      :: satNumber2 !! 03-07  I5     Satellite Number
      !/ ------------ SPACE ------- 08-08 -------------------------------------------------
-     real(dp)     :: I0         !< 09-16  F8.4   Orbital Inclination
+     real(dp)     :: I0         !! 09-16  F8.4   Orbital Inclination
      !                                           TLE:[Degrees] Internal:{radian}
      !/ ------------ SPACE ------- 17-17 -------------------------------------------------
-     real(dp)     :: O0         !< 18-25  F8.4   Rt. Asc. of the Ascending Node
+     real(dp)     :: O0         !! 18-25  F8.4   Rt. Asc. of the Ascending Node
      !                                           TLE:[Degrees] Internal:{radian}
      !/ ------------ SPACE ------- 26-26 -------------------------------------------------
-     real(dp)     :: E0         !< 27-33  F7.7   Eccentricity (decimal point assumed)
+     real(dp)     :: E0         !! 27-33  F7.7   Eccentricity (decimal point assumed)
      !/ ------------ SPACE ------- 34-34 -------------------------------------------------
-     real(dp)     :: W0         !< 35-42  F8.4   Argument of Perigee
+     real(dp)     :: W0         !! 35-42  F8.4   Argument of Perigee
      !                                           TLE:[Degrees] Internal:{radian}
      !/ ------------ SPACE ------- 43-43 -------------------------------------------------
-     real(dp)     :: M0         !< 44-51  F8.4   Mean Anomaly
+     real(dp)     :: M0         !! 44-51  F8.4   Mean Anomaly
      !                                           TLE:[Degrees] Internal:{radian}
      !/ ------------ SPACE ------- 52-52 -------------------------------------------------
-     real(dp)     :: N0         !< 53-63  F11.8  Mean Motion
+     real(dp)     :: N0         !! 53-63  F11.8  Mean Motion
      !                                           TLE:[Revs per day]  Internal:[rad/min]
-     integer      :: revNumber  !< 64-68  I5     Revolution number at epoch         [Revs]
-     integer      :: cksum2     !< 69-69  I1     Check Sum (Modulo 10)
+     integer      :: revNumber  !! 64-68  I5     Revolution number at epoch         [Revs]
+     integer      :: cksum2     !! 69-69  I1     Check Sum (Modulo 10)
 
    contains
 

@@ -101,7 +101,39 @@ module tc_lapack_f77
      END SUBROUTINE DGETRF
   END INTERFACE DGETRF_F77
 
+
+  !/ =====================================================================================
+  INTERFACE DLANGE_F77 !/ ----- Frobenius norm  ------------------------------------------
+     !/ ==================================================================================
+     FUNCTION DLANGE( NORM, M, N, A, LDA, WORK )
+       USE iso_fortran_env
+       REAL(real64)                  :: DLANGE
+       CHARACTER(LEN=1), INTENT(IN)  :: NORM
+       INTEGER,          INTENT(IN)  :: LDA, M, N
+       REAL(real64),     INTENT(IN)  :: A(LDA,*)
+       REAL(real64),     INTENT(OUT) :: WORK(*)
+     END FUNCTION DLANGE
+  END INTERFACE DLANGE_F77
+
   
+  !/ =====================================================================================
+  INTERFACE DGECON_F77 !/ ----- RCOND = 1 / ( norm(A) * norm(inv(A)) ) -------------------
+     !/ ==================================================================================
+     SUBROUTINE DGECON( NORM, N, A, LDA, ANORM, &
+          &             RCOND, WORK, IWORK, INFO )
+       USE iso_fortran_env
+       CHARACTER(LEN=1), INTENT(IN)  :: NORM
+       INTEGER,          INTENT(IN)  :: LDA, N
+       INTEGER,          INTENT(OUT) :: INFO
+       REAL(real64),     INTENT(IN)  :: ANORM
+       REAL(real64),     INTENT(OUT) :: RCOND
+       INTEGER,          INTENT(OUT) :: IWORK(*)
+       REAL(real64),     INTENT(IN)  :: A(LDA,*)
+       REAL(real64),     INTENT(OUT) :: WORK(*)
+     END SUBROUTINE DGECON
+  END INTERFACE DGECON_F77
+
+
 END MODULE tc_lapack_f77
 
 

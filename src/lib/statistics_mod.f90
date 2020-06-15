@@ -39,6 +39,8 @@ module statistics_mod
   use tlogger
   implicit none
 
+  public :: LeastSquares
+
 
   !/ =====================================================================================
   type :: running_stats
@@ -273,6 +275,83 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
 
 
 
+  
+  !/ =====================================================================================
+  subroutine LeastSquares( m, b, x, y, IERR )
+    !/ -----------------------------------------------------------------------------------
+    !! Calculate Linear Least Squares
+    !!
+    !! | ierr | meaning                |
+    !! | :--: | :--------------------- |
+    !! |  0   | success                |
+    !! |  1   | arrays not same length |
+    !! |  2   | data is singular       |
+    !!
+    !/ -----------------------------------------------------------------------------------
+    implicit none
+    real(dp),          intent(out) :: m     !! slope of the line.
+    real(dp),          intent(out) :: b     !! Y-intercept.
+    real(dp),          intent(in)  :: x(:)  !! independent variable array
+    real(dp),          intent(in)  :: y(:)  !! dependent   variable array
+    integer, optional, intent(out) :: IERR  !! error return value
+    !/ -----------------------------------------------------------------------------------
+    real(dp) :: SX, SY, SXY, SXX, S2X, D
+    integer  :: i, n, ier
+    logical  :: report
+    !/ -----------------------------------------------------------------------------------
+
+    report = .true.
+    if ( present( IERR ) ) report = .false.
+    
+    n = size(x)
+    m = D_ZERO
+    b = D_ZERO
+
+    ier = 0
+
+    if ( n.ne.size(y) ) then
+       ier = 1
+       if ( report ) then
+          call log_error( 'dimensions for x and y must match' )
+       end if
+       goto 999
+    end if
+    
+    SX  = D_ZERO
+    SY  = D_ZERO
+    SXY = D_ZERO
+    SXX = D_ZERO
+
+    do i=1,n
+       SX  = SX  + x(i)
+       SY  = SY  + y(i)
+       SXY = SXY + ( x(i) * y(i) )
+       SXX = SXX + ( x(i) * x(i) )
+    end do
+
+    S2X = SX * SX
+
+    D = real(n,dp) * SXX - S2X
+
+    if ( isZero(D) ) then
+       ier = 2
+       if ( report ) then
+          call log_error( 'data has singularity' )
+       end if
+       goto 999       
+    end if
+
+    m = ( ( real(n,dp) * SXY ) - ( SX * SY ) ) / D
+    b = ( ( SXX * SY ) - ( SX * SXY ) ) / D
+  
+999 continue
+    
+    if ( present( IERR ) ) IERR = ier
+    
+  end subroutine LeastSquares
+
+
+  
 
   !/ =====================================================================================
   subroutine running_reset( dts )

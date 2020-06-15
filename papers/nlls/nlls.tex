@@ -1,0 +1,775 @@
+%/ ====================================================================== BEGIN FILE =====
+%/ **                   N O N L I N E A R   L E A S T   S Q U A R E S                   **
+%/ =======================================================================================
+%/ **                                                                                   **
+%/ **  Copyright (c) 2020, Stephen W. Soliday                                           **
+%/ **                      stephen.soliday@trncmp.org                                   **
+%/ **                      http://research.trncmp.org                                   **
+%/ **                                                                                   **
+%/ **  -------------------------------------------------------------------------------  **
+%/ **                                                                                   **
+%/ **  This program is free software: you can redistribute it and/or modify it under    **
+%/ **  the terms of the GNU General Public License as published by the Free Software    **
+%/ **  Foundation, either version 3 of the License, or (at your option)                 **
+%/ **  any later version.                                                               **
+%/ **                                                                                   **
+%/ **  This program is distributed in the hope that it will be useful, but WITHOUT      **
+%/ **  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS    **
+%/ **  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.   **
+%/ **                                                                                   **
+%/ **  You should have received a copy of the GNU General Public License along with     **
+%/ **  this program. If not, see <http://www.gnu.org/licenses/>.                        **
+%/ **                                                                                   **
+%/ ----- Modification History ------------------------------------------------------------
+%/
+%/  @file nlls.tex
+%/   Provides
+%/
+%/  @author Stephen W. Soliday
+%/  @date 2014-Jul-14
+%/  @date 2020-Jun-03
+%/
+%/ =======================================================================================
+
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{trncmp}
+\usepackage{picinpar}
+\usepackage{asiwp}
+\usepackage{environ}
+\usepackage{fancyvrb}
+
+%  =======================================================================================
+% Heading arguments are {volume}{year}{pages}{submitted}{published}{author-full-names}
+
+\jmlrheading{Tutorial}{2014}{}{6/18}{-}{Stephen W.~Soliday}{TRNCMP/ARD/CCB}
+
+% Short headings should be running head and authors last names
+
+\ShortHeadings{Non-linear Least Squares}{Soliday}
+\firstpageno{1}
+%  =======================================================================================
+
+\newcommand{\MAT}[1]{\GPP{#1}}
+\newcommand{\VAR}[3]{#1^{(#2)}_{#3}}
+\newcommand{\efrac}[2]{\displaystyle\frac{#1}{#2}}
+\newcommand{\pfrac}[2]{\efrac{\partial#1}{\partial#2}}
+
+\NewEnviron{tcequation}{%
+  \begin{equation}\scalebox{1.4}
+    {$\BODY$}
+  \end{equation}
+}
+
+
+\begin{document}
+%\bibliographystyle{plain}
+
+\title{Non-linear Least Squares \\ with an example of: Transmitter Localization}
+\author{ \name Stephen W.~Soliday \email research@trncmp.org %\\
+%  \addr Tranquillitatis Computing \\
+%  \addr Advanced Research Division\\
+%  \addr Cognitive Computing Branch \\
+}
+\date{16-July-2014}
+
+\maketitle
+
+\begin{abstract}%   <- trailing '%' for backward compatibility of .sty file
+  Non-linear Least Squares (NLLS) is a method of solving an over determined set of 
+  non-linear simultaneous equations. 
+  This paper derives the NLLS algorithm, beginning with the derivation for 
+  Newton-Raphson method of root convergence for single dimensions. 
+  A method for the pseudo inversion of a rectangular matrix is also presented. 
+  Finally, a real world example of transmitter localization is presented.
+\end{abstract}
+
+\vspace{12pt}
+\textbf{Keywords}: Taylor-series, Newton-Raphson, Jacobian, Least-squares, Non-linear, 
+Regression, Over-determined, Range-only Localization
+
+%/ =======================================================================================
+\section{Introduction\label{sec:intro}}
+%/ =======================================================================================
+
+This paper provides a step by step explanation of root solving in 1 or more dimensions.
+The first subsection will review the basic one-dimensional case, known as the 
+Newton-Raphson method.
+The next section will cover the extension to n-dimensions for a fully determined system.
+A fully determined system has the same number of equations as unknown variables.
+Finally a worked example for transmitter localization is presented.
+
+%/ ---------------------------------------------------------------------------------------
+\subsection{Background}
+%/ ---------------------------------------------------------------------------------------
+
+Presented here are three mathematical techniques that are required by these derivations.
+This include a discussion on a Taylor series, Jacobian matrix and a  technique for the
+ pseudo inversion of a rectangular matrix.
+
+%/ ---------------------------------------------------------------------------------------
+\subsubsection{Taylor Series\label{sec:taylor}}
+%/ ---------------------------------------------------------------------------------------
+Each of the following sections will begin by expressing the first few terms of the 
+Taylor series in increasing dimensions.
+
+The Taylor Series may be used to approximate a function about a given point.
+
+\begin{tcequation}
+  \FU{f}{x_0 + \epsilon} = 
+  \FU{f}{x_0} + \FU{f'}{x_0}\epsilon + \frac{1}{2}\FU{f''}{x_0}\epsilon^2 + \hdots
+\end{tcequation}
+
+
+\begin{tcequation}
+  \FU{f}{x_0 + \epsilon} = \sum^\infty_{n=0} \frac{1}{n!}\FU{f^{\GPP{n}}}{x_0}\epsilon^n
+\end{tcequation}
+
+For the rest of this paper only the first two terms will be used:
+
+\begin{tcequation}
+  \FU{f}{x_0 + \epsilon} \approx \FU{f}{x_0} + \FU{f'}{x_0}\epsilon
+  \label{eq:taylor}
+\end{tcequation}
+
+%/ ---------------------------------------------------------------------------------------
+\subsubsection{Jacobian Matrix\label{sec:jacobian}}
+%/ ---------------------------------------------------------------------------------------
+
+The Jacobian matrix generalizes the gradient of a scalar-valued function of multiple variables,
+which itself generalizes the derivative of a scalar-valued function of a single variable. 
+In other words, the Jacobian of a scalar-valued function of a single variable
+$F:\RE \rightarrow \RE$ is just the first derivative.
+
+\begin{tcequation}
+  J = \frac{d}{d x}\FU{F}{x}
+\end{tcequation}
+
+And the Jacobian for a scalar-valued multivariable function
+$F:\RE^n \rightarrow \RE$ is the gradient.
+
+\begin{tcequation}
+  J = \nabla F = 
+  \frac{\partial}{\partial q_1}F +
+  \frac{\partial}{\partial q_2}F + \hdots
+  \frac{\partial}{\partial q_n}F
+\end{tcequation}
+
+Extending this to a system of scalar-valued multivariable functions, 
+$F \equiv f_i:\RE^n \rightarrow \RE \ \ \forall i=1,2,\hdots m$
+to express a Jacobian matrix.
+
+\begin{tcequation}
+  J = \left(
+  \begin{array}{c}
+    \frac{\partial}{\partial q_1} \\  \\ 
+    \frac{\partial}{\partial q_2} \\
+    \vdots \\
+    \frac{\partial}{\partial q_n}
+  \end{array}
+  \right) \cdot \left( f_1, f_2, \hdots f_m \right)
+\end{tcequation}
+
+\begin{tcequation}
+  J = 
+  \left(
+  \begin{array}{cccc}
+    \frac{\partial}{\partial q_1} f_1 & \frac{\partial}{\partial q_2} f_1 &
+    \hdots & \frac{\partial}{\partial q_n} f_1 \\  \\ 
+    \frac{\partial}{\partial q_1} f_2 & \frac{\partial}{\partial q_2} f_2 &
+    \hdots & \frac{\partial}{\partial q_n} f_2 \\ \\ 
+    \vdots & \vdots & \ddots & \vdots \\ \\
+    \frac{\partial}{\partial q_1} f_m & \frac{\partial}{\partial q_2} f_m &
+    \hdots & \frac{\partial}{\partial q_n} f_m
+  \end{array}
+  \right)
+\end{tcequation}
+
+If $p$ is a point in $\RE^n$ and $F$ is differentiable at $p$, then its derivative at $p$ is 
+given by $\FU{J_F}{p}$. In this case, the linear map described by $\FU{J_F}{p}$ is 
+the best linear approximation of $F$ near the point $p$, in the sense that
+
+\begin{tcequation}
+  \FU{F}{x} = \FU{F}{p} + \FU{J_F}{p} \left(x-p\right) + \FU{o}{\left|x-p\right|}
+\end{tcequation}
+
+for $x$ close to $p$ and where $o$ is the little o-notation (for $x - p$) and
+$\left|x-p\right|$ is the distance between $x$ and $p$.
+
+Compare this to a Taylor series for a scalar function of a scalar argument, 
+truncated to first order:
+
+\begin{tcequation}
+  \FU{f}{x} = \FU{f}{p} + \FU{f'}{p} \left( x - p \right) + \FU{o}{\left|x-p\right|}
+\end{tcequation}
+
+%/ ---------------------------------------------------------------------------------------
+\subsubsection{Pseudo Inversion of a Rectangular Matrix\label{sec:rectangle}}
+%/ ---------------------------------------------------------------------------------------
+
+This section presents one method for performing the pseudo inversion of a rectangular 
+matrix. Given the following linear mapping:
+
+\begin{tcequation}
+  \GPP{
+    \begin{array}{cccc}
+      Y_{1,1} & Y_{1,2} & \hdots & Y_{1,o} \\
+      Y_{2,1} & Y_{2,2} & \hdots & Y_{2,o} \\
+      \vdots & \vdots & \ddots & \vdots  \\
+      Y_{e,1} & Y_{e,2} & \hdots & Y_{e,o} 
+    \end{array}
+  }_{e,o} = 
+  \GPP{
+    \begin{array}{cccc}
+      X_{1,1} & X_{1,2} & \hdots & X_{1,i} \\
+      X_{2,1} & X_{2,2} & \hdots & X_{2,i} \\
+      \vdots & \vdots & \ddots & \vdots  \\
+      X_{e,1} & X_{e,2} & \hdots & X_{e,i} 
+    \end{array}
+  }_{e,i} \cdot 
+  \GPP{
+    \begin{array}{cccc}
+      A_{1,1} & A_{1,2} & \hdots & A_{1,o} \\
+      A_{2,1} & A_{2,2} & \hdots & A_{2,o} \\
+      \vdots & \vdots & \ddots & \vdots  \\
+      A_{i,1} & A_{i,2} & \hdots & A_{i,o} 
+    \end{array}
+  }_{i,o}
+\end{tcequation}
+
+Compactly written as 
+
+\begin{tcequation}
+  Y_{e,o} = X_{e,i} \cdot A_{i,o}
+  \label{eq:overlin}
+\end{tcequation}
+
+Where $e$ is the number of events.
+$i$ is the number of input/independent variables in each event.
+$o$ is the number of output/dependent variables in each event.
+
+If $e = i$ then the system of linear equations is fully determined, and an exact 
+solution may exist,
+and the matrix $X$ is square and therefor directly invertable.
+
+If $e < i$ then the system is under determined and can not be solved for a point 
+solution but rather for hyper-planes.
+
+If $e > i$ then the system is over determined and an approximate value may be ``fit''
+to the data.
+It will be come apparent in the final solution that this will resemble a version of least 
+squares,
+
+Start by multiplying both sides of equation~\ref{eq:overlin} with the transpose of $X$:
+
+\begin{tcequation}
+  \GPB{X_{i,e}^T \cdot Y_{e,o}}_{i,o} = \GPB{X_{i,e}^T \cdot X_{e,i}}_{i,i} \cdot A_{i,o}
+\end{tcequation}
+
+the subscripts indicate the row and column dimensions of the variables or groups,
+making the matrix operations easier to follow.
+
+Next multiply both sides by the inverse of the square $i \times i$ matrix
+$\left[{X^T X}\right]$
+
+\begin{tcequation}
+  \GPB{X_{i,e}^T \cdot X_{e,i}}_{i,i}^{-1} \cdot \GPB{X_{i,e}^T \cdot Y_{e,o}}_{i,o} = 
+  \GPB{X_{i,e}^T \cdot X_{e,i}}_{i,i}^{-1} \cdot \GPB{X_{i,e}^T \cdot X_{e,i}}_{i,i}
+  \cdot A_{i,o}
+\end{tcequation}
+
+And simplify
+
+\begin{tcequation}
+  \GPB{X_{i,e}^T \cdot X_{e,i}}_{i,i}^{-1} \cdot \GPB{X_{i,e}^T \cdot Y_{e,o}}_{i,o} = A_{i,o}
+\end{tcequation}
+
+Without subscripts the final solution may be expressed as:
+
+\begin{tcequation}
+  A = \GPB{X^T X}^{-1} \cdot \GPB{X^T Y}
+\label{eq:pseudoinv}
+\end{tcequation}
+
+%/ =======================================================================================
+\section{Newton-Raphson (one dimension)\label{sec:newton}}
+%/ =======================================================================================
+
+The Newton-Raphson (N-R) method is used to find the roots of a non-linear equations.
+This section will derive N-R for a single valued function of one independent variable:
+$f:\RE\rightarrow\RE$
+
+examine the function:
+
+\begin{tcequation}
+  y = \FU{f}{x}
+\end{tcequation}
+
+In order to solve this function using N-R an objective function is constructed:
+
+\begin{tcequation}
+  \FU{F}{x} = \FU{f}{x} - y
+  \label{eq:obj1}
+\end{tcequation}
+
+The requirement for this algorithm is that: the first derivative of the 
+function with respect to $x$ is known, and is continuous about zero.
+
+\begin{figure}[h]
+  \begin{center}
+    \includegraphics*[width=1.75in]{figures/newton.eps}
+    \caption{Follow a tangent to the X--axis\label{fig:newton}}
+  \end{center}
+\end{figure}
+
+Figure~\ref{fig:newton} illustrates the basic approach. The first derivative is the 
+slope of the curve at point $x$. That tangent may be followed to the x-axis and a new
+$x$ is found. That value of $x$ is recursively applied until the difference between 
+two successive estimations ( $x_t$ and $x_{t-1}$ ) falls below some user defined threshold.
+
+Set up equation~\ref{eq:taylor} in terms of a single valued function of one independent
+variable, using the objective function from equation~\ref{eq:obj1}.
+
+\begin{tcequation}
+  \FU{F}{x_0 + \epsilon} = \FU{F}{x_0} + \FU{F'}{x_0}\epsilon
+\end{tcequation}
+
+The goal is to minimize the objective function. In other words to find
+$\FU{F}{x_{k+1}} = 0$
+
+Solving for $\epsilon$:
+
+\begin{tcequation}
+  \epsilon = - \frac{F_k}{F'_k}
+  \label{eq:inter1}
+\end{tcequation}
+
+Because this will be an iterative process, $\epsilon = x_{k+1} - x_k$
+is substituted into equation~\ref{eq:inter1}:
+
+\begin{tcequation}
+  x_{k+1} = x_k - \frac{\FU{F}{x_k}}{\FU{F'}{x_k}}
+  \label{eq:newton1}
+\end{tcequation}
+
+And in terms of the original function $y = \FU{f}{x}$
+
+\begin{tcequation}
+  x_{k+1} = x_k - \frac{1}{\FU{F'}{x_k}}\GPP{\FU{f}{x_k} - y}
+\end{tcequation}
+
+%/ ---------------------------------------------------------------------------------------
+\subsection{ Example -- iterative algorithm for square root }
+%/ ---------------------------------------------------------------------------------------
+
+\begin{table}[h]
+  \begin{center}
+    \begin{tabular}{c|c|c}
+      \textbf{\#} & \textbf{$x$} & \textbf{$x^2$} \\ \hline
+      0 & 65.50000 & 4290.25000 \\
+      1 & 33.75000 & 1139.06250 \\
+      2 & 18.81574 & 354.03210 \\
+      3 & 12.88900 & 166.12628 \\
+      4 & 11.52635 & 132.85680 \\
+      5 & 11.44581 & 131.00649 \\
+      6 & 11.44552 & 131.00000 \\
+      7 & 11.44552 & 131.00000
+    \end{tabular}
+  \end{center}
+  \caption{Square Root of 131\label{tab:sqt131}}
+\end{table}
+
+Suppose you want to find the square root of an arbitrary real number.
+
+\begin{tcequation}
+  x = \sqrt{c}
+\end{tcequation}
+
+square both sides and place it in the form of equation~\ref{eq:obj1}
+
+\begin{tcequation}
+  0 = \FU{F}{x} = x^2 - c
+\end{tcequation}
+
+take the first derivative with respect to $x$:
+
+\begin{tcequation}
+  \frac{d F}{ d x} = 2 x
+\end{tcequation}
+
+Substitute this into equation~\ref{eq:newton1}
+
+\begin{tcequation}
+  x_{k+1} = x_k - \frac{x_k^2 - c}{2 x_k} 
+\end{tcequation}
+
+and simplify
+
+\begin{tcequation}
+  x_{k+1} = \frac{1}{2} \GPP{ x_k + \frac{c}{x_k}}
+\end{tcequation}
+
+Table~\ref{tab:sqt131} shows that it only takes 6 or 7 iterations to get reasonable
+accuracy, from an initial guess of $x_0 = 131 / 2$.
+
+%/ =======================================================================================
+\section{Newton-Raphson (multi dimension - fully determined)\label{sec:newtonFD}}
+%/ =======================================================================================
+
+In this section an equation will be derived to apply the Newton-Raphson method to
+multidimensional data. This will be the solution of a fully determined set of
+simultaneous non-linear equations. By fully determined it is meant that the number of
+equations is equal to the number of unknown variables.
+Each of the $n$ equations will be a single valued function of $n$ independent variables:
+
+\begin{tcequation}
+  f_i:\RE^n\rightarrow\RE \ \ \forall i=1,2,\hdots,n
+\end{tcequation}
+
+\begin{tcequation}
+  y_i=\FU{f_i}{\bar{x}} = \FU{f_i}{x_1,x_2,\hdots,x_n}
+\end{tcequation}
+
+In order to solve this system of equations using N-R, an objective function is defined:
+
+\begin{tcequation}
+  \FU{F_i}{\bar{x}} = y_i - \FU{f_i}{\bar{x}}
+\end{tcequation}
+
+Set up equation~\ref{eq:taylor} in terms of a system of $n$ simultaneous single valued
+equations of $n$ independent variables. Substitute the first derivative in the Taylor
+series with a Jacobian matrix, see Section~\ref{sec:jacobian}
+
+\begin{tcequation}
+  \FU{F}{\bar{x}_0+\epsilon} = \FU{F}{\bar{x}_0} + \FU{J_F}{\bar{x}_0}\cdot\epsilon
+\end{tcequation}
+
+again the goal is to solve for $\epsilon$ when $\FU{F}{\bar{x}_0+\epsilon} = 0$
+
+\begin{tcequation}
+  \FU{J_F}{\bar{x}_0}\cdot\epsilon = -\FU{F}{\bar{x}_0}
+  \label{eq:temp2}
+\end{tcequation}
+
+The Jacobian in equation~\ref{eq:temp2} is square so just multiply both sides by its
+inverse:
+
+\begin{tcequation}
+  \epsilon = -\FU{J_F}{\bar{x}_0}^{-1} \cdot \FU{F}{\bar{x}_0}
+  \label{eq:inter2}
+\end{tcequation}
+
+Because this will be an iterative process, $\epsilon = x_{k+1} - x_k$ is substituted
+into equation~\ref{eq:inter2}:
+
+\begin{tcequation}
+  \bar{x}_{k+1} = \bar{x}_k - \FU{J_F}{\bar{x}_k}^{-1} \cdot \FU{F}{\bar{x}_k}
+\end{tcequation}
+
+And in terms of the original function $y_i = \FU{f_i}{\bar{x}}$
+
+\begin{tcequation}
+  \bar{x}_{k+1} = 
+  \bar{x}_k - \FU{J_F}{\bar{x}_k}^{-1} \cdot \GPP{\bar{y} - \FU{f}{\bar{x}_k}}
+  \label{eq:newton2}
+\end{tcequation}
+
+Where $\bar{x}$ is an $1 \times n$ row vector, representing the desired solution of
+unknown independent variables. 
+$\bar{y}$ is an $n \times 1$ column vector, representing the constant measured dependent
+variable.
+$\FU{J_F}{\bar{x}_0}$ is an $n \times n$ Jacobian matrix representing the first 
+derivative of the $n$ objective functions with respect to the $n$ unknown independent
+variables.
+
+A reasonable test for convergence would be the mean square error (MSE) of the difference
+between $ \bar{x}_{k+1}$ and $\bar{x}_k$:
+
+\begin{tcequation}
+  \mbox{MSE} = \GPP{\bar{x}_{k+1} - \bar{x}_k}^T\cdot\GPP{\bar{x}_{k+1} - \bar{x}_k}
+\end{tcequation}
+
+%/ =======================================================================================
+\subsection{Add a worked example here}
+%/ =======================================================================================
+
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+Xxxxxxx xx xxxxx xx xxxxxxxxxxx xxxxx xxxxxx xxxx xxxxxxxx xxxxxxx.
+
+%/ =======================================================================================
+\section{Newton-Raphson (multi dimension - over determined)\label{sec:newtonOD}}
+%/ =======================================================================================
+
+In this section an equation will be derived to apply the Newton-Raphson (N-R) method to
+multidimensional data. This will be the solution of an over determined set of
+simultaneous non-linear equations. By over determined it is meant that the number of
+equations is more (much more) than the number of unknown variables.
+Each of the $n$ equations will be a single valued function of $m$ independent variables:
+
+\begin{tcequation}
+  f_i:\RE^m\rightarrow\RE \ \ \forall i=1,2,\hdots,n
+\end{tcequation}
+
+\begin{tcequation}
+  y_i=\FU{f_i}{\bar{x}} = \FU{f_i}{x_1,x_2,\hdots,x_m}
+\end{tcequation}
+
+In order to solve this system of equations using N-R, an objective function is defined:
+
+\begin{tcequation}
+  \FU{F_i}{\bar{x}} = y_i - \FU{f_i}{\bar{x}}
+\label{eq:odobj}
+\end{tcequation}
+
+Set up the Taylor Series, from Equation~\ref{eq:taylor}, in terms of a system of $n$ simultaneous single valued
+equations of $m$ independent variables. 
+Substitute the first derivative in the Taylor
+Series with a Jacobian matrix, see Section~\ref{sec:jacobian}
+
+\begin{tcequation}
+  \FU{F}{\bar{x}_0+\epsilon} = \FU{F}{\bar{x}_0} + \FU{J_F}{\bar{x}_0}\cdot\epsilon
+\end{tcequation}
+
+again the goal is to solve for $\epsilon$ when $\FU{F}{\bar{x}_0+\epsilon} = 0$
+
+\begin{tcequation}
+  \FU{J_F}{\bar{x}_0}\cdot\epsilon = -\FU{F}{\bar{x}_0}
+  \label{eq:temp2b}
+\end{tcequation}
+
+The Jacobian in equation~\ref{eq:temp2b} is not square, 
+it is $n \times m$.
+The normal matrix inversion is substituted with the pseudo inversion from Section~\ref{sec:rectangle}:
+
+The following equation would be incorrect:
+
+\begin{tcequation}
+  \epsilon = -\FU{J_F}{\bar{x_0}}^{-1} \cdot \FU{F}{\bar{x_0}}
+\end{tcequation}
+
+So, it is expressed in the form of Equation~\ref{eq:pseudoinv}:
+
+\begin{tcequation}
+  \epsilon = -\GPB{\FU{J_F}{\bar{x_0}}^T \FU{J_F}{\bar{x_0}}}^{-1} \cdot \GPB{\FU{J_F}{\bar{x_0}}^T Y}
+  \label{eq:inter2b}
+\end{tcequation}
+
+Because this will be an iterative process, $\epsilon = x_{k+1} - x_k$ is substituted
+into equation~\ref{eq:inter2b}:
+
+\begin{tcequation}
+  \bar{x}_{k+1} = \bar{x}_k - \GPB{\FU{J_F}{\bar{x}_k}^T \FU{J_F}{\bar{x}_k}}^{-1} \cdot \GPB{\FU{J_F}{\bar{x}_k}^T Y}
+\end{tcequation}
+
+And in terms of the original function $y_i = \FU{f_i}{\bar{x}}$
+
+\begin{tcequation}
+  \bar{x}_{k+1} = 
+  \bar{x}_k - \GPB{\FU{J_F}{\bar{x}_k}^T \FU{J_F}{\bar{x}_k}}^{-1} \cdot \GPB{\FU{J_F}{\bar{x}_k}^T \GPP{\FU{f}{\bar{x}_k} - \bar{y}}}
+  \label{eq:newton2b}
+\end{tcequation}
+
+Where $\bar{x}$ is an $1 \times m$ row vector, representing the desired solution of
+unknown independent variables. 
+$\bar{y}$ is an $n \times 1$ column vector, representing the constant measurement
+variable.
+$\FU{J_F}{\bar{x}_0}$ is an $n \times m$ Jacobian matrix representing the first 
+derivative of the $n$ objective functions with respect to the $m$ unknown independent
+variables.
+
+A reasonable test for convergence would be the mean square error (MSE) of the difference
+between $ \bar{x}_{k+1}$ and $\bar{x}_k$:
+
+\begin{tcequation}
+  \mbox{MSE} = \GPP{\bar{x}_{k+1} - \bar{x}_k}^T\cdot\GPP{\bar{x}_{k+1} - \bar{x}_k}
+\end{tcequation}
+
+%/ =======================================================================================
+\section{Transmitter Localization -- example of the over determined Non-linear Least Squares}
+%/ =======================================================================================
+\begin{figure}[ht]
+\begin{center}
+\includegraphics*[width=2.5in]{figures/LocalSetup.eps}
+\caption{Setup for problem number 1.\label{fig:setup}}
+\end{center}
+\end{figure}
+
+This example involves locating a transmitter using range only 
+measurements\footnote{RTS-CTS timing can be used to determine range.
+  Under ideal conditions RSSI may be calibrated for distance measurements.} from multiple 
+receivers.
+Figure~\ref{fig:setup} shows a transmitter T at its true location.
+The points $Q_i$ are the locations of receivers where measurements are made. 
+$r_i$ indicates the measured value of distance between the receiver and the true
+location of the transmitter. 
+\textbf{$\theta$} is the estimated location of the transmitter.
+$d_i$ indicates the expected distance between the $i^{th}$  receiver and the estimated
+Transmitter location.
+
+The objective function consists of minimizing the sum of the square differences
+between the measured distances and the estimated distances.
+
+Let $\theta = \GPR{x,y}$ be the estimated location of the transmitter,
+and $\theta_i = \GPR{x_i,y_i}$ be the location of the $i^{th}$ receiver.
+The distance between this estimated location and the location of the $i^{th}$ receiver is:
+
+\begin{tcequation}
+\FU{d_i}{\theta} = \sqrt{\GPP{x_i - x}^2 + \GPP{y_i - y}^2}
+\label{eq:euclid}
+\end{tcequation}
+
+From this definition and Equation~\ref{eq:odobj}, the objective function is:
+
+\begin{tcequation}
+ \FU{F_i}{\theta} = r_i - \FU{d_i}{\theta}
+\label{eq:locobj}
+\end{tcequation}
+
+The iterative solution will come from Equation~\ref{eq:newton2}:
+
+\begin{tcequation}
+  \theta_{k+1} = 
+  \theta_k - \GPB{\FU{J_F}{\theta_k}^T \FU{J_F}{\theta_k}}^{-1} \cdot 
+  \GPB{\FU{J_F}{\theta_k}^T \GPP{r_i - \FU{d_i}{\theta_k}}}
+\label{eq:oditer}
+\end{tcequation}
+
+The severance matrix for the estimation will be:
+
+\begin{tcequation}
+\FU{Cov}{\theta_k} = \sigma_k^2 \GPB{\FU{J_F}{\theta_k}^T \FU{J_F}{\theta_k}}^{-1}
+\label{eq:cov}
+\end{tcequation}
+
+where $\sigma_k^2$ is estimated to be:
+
+\begin{tcequation}
+\sigma_k^2 = \frac{1}{n-3} \sum^n_{i=1} \GPB{r_i - \FU{d_i}{\theta_k}}^2
+\end{tcequation}
+
+The Jacobian is an $n \times 2$ matrix:
+
+\begin{tcequation}
+\FU{J_F}{\theta_k} = \MAT{\begin{array}{cc}
+\frac{\partial\FU{F_1}{\theta_k}}{\partial x} & \frac{\partial\FU{F_1}{\theta_k}}{\partial y} \\ \\
+\frac{\partial\FU{F_2}{\theta_k}}{\partial x} & \frac{\partial\FU{F_2}{\theta_k}}{\partial y} \\ \\
+\vdots & \vdots \\
+\frac{\partial\FU{F_n}{\theta_k}}{\partial x} & \frac{\partial\FU{F_n}{\theta_k}}{\partial y} \\ \\
+\end{array}}_{n,2}
+\label{eq:jacobA}
+\end{tcequation}
+
+\begin{tcequation}
+\FU{J_F}{\theta_k}^T = \MAT{\begin{array}{cccc}
+\frac{\partial\FU{F_1}{\theta_k}}{\partial x} & \frac{\partial\FU{F_2}{\theta_k}}{\partial x} & \cdots & \frac{\partial\FU{F_n}{\theta_k}}{\partial x} \\ \\
+\frac{\partial\FU{F_1}{\theta_k}}{\partial y} & \frac{\partial\FU{F_2}{\theta_k}}{\partial y} & \cdots & \frac{\partial\FU{F_n}{\theta_k}}{\partial y} \\ \\
+\end{array}}_{2,n}
+\label{eq:jacobAT}
+\end{tcequation}
+
+From Equations~\ref{eq:euclid}~\&~\ref{eq:locobj}, the partial derivative of $\FU{F_i}{\theta_k}$ with respect to $x$ and $y$ are:
+
+\begin{tcequation}
+\frac{\partial\FU{F_i}{\theta_k}}{\partial x} = \frac{\GPP{x_i - x}}{\FU{d_i}{\theta_k}} \ \  \ \ \mbox{and} \ \  \ \ 
+\frac{\partial\FU{F_i}{\theta_k}}{\partial y} = \frac{\GPP{y_i - y}}{\FU{d_i}{\theta_k}}
+\end{tcequation}
+
+Substituting these into Equations~\ref{eq:jacobA}~\&~\ref{eq:jacobAT}, and using the dot product, the transpose of the Jacobian doted with itself is:
+
+\begin{tcequation}
+\FU{J_F}{\theta_k}^T \cdot \FU{J_F}{\theta_k} = 
+\MAT{\begin{array}{cc}
+\sum^n_{i=1} \frac{\GPP{x_i - x}^2}{\FU{d_i}{\theta_k}^2} &
+\sum^n_{i=1} \frac{\GPP{x_i - x}\GPP{y_i - y}}{\FU{d_i}{\theta_k}^2} \\ \\
+\sum^n_{i=1} \frac{\GPP{x_i - x}\GPP{y_i - y}}{\FU{d_i}{\theta_k}^2} &
+\sum^n_{i=1} \frac{\GPP{y_i - y}^2}{\FU{d_i}{\theta_k}^2} \\ \\
+\end{array}}_{2,2}
+\end{tcequation}
+
+As a side note, the elements of the Jacobian are the angles $\alpha_i$ from the estimated position of the transmitter and the location of the receivers:
+
+ \begin{tcequation}
+\FU{J_F}{\theta_k}^T \cdot \FU{J_F}{\theta_k} = 
+\MAT{\begin{array}{cc}
+\sum^n_{i=1} \FU{\cos^2}{\alpha_i} &
+\sum^n_{i=1} \FU{\cos}{\alpha_i}\FU{\sin}{\alpha_i} \\ \\
+\sum^n_{i=1} \FU{\cos}{\alpha_i}\FU{\sin}{\alpha_i} &
+\sum^n_{i=1} \FU{\sin^2}{\alpha_i}  \\ \\
+\end{array}}_{2,2}
+\end{tcequation}
+
+ \centerline{\fbox{%
+   \begin{minipage}{4.25 in}
+     A $2 \times 2$ matrix with equal off diagonal elements has a trivial inverse:
+
+     \begin{tcequation}
+       \MAT{\begin{array}{cc} A & C \\ C & B \end{array}}^{-1} =
+       \frac{1}{ A B - C^2}
+       \MAT{\begin{array}{cc} B & -C \\ -C & A \end{array}}
+     \end{tcequation}
+
+     It is left as an exercise to the reader to combine these two equations:
+ \end{minipage}}}
+
+ \vspace{12 pt}
+
+The right hand factor from Equation~\ref{eq:oditer} is:
+
+\begin{tcequation}
+\FU{J_F}{\theta_k}^T \cdot \GPP{r_i - \FU{d_i}{\theta_k}} =
+\MAT{\begin{array}{c}
+\sum^n_{i=1} \frac{\GPP{x_i - x}}{\FU{d_i}{\theta_k}}  \GPP{r_i - \FU{d_i}{\theta_k}}
+\\ \\
+\sum^n_{i=1} \frac{\GPP{y_i - y}}{\FU{d_i}{\theta_k}}  \GPP{r_i - \FU{d_i}{\theta_k}}
+ \end{array}}_{2,1}
+\end{tcequation}
+
+
+{\bf WRITE OUT THE FINAL EQUATION HERE}
+
+
+
+
+
+\section{Appendix}
+
+%  ==========================================================================================
+%
+%  PROVIDED A DESCRIPTION OF  THE RELATIONSHIP BETWEEN ERROR ELLIPSES AND COVARIANCE MATRICES
+%
+%  ==========================================================================================
+
+Provide a discussion of error ellipses
+
+
+\nocite{Iosifescu80}
+
+\bibliography{soliday}
+
+%\begin{verbatim}
+%http://www2.fiu.edu/~sabar/enc1102/Research%20Paper%20Advice.htm%
+%
+%http://tychousa8.umuc.edu/WRTG999A/index.html
+%\end{verbatim}
+
+%/ =======================================================================================
+
+\newpage
+
+\input{soliday-bio.tex}
+
+\end{document}
+
+%/ =======================================================================================
+%/ **                   N O N L I N E A R   L E A S T   S Q U A R E S                   **
+%/ ======================================================================== END FILE =====

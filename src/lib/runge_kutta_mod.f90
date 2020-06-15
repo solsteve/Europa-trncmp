@@ -42,17 +42,19 @@ module runge_kutta_mod
      !! This class defines an abstract type for a Runge-Kutta 4th order numerical integrator
      !/ ----------------------------------------------------------------------------------
 
-     integer               :: dim  = 0 !! number of coupled first order equations.
-!     real(dp), allocatable :: A(:)     !! stage one   state vector.
-!     real(dp), allocatable :: B(:)     !! stage two   state vector.
-!     real(dp), allocatable :: C(:)     !! stage three state vector.
-!     real(dp), allocatable :: D(:)     !! stage four  state vector.
-!     real(dp), allocatable :: W(:)     !! DIFEQ input vector.
-     real(dp), pointer, dimension(:) :: A => null() !< stage one   state vector
-     real(dp), pointer, dimension(:) :: B => null() !< stage two   state vector
-     real(dp), pointer, dimension(:) :: C => null() !< stage three state vector
-     real(dp), pointer, dimension(:) :: D => null() !< stage four  state vector
-     real(dp), pointer, dimension(:) :: W => null() !< DIFEQ input vector
+     integer :: dim  = 0 !! number of coupled first order equations.
+
+     !     real(dp), allocatable :: A(:)     !! stage one   state vector.
+     !     real(dp), allocatable :: B(:)     !! stage two   state vector.
+     !     real(dp), allocatable :: C(:)     !! stage three state vector.
+     !     real(dp), allocatable :: D(:)     !! stage four  state vector.
+     !     real(dp), allocatable :: W(:)     !! DIFEQ input vector.
+
+     real(dp), pointer, dimension(:) :: A => null() !! stage one   state vector
+     real(dp), pointer, dimension(:) :: B => null() !! stage two   state vector
+     real(dp), pointer, dimension(:) :: C => null() !! stage three state vector
+     real(dp), pointer, dimension(:) :: D => null() !! stage four  state vector
+     real(dp), pointer, dimension(:) :: W => null() !! DIFEQ input vector
 
    contains
 
@@ -94,9 +96,9 @@ module runge_kutta_mod
        import :: RK4
        class(RK4),         intent(inout) :: dts   !! reference to this integrator.
        real(dp),           intent(inout) :: Q(:)  !! state vector.
-       real(dp),           intent(in) :: t     !! time.
-       real(dp), optional, intent(in) :: P(:)  !! fixed parameters.
-       integer                        :: tcond !! termination condition.  
+       real(dp),           intent(in)    :: t     !! time.
+       real(dp), optional, intent(in)    :: P(:)  !! fixed parameters.
+       integer                           :: tcond !! termination condition.  
      end function rk4_abstract_check
   end interface
 
@@ -120,18 +122,18 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     ! ------------------------------------------------------------------------------------
 
     dts%dim = n
-    
+
     if ( associated( dts%A ) ) deallocate( dts%A )
     if ( associated( dts%B ) ) deallocate( dts%B )
     if ( associated( dts%C ) ) deallocate( dts%C )
     if ( associated( dts%D ) ) deallocate( dts%D )
     if ( associated( dts%W ) ) deallocate( dts%W )
 
-!    if ( allocated( dts%A ) ) deallocate( dts%A )
-!    if ( allocated( dts%B ) ) deallocate( dts%B )
-!    if ( allocated( dts%C ) ) deallocate( dts%C )
-!    if ( allocated( dts%D ) ) deallocate( dts%D )
-!    if ( allocated( dts%W ) ) deallocate( dts%W )
+    !    if ( allocated( dts%A ) ) deallocate( dts%A )
+    !    if ( allocated( dts%B ) ) deallocate( dts%B )
+    !    if ( allocated( dts%C ) ) deallocate( dts%C )
+    !    if ( allocated( dts%D ) ) deallocate( dts%D )
+    !    if ( allocated( dts%W ) ) deallocate( dts%W )
 
     allocate( dts%A(n) )
     allocate( dts%B(n) )
@@ -145,22 +147,22 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
   !  !/ =====================================================================================
   !  subroutine rk4_destroy( rk )
   !    ! ------------------------------------------------------------------------------------
-  !    !! Finalization. Deallocate memory.
+  !    ! Finalization. Deallocate memory.
   !    ! ------------------------------------------------------------------------------------
   !    implicit none
-  !    type(RK4), intent(inout) :: rk   !! reference to an integrator.
+  !    type(RK4), intent(inout) :: rk   ! reference to an integrator.
   !    ! ------------------------------------------------------------------------------------
   !    rk%dim = 0
-!    if ( associated( self%A ) ) deallocate( self%A )
-!    if ( associated( self%B ) ) deallocate( self%B )
-!    if ( associated( self%C ) ) deallocate( self%C )
-!    if ( associated( self%D ) ) deallocate( self%D )
-!    if ( associated( self%W ) ) deallocate( self%W )
-!    nullify( self%A )
-!    nullify( self%B )
-!    nullify( self%C )
-!    nullify( self%D )
-!    nullify( self%W )
+  !    if ( associated( self%A ) ) deallocate( self%A )
+  !    if ( associated( self%B ) ) deallocate( self%B )
+  !    if ( associated( self%C ) ) deallocate( self%C )
+  !    if ( associated( self%D ) ) deallocate( self%D )
+  !    if ( associated( self%W ) ) deallocate( self%W )
+  !    nullify( self%A )
+  !    nullify( self%B )
+  !    nullify( self%C )
+  !    nullify( self%D )
+  !    nullify( self%W )
   !    if ( allocated( rk%A ) ) deallocate( rk%A )
   !    if ( allocated( rk%B ) ) deallocate( rk%B )
   !    if ( allocated( rk%C ) ) deallocate( rk%C )
@@ -198,7 +200,7 @@ contains !/ **                  P R O C E D U R E   S E C T I O N               
     r  = 0
 
     do k =1,steps
-        r = dts%CHECK( Q, t, P )
+       r = dts%CHECK( Q, t, P )
        if ( r.gt.0 ) goto 999
 
        !/ ----- stage 1 --------------------
